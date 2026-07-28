@@ -278,6 +278,15 @@ public class HomeController : Controller
             .Where(m => m.ReleaseDate.HasValue && m.ReleaseDate.Value <= now)
             .ToListAsync();
 
+        var ticketsSoldDict = await _context.OrderDetails
+            .Include(od => od.Order)
+            .Include(od => od.Showtime)
+            .Where(od => od.Order.IsPaid == true)
+            .GroupBy(od => od.Showtime.MovieId)
+            .Select(g => new { MovieId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.MovieId, x => x.Count);
+        ViewBag.TicketsSold = ticketsSoldDict;
+
         return View("Index", movies);
     }
 

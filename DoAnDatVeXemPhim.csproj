@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <ServerGarbageCollection>false</ServerGarbageCollection>
     <UserSecretsId>aspnet-DoAnDatVeXemPhim-b2a16649-6bfd-4c5f-a7eb-a2ac6153e7dd</UserSecretsId>
   </PropertyGroup>
 
