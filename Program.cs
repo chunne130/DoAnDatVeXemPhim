@@ -6,17 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-var builder = WebApplication.CreateBuilder(args);
+// --- CỨU CÁNH CHO RENDER FREE TIER (LỖI 139 INOTIFY) ---
+// Phải set biến môi trường TRƯỚC khi gọi CreateBuilder thì nó mới có tác dụng!
+Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
+Environment.SetEnvironmentVariable("ASPNETCORE_hostBuilder:reloadConfigOnChange", "false");
 
-// VÔ HIỆU HÓA TÍNH NĂNG THEO DÕI SỰ THAY ĐỔI FILE (RELOAD ON CHANGE)
-// Giúp tránh lỗi tràn giới hạn inotify (System.IO.IOException) trên server Linux/Render Free
-builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
-{
-    foreach (var source in config.Sources.OfType<Microsoft.Extensions.Configuration.Json.JsonConfigurationSource>())
-    {
-        source.ReloadOnChange = false;
-    }
-});
+var builder = WebApplication.CreateBuilder(args);
 
 // 1. CẤU HÌNH DATABASE
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
