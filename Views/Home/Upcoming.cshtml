@@ -1,0 +1,143 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Movie>
+@{
+    ViewData["Title"] = "Phim sắp chiếu - Cinema Hub";
+}
+
+<div class="container-xl mt-5 mb-5" style="font-family: 'Inter', sans-serif;">
+    @* --- HEADER CHUẨN ĐỒNG BỘ NEON --- *@
+    <div class="d-flex align-items-center gap-3 mb-2">
+        <div style="width: 5px; height: 28px; background: #00ff87; border-radius: 4px; box-shadow: 0 0 10px rgba(0,255,135,0.5);"></div>
+        <h2 class="fw-bold text-uppercase m-0" style="color: #ffffff; letter-spacing: -0.5px; text-shadow: 0 0 20px rgba(0,255,135,0.2);">
+            Phim Sắp Chiếu
+        </h2>
+    </div>
+    <p class="mb-5 ms-3" style="color: #9ca3af; font-size: 0.95rem;">Những siêu phẩm bom tấn sắp đổ bộ tại hệ thống Cinema Hub</p>
+
+    @* --- DANH SÁCH PHIM --- *@
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var movie in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 upcoming-card-neon">
+                        <div class="position-relative overflow-hidden" style="border-radius: 16px 16px 0 0;">
+                            <img src="@movie.PosterUrl" class="w-100 upcoming-img" alt="@movie.Title" style="height: 360px; object-fit: cover;">
+
+                            @* Huy hiệu ngày chiếu nổi bật *@
+                            <div class="position-absolute top-0 start-0 m-3 badge-coming-soon shadow-sm">
+                                <i class="bi bi-calendar-star me-1"></i> @(movie.ReleaseDate?.ToString("dd/MM") ?? "Sắp ra mắt")
+                            </div>
+                        </div>
+
+                        <div class="card-body p-4 d-flex flex-column">
+                            <h6 class="card-title fw-bold text-uppercase text-truncate mb-3 upcoming-title-text" title="@movie.Title">
+                                @movie.Title
+                            </h6>
+
+                            <div class="mt-auto">
+                                <p class="small mb-2 fw-medium" style="color: #d1fae5;">
+                                    <i class="bi bi-calendar-check me-2" style="color: #00ff87;"></i>Khởi chiếu: @(movie.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Chưa rõ")
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center small" style="color: #9ca3af;">
+                                    <span><i class="bi bi-clock me-1"></i> @movie.Duration phút</span>
+                                    <span class="px-2 py-1" style="background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">
+                                        @(movie.Genre?.Name ?? "N/A")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 pt-0 mt-auto">
+                            <a asp-action="MovieDetailsComing" asp-route-id="@movie.Id" class="btn btn-outline-neon w-100 text-center fw-bold py-2 rounded-3 text-uppercase" style="letter-spacing: 0.5px; font-size: 0.85rem;">
+                                Xem chi tiết
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5 rounded-4" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+                <i class="bi bi-film mb-3" style="font-size: 4rem; color: #4b5563;"></i>
+                <h5 style="color: #9ca3af;">Hiện chưa có phim nào sắp chiếu.</h5>
+                <p class="text-muted small">Hãy quay lại sau để cập nhật những bom tấn mới nhất nhé!</p>
+                <a href="/Home/Index" class="btn mt-3 fw-bold px-4 rounded-pill" style="background: rgba(0,255,135,0.1); color: #00ff87; border: 1px solid rgba(0,255,135,0.3);">
+                    Xem phim đang chiếu
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* ═══════════════════════════════════════════
+           🟢 ĐỒNG BỘ DARK NEON THEME CHO TRANG SẮP CHIẾU
+        ═══════════════════════════════════════════ */
+
+    .upcoming-card-neon {
+        background: rgba(17, 24, 39, 0.7) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 16px !important;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+        .upcoming-card-neon:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 255, 135, 0.15) !important;
+            border-color: rgba(0, 255, 135, 0.3) !important;
+        }
+
+    /* Hiệu ứng hình ảnh */
+    .upcoming-img {
+        transition: transform 0.5s ease;
+    }
+
+    .upcoming-card-neon:hover .upcoming-img {
+        transform: scale(1.06);
+    }
+
+    /* Huy hiệu ngày chiếu góc trái */
+    .badge-coming-soon {
+        background: rgba(0, 255, 135, 0.15);
+        color: #00ff87;
+        border: 1px solid rgba(0, 255, 135, 0.3);
+        padding: 6px 12px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+    }
+
+    /* Hiệu ứng nảy và sáng chữ tên phim */
+    .upcoming-title-text {
+        color: #ffffff;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .upcoming-card-neon:hover .upcoming-title-text {
+        color: #00ff87 !important;
+        text-shadow: 0 0 12px rgba(0, 255, 135, 0.6);
+        transform: scale(1.03);
+        transform-origin: left;
+    }
+
+    /* Nút Xem chi tiết */
+    .btn-outline-neon {
+        color: #00ff87;
+        border: 1px solid rgba(0, 255, 135, 0.5);
+        background: transparent;
+        transition: all 0.25s ease;
+        display: block;
+    }
+
+        .btn-outline-neon:hover {
+            background: #00ff87;
+            color: #022c22 !important;
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.3);
+        }
+</style>

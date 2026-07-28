@@ -1,0 +1,328 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Promotion>
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<div class="dashboard-panel-card slide-in-bottom">
+    @* HEADER *@
+    <div class="page-header d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div class="page-header-left d-flex align-items-center gap-3">
+            <div class="accent-bar" style="width: 4px; height: 36px; background: #00ff87; border-radius: 2px;"></div>
+            <div>
+                <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                    QUẢN LÝ KHUYẾN MÃI
+                </h4>
+                <p class="text-muted small m-0 mt-1">Cấu hình voucher, chiết khấu và số lượng phát hành</p>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="/AdminControllers/Index" class="btn btn-outline-secondary rounded-pill px-4 fw-bold ajax-link shadow-sm text-light" style="border-color: rgba(255,255,255,0.2);">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+
+            @* 🚀 NÚT GỌI MODAL THÊM MỚI *@
+            <a href="/Promotions/Create" class="btn-action-pill btn-open-modal shadow-sm" style="background: #00ff87; color: #022c22; padding: 8px 20px; border-radius: 50px; font-weight: bold; text-decoration: none;">
+                <i class="bi bi-plus-lg me-1"></i> Tạo voucher mới
+            </a>
+        </div>
+    </div>
+
+    @* THANH TÌM KIẾM ĐA NĂNG *@
+    <form id="searchPromoForm" action="/Promotions/Index" method="get" class="mb-4">
+        <div class="search-wrap d-flex align-items-center p-2 rounded-pill" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); max-width: 600px;">
+            <div class="search-field flex-grow-1 d-flex align-items-center px-3">
+                <i class="bi bi-search me-2" style="color: #00ff87;"></i>
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control border-0 bg-transparent text-white shadow-none p-0" placeholder="Tìm mã code hoặc mô tả voucher..." style="outline: none !important;" />
+            </div>
+            <button type="submit" class="btn btn-save-neon rounded-pill px-4 fw-bold" style="background: #00ff87; color: #000;">TÌM KIẾM</button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()))
+            {
+                <a href="/Promotions/Index" class="btn ajax-link text-danger ms-2" title="Xóa bộ lọc"><i class="bi bi-x-circle-fill fs-5"></i></a>
+            }
+        </div>
+    </form>
+
+    @* 🟢 KHU VỰC CHỨA THÔNG BÁO DÀNH CHO SPA AJAX *@
+    <div id="promoAlertContainer"></div>
+
+    @* 🟢 THÊM ID tableContainer Ở ĐÂY ĐỂ TRÁNH LỖI ĐƠ KHI UPDATE *@
+    <div id="tableContainer" class="table-responsive custom-scrollbar mt-2">
+        <table class="table table-dark table-borderless align-middle table-hover m-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.02);">
+            <thead>
+                <tr class="text-muted small uppercase border-bottom" style="border-color: rgba(255,255,255,0.1) !important; font-size: 0.75rem;">
+                    <th class="ps-4 pb-3">Mã Code</th>
+                    <th class="pb-3" style="width: 250px;">Mô tả & Điều kiện</th>
+                    <th class="text-center pb-3">Mức giảm</th>
+                    <th class="text-center pb-3">Tiến độ sử dụng</th>
+                    <th class="text-center pb-3">Thời hạn</th>
+                    <th class="text-center pe-4 pb-3" style="width: 120px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        bool isExpired = item.EndDate < DateTime.Now;
+                        bool isFull = item.UsedCount >= item.UsageLimit;
+                        double pct = item.UsageLimit > 0 ? (double)item.UsedCount / item.UsageLimit * 100 : 0;
+                        string rowStyle = (isExpired || isFull) ? "opacity: 0.5;" : "";
+
+                        <tr class="border-bottom transition-all" style="border-color: rgba(255,255,255,0.03) !important; @rowStyle">
+                            <td class="ps-4 py-3">
+                                <span class="voucher-code" style="display: inline-block; background: rgba(0,255,135,0.1); border: 1px dashed rgba(0,255,135,0.4); color: #00ff87; font-family: monospace; font-size: 0.9rem; font-weight: 800; padding: 6px 12px; border-radius: 8px; letter-spacing: 1px;">
+                                    <i class="bi bi-ticket-detailed me-1"></i> @item.VoucherCode
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-white fw-bold mb-1" style="font-size: 0.85rem;">@item.Description</div>
+                                <div style="font-size: 0.7rem; color: #fbbf24;"><i class="bi bi-cart-check me-1"></i> Đơn tối thiểu: @string.Format("{0:N0}", item.MinOrderValue)đ</div>
+                                <div style="font-size: 0.7rem; color: #a855f7;"><i class="bi bi-person-badge me-1"></i> Hạng: @(item.MembershipLevel?.LevelName ?? "Tất cả")</div>
+                                @if (item.PointsRequired > 0)
+                                {
+                                    <div style="font-size: 0.7rem; color: #00ff87;"><i class="bi bi-star-fill text-warning me-1"></i> Điểm đổi: @item.PointsRequired</div>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <span class="fw-bold fs-5" style="color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.3);">
+                                    @if (item.IsPercentage)
+                                    {
+                                        <span>@item.DiscountValue%</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@string.Format("{0:N0}", item.DiscountValue)<small style="font-size:0.7rem; color:#9ca3af; margin-left: 2px;">đ</small></span>
+                                    }
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="usage-bar-wrap mx-auto d-flex flex-column justify-content-center" style="max-width: 120px; min-height: 40px;">
+                                    <div class="d-flex justify-content-between mb-1" style="font-size: 0.72rem; color: #9ca3af;">
+                                        <span>Đã dùng: <strong class="text-white">@item.UsedCount</strong></span>
+                                        <span>/ @item.UsageLimit</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden;">
+                                        <div class="progress-bar" role="progressbar" style="width: @pct%; background: @(isFull ? "#ef4444" : "#00ff87"); border-radius: 10px;" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center" style="font-size: 0.75rem; color: #9ca3af;">
+                                <div><i class="bi bi-calendar-check me-1" style="color: #60a5fa;"></i>@item.StartDate.ToString("dd/MM/yyyy")</div>
+                                <div class="mt-1 @(isExpired ? "text-danger fw-bold" : "")">
+                                    <i class="bi bi-calendar-x me-1" style="color: @(isExpired ? "#ef4444" : "#fbbf24");"></i>@item.EndDate.ToString("dd/MM/yyyy")
+                                </div>
+                            </td>
+                            <td class="text-center pe-4">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="/Promotions/Edit/@item.Id" class="btn btn-sm btn-outline-light border-0 btn-open-modal d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Sửa">
+                                        <i class="bi bi-pencil" style="color: #fbbf24;"></i>
+                                    </a>
+                                    <a href="/Promotions/Delete/@item.Id" class="btn btn-sm btn-outline-danger border-0 btn-open-modal d-flex align-items-center justify-content-center" style="background: rgba(239, 68, 68, 0.1); width: 32px; height: 32px; border-radius: 6px;" title="Xóa">
+                                        <i class="bi bi-trash" style="color: #ef4444;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-ticket-perforated text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                            <p class="text-muted fw-bold mb-0">Chưa có mã khuyến mãi nào.</p>
+                            <p class="text-muted small">Hãy tạo voucher đầu tiên ngay nhé!</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@* Khung chứa Modal duy nhất *@
+<div class="modal fade" id="promotionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(16px); border: 1px solid rgba(0,255,135,0.3) !important; border-radius: 20px;">
+            <div id="modalBody"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .slide-in-bottom {
+        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+
+    @@keyframes slideIn {
+        0% {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+    }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,255,135,0.5);
+        }
+
+    .modal-backdrop {
+        z-index: 1040 !important;
+    }
+
+    .modal {
+        z-index: 1050 !important;
+    }
+</style>
+
+<script>
+    (function() {
+        // 🚀 Hàm hỗ trợ Đóng Modal bất tử
+        function closeNeonModal() {
+            var $el = $('#promotionModal');
+            if (typeof bootstrap !== 'undefined') {
+                var instance = bootstrap.Modal.getInstance($el[0]);
+                if (instance) instance.hide();
+                else $el.modal('hide');
+            } else {
+                $el.modal('hide');
+            }
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('overflow', '');
+        }
+
+        // 🚀 1. AJAX TÌM KIẾM KHÔNG CHỚP TRANG
+        $('#searchPromoForm').off('submit').on('submit', function(e) {
+            e.preventDefault();
+            var targetUrl = $(this).attr('action') + '?' + $(this).serialize();
+            var $contentBox = $('#admin-dynamic-content');
+            var $loader = $('#admin-loader');
+
+            $contentBox.css('opacity', '0.3'); $loader.fadeIn(200);
+            $.ajax({
+                url: targetUrl, type: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(res) {
+                    $contentBox.html(res);
+                    $loader.fadeOut(200, function() { $contentBox.css('opacity', '1'); });
+                    window.history.pushState({path: targetUrl}, '', targetUrl);
+                }
+            });
+        });
+
+        // 🚀 2. BẤM NÚT MỞ MODAL ĐA NĂNG
+        $(document).off('click', '.btn-open-modal').on('click', '.btn-open-modal', function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            var $modalEl = $('#promotionModal');
+
+            $('#modalBody').html('<div class="text-center p-5"><div class="spinner-border" style="color: #00ff87;"></div><p class="mt-3 text-muted">Đang tải form...</p></div>');
+            $('body').append($modalEl);
+
+            if (typeof bootstrap !== 'undefined') {
+                var myModal = new bootstrap.Modal($modalEl[0]);
+                myModal.show();
+            } else {
+                $modalEl.modal('show');
+            }
+
+            $.ajax({
+                url: url, type: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(res) {
+                    $('#modalBody').html(res);
+                },
+                error: function() {
+                    $('#modalBody').html('<div class="p-5 text-center text-danger"><i class="bi bi-x-circle display-1"></i><h4 class="mt-3">Lỗi tải dữ liệu Form!</h4></div>');
+                }
+            });
+        });
+
+        // 🚀 3. SUBMIT FORM BÊN TRONG MODAL BẰNG AJAX (ĐÃ FIX LỖI HIỂN THỊ THÔNG BÁO)
+        $(document).off('submit', '#modalBody form').on('submit', '#modalBody form', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            $form.css('opacity', '0.5');
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(res) {
+                    if (res && res.success === true) {
+                        closeNeonModal(); // Đóng modal
+
+                        // ⚡ BƯỚC FIX: Vẽ thanh thông báo màu xanh ngay tại trang này theo chuẩn giao diện của bạn
+                        var alertHtml = `
+                            <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 transition-all" role="alert" style="background: rgba(0, 255, 135, 0.1); border: 1px solid #00ff87; color: #00ff87;">
+                                <i class="bi bi-check-circle-fill me-2"></i> ${res.message}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        $('#promoAlertContainer').html(alertHtml);
+
+                        // Tự động xóa thông báo sau 4 giây cho đẹp mắt
+                        setTimeout(function() {
+                            $('.alert').fadeOut(500, function() { $(this).remove(); });
+                        }, 4000);
+
+                        // Hiển thị thêm SweetAlert nếu hệ thống có tích hợp sẵn
+                        if (typeof Swal !== 'undefined') {
+                            Swal.fire({
+                                title: 'Thành công!', text: res.message, icon: 'success',
+                                background: '#111827', color: '#fff', confirmButtonColor: '#00ff87'
+                            });
+                        }
+
+                        // Cập nhật lại ruột bảng dữ liệu mới không chớp trang
+                        $.ajax({
+                            url: '/Promotions/Index',
+                            type: 'GET',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            success: function(htmlData) {
+                                var freshTable = $(htmlData).find('#tableContainer').html();
+                                $('#tableContainer').html(freshTable);
+                            }
+                        });
+                    }
+                    else {
+                        $('#modalBody').html(res);
+                        $form.css('opacity', '1');
+                    }
+                },
+                error: function() {
+                    closeNeonModal();
+                    window.location.reload();
+                }
+            });
+        });
+
+        // 🚀 4. DỌN DẸP SẠCH SẼ KHI TẮT MODAL
+        $(document).off('hidden.bs.modal', '#promotionModal').on('hidden.bs.modal', '#promotionModal', function () {
+            $('#modalBody').html('');
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('overflow', '');
+        });
+
+    })();
+</script>

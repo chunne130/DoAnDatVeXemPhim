@@ -1,0 +1,361 @@
+@model IEnumerable<DoAnDatVeXemPhim.Models.Showtime>
+@{
+    ViewData["Title"] = "Chọn suất chiếu";
+    var movie = ViewBag.Movie as DoAnDatVeXemPhim.Models.Movie;
+    var selectDate = (DateTime)ViewBag.SelectDate;
+}
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-image: radial-gradient(ellipse at 0% 100%, rgba(0,160,70,0.55) 0%, rgba(0,80,30,0.3) 30%, transparent 55%), radial-gradient(ellipse at 100% 0%, rgba(0,160,70,0.45) 0%, rgba(0,80,30,0.25) 28%, transparent 50%);
+        background-color: #010a04;
+        background-attachment: fixed;
+        color: #fff;
+    }
+
+    .page-wrap {
+        padding-top: 32px;
+        padding-bottom: 60px;
+    }
+
+    /* ── DATE PICKER ── */
+    .date-strip {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        margin-bottom: 32px;
+        scrollbar-width: none;
+    }
+
+        .date-strip::-webkit-scrollbar {
+            display: none;
+        }
+
+    .date-item {
+        flex-shrink: 0;
+        min-width: 72px;
+        background: rgba(10,22,13,0.7);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 10px;
+        padding: 10px 8px;
+        text-align: center;
+        text-decoration: none;
+        color: #6b8c78;
+        transition: all 0.2s;
+    }
+
+        .date-item:hover {
+            border-color: rgba(0,255,135,0.3);
+            color: #00ff87;
+            background: rgba(0,255,135,0.06);
+        }
+
+        .date-item.active {
+            background: #00ff87;
+            color: #022c22;
+            border-color: #00ff87;
+            box-shadow: 0 4px 14px rgba(0,255,135,0.3);
+        }
+
+        .date-item .month {
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .date-item .day {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin: 2px 0;
+        }
+
+        .date-item .dname {
+            font-size: 0.62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+    /* ── MOVIE HEADER ── */
+    .movie-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: rgba(10,22,13,0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 28px;
+    }
+
+        .movie-header img {
+            width: 80px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+    .movie-info-title {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        line-height: 1.2;
+        margin-bottom: 10px;
+        letter-spacing: -0.3px;
+    }
+
+    .movie-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .meta-badge {
+        background: rgba(0,255,135,0.1);
+        border: 1px solid rgba(0,255,135,0.2);
+        color: #00ff87;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+
+    .meta-text {
+        font-size: 0.78rem;
+        color: #6b8c78;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .meta-divider {
+        width: 1px;
+        height: 14px;
+        background: rgba(255,255,255,0.08);
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .accent-bar {
+        width: 4px;
+        height: 20px;
+        background: #00ff87;
+        border-radius: 2px;
+    }
+
+    .section-head h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+    }
+
+    /* ── CINEMA CARD ── */
+    .cinema-card {
+        background: rgba(10,22,13,0.65);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        padding: 22px 24px;
+        margin-bottom: 16px;
+        transition: border-color 0.2s;
+    }
+
+        .cinema-card:hover {
+            border-color: rgba(0,255,135,0.15);
+        }
+
+    .cinema-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .cinema-name i {
+            color: #ef4444;
+            font-size: 0.9rem;
+        }
+
+    .cinema-address {
+        font-size: 0.75rem;
+        color: #4b6b58;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    /* ── SHOWTIME BUTTONS ── */
+    .showtime-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .btn-showtime {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 88px;
+        padding: 10px 14px;
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #c8e6d0;
+        transition: all 0.2s;
+    }
+
+        .btn-showtime:hover {
+            background: rgba(0,255,135,0.1);
+            border-color: #00ff87;
+            color: #00ff87;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,255,135,0.2);
+        }
+
+        .btn-showtime .time {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .btn-showtime .fmt {
+            font-size: 0.6rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #3d7a52;
+            margin-top: 2px;
+        }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: rgba(10,22,13,0.5);
+        border: 1px dashed rgba(255,255,255,0.08);
+        border-radius: 14px;
+    }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            color: rgba(0,255,135,0.15);
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h4 {
+            font-size: 1rem;
+            color: #6b8c78;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 0.8rem;
+            color: #3d6650;
+        }
+</style>
+
+<div class="container-xl page-wrap">
+
+    @* ── DATE STRIP ── *@
+    <div class="date-strip">
+        @for (int i = 0; i < 14; i++)
+        {
+            var date = DateTime.Today.AddDays(i);
+            var isActive = date.Date == selectDate.Date ? "active" : "";
+            <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = movie.Id, date = date.ToString("yyyy-MM-dd") })"
+               class="date-item @isActive">
+                <div class="month">Th. @date.ToString("MM")</div>
+                <div class="day">@date.ToString("dd")</div>
+                <div class="dname">@date.ToString("ddd")</div>
+            </a>
+        }
+    </div>
+
+    @* ── MOVIE HEADER ── *@
+    <div class="movie-header">
+        <img src="@movie.PosterUrl" alt="@movie.Title" />
+        <div>
+            <div class="movie-info-title">@movie.Title</div>
+            <div class="movie-meta">
+                @if (movie.Genre != null)
+                {
+                    <span class="meta-badge">@movie.Genre.Name</span>
+                }
+                <div class="meta-divider"></div>
+                <span class="meta-text"><i class="bi bi-clock"></i> @movie.Duration phút</span>
+                
+                @* --- ĐÃ THÊM: Tính năng Behavior Tracking (ViewCount) --- *@
+                <div class="meta-divider"></div>
+                <span class="meta-text"><i class="bi bi-eye text-warning"></i> @movie.ViewCount lượt xem</span>
+                
+                <div class="meta-divider"></div>
+                <span class="meta-text"><i class="bi bi-calendar-check"></i> @selectDate.ToString("dd/MM/yyyy")</span>
+            </div>
+        </div>
+    </div>
+
+    @* ── DANH SÁCH RẠP ── *@
+    <div class="section-head">
+        <div class="accent-bar"></div>
+        <h2>Chọn suất chiếu</h2>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        @foreach (var cinemaGroup in Model.GroupBy(s => s.CinemaHall.Cinema))
+        {
+            <div class="cinema-card">
+                <div class="cinema-name">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    @cinemaGroup.Key.Name
+                </div>
+                <div class="cinema-address">@cinemaGroup.Key.Address</div>
+                <div class="showtime-grid">
+                    @foreach (var st in cinemaGroup)
+                    {
+                        <a href="@Url.Action("SelectSeat", "Booking", new { showtimeId = st.Id })"
+                           class="btn-showtime">
+                            <div class="time">@st.StartTime.ToString("HH:mm")</div>
+                            <div class="fmt">@st.Format</div>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h4>Chưa có suất chiếu nào cho ngày này!</h4>
+            <p>Thử chọn ngày khác ở thanh bên trên nhé.</p>
+        </div>
+    }
+
+</div>

@@ -1,0 +1,322 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Combo>
+
+@{
+    ViewData["Title"] = "Menu Bắp Nước";
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<div class="dashboard-panel-card slide-in-bottom">
+    @* --- Header đồng bộ với CinemaHalls --- *@
+    <div class="d-flex justify-content-between align-items-center mb-4 border-start border-5 ps-3 py-2" style="border-color: #00ff87 !important;">
+        <div>
+            <h2 class="fw-bold mb-0 text-uppercase text-white" style="text-shadow: 0 0 10px rgba(0,255,135,0.3);">
+                DANH MỤC <span style="color: #00ff87;">BẮP NƯỚC</span>
+            </h2>
+            <p class="text-muted small mb-0 mt-1">Quản lý thực đơn và giá các gói Combo tại rạp</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/AdminControllers/Index" class="btn fw-bold px-4 py-2 rounded-pill ajax-link shadow-sm" style="background: transparent; color: #e5e7eb; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; display: inline-flex; align-items: center; width: auto; height: auto; text-decoration: none;">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+            <button data-url="/Comboes/Create" class="btn btn-cyber-success fw-bold rounded-pill px-4 shadow-sm btn-trigger-modal text-uppercase">
+                <i class="bi bi-plus-circle-fill me-2"></i>Tạo Combo mới
+            </button>
+        </div>
+    </div>
+
+    @* THANH TÌM KIẾM BẮP NƯỚC (LIVE SEARCH) *@
+    <form id="searchComboForm" action="/Comboes/Index" method="get" class="mb-4 mt-2">
+        <div class="search-wrap d-flex align-items-center p-2 rounded-pill" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); max-width: 600px;">
+            <div class="search-field flex-grow-1 d-flex align-items-center px-3">
+                <i class="bi bi-search me-2" style="color: #00ff87;"></i>
+                <input type="text" name="searchString" id="searchInput" value="@ViewData["CurrentFilter"]" class="form-control border-0 bg-transparent text-white shadow-none p-0" placeholder="Tìm tên Combo, mô tả..." style="outline: none !important;" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-save-neon rounded-pill px-4 fw-bold" style="background: #00ff87; color: #000;">TÌM KIẾM</button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()))
+            {
+                <a href="/Comboes/Index" class="btn ajax-link text-danger ms-2" title="Xóa bộ lọc"><i class="bi bi-x-circle-fill fs-5"></i></a>
+            }
+        </div>
+    </form>
+
+    <div id="comboContainer">
+        @* --- Danh sách dạng Card Menu Dark Mode --- *@
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 col-lg-3">
+                    <div class="card h-100 border-0 shadow-lg rounded-4 overflow-hidden combo-card style-dark-card position-relative">
+                        @* Giá tiền đè lên ảnh (Glow Neon) *@
+                        <div class="position-absolute top-0 end-0 m-2 z-3">
+                            <span class="badge bg-cyber-warning fs-6 px-3 py-2 rounded-pill shadow-lg border border-warning border-opacity-25">
+                                @Html.DisplayFor(modelItem => item.Price) VNĐ
+                            </span>
+                        </div>
+
+                        @* Hình ảnh sản phẩm *@
+                        <div class="combo-img-container" style="background: rgba(0,0,0,0.5); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://via.placeholder.com/400x300/111827/00ff87?text=Cinema+Popcorn" : item.ImageUrl)"
+                                 class="card-img-top opacity-75"
+                                 style="height: 200px; object-fit: cover; transition: all 0.5s ease;"
+                                 alt="@item.Name">
+                        </div>
+
+                        <div class="card-body p-4 text-center d-flex flex-column">
+                            <h5 class="fw-bold text-white text-uppercase mb-2" style="letter-spacing: 1px;">@item.Name</h5>
+                            <p class="text-muted small mb-4 flex-grow-1" style="min-height: 40px;">
+                                @(item.Description?.Length > 60 ? item.Description.Substring(0, 57) + "..." : item.Description)
+                            </p>
+
+                            @* Nhóm nút thao tác bọc bằng Modal *@
+                            <div class="d-flex justify-content-center gap-2 pt-3" style="border-top: 1px solid rgba(255,255,255,0.05);">
+                                <button data-url="/Comboes/Edit/@item.Id" class="btn btn-sm btn-outline-info btn-trigger-modal" title="Sửa">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button data-url="/Comboes/Delete/@item.Id" class="btn btn-sm btn-outline-danger btn-trigger-modal" title="Xóa">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="col-12 text-center py-5">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-start border-5 ps-3 py-2" style="border-color: #00ff87 !important;">
+                        <i class="bi bi-cup-straw display-1 mb-3" style="color: rgba(0,255,135,0.3);"></i>
+                        <h4 class="text-white">Chưa có Combo nào trong thực đơn</h4>
+                        <p class="text-muted small">Nhấn nút <strong>"Tạo Combo mới"</strong> để thêm bắp nước vào hệ thống nhé!</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@* THÀNH PHẦN MODAL POPUP CHUNG CHO MODULE BẮP NƯỚC *@
+<div class="modal fade" id="comboModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content style-modal-cyber">
+            <div id="modalContentBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Reset nền */
+    body {
+        background-color: #0b0f19 !important;
+        color: #ffffff;
+    }
+
+    /* Giao diện Dark Card / Cyberpunk */
+    .style-dark-card {
+        background-color: rgba(17, 24, 39, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(10px);
+    }
+
+    .bg-cyber-warning {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24 !important;
+    }
+
+    .btn-cyber-success {
+        background: #00ff87 !important;
+        color: #000000 !important;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-cyber-success:hover {
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.6);
+            transform: translateY(-2px);
+        }
+
+    /* Hiệu ứng Card Combo */
+    .combo-card {
+        transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    }
+
+        .combo-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4) !important;
+            border-color: #00ff87 !important;
+        }
+
+    .combo-img-container {
+        overflow: hidden;
+    }
+
+    .combo-card:hover img {
+        transform: scale(1.08);
+        opacity: 1 !important;
+    }
+
+    /* Modal Styling */
+    .style-modal-cyber {
+        background-color: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 0 30px rgba(0,0,0,0.8) !important;
+        border-radius: 16px !important;
+    }
+
+    /* Animations & Links */
+    .slide-in-bottom {
+        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+    @@keyframes slideIn {
+        0%
+
+    {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    }
+
+    .back-dashboard-link {
+        color: #9ca3af;
+        transition: all 0.3s ease;
+    }
+
+        .back-dashboard-link:hover {
+            color: #fbbf24 !important;
+        }
+</style>
+
+<script>
+    // 🚀 Đưa hàm ra ngoài để form AJAX trong Modal gọi được
+    window.closeComboModal = function() {
+        var $el = $('#comboModal');
+        var instance = bootstrap.Modal.getInstance($el[0]);
+        if (instance) instance.hide();
+        else $el.modal('hide');
+
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('overflow', '');
+    };
+
+    (function () {
+        // 🚀 1. GỌI MODAL (Create, Edit, Delete)
+        $(document).off('click', '.btn-trigger-modal').on('click', '.btn-trigger-modal', function (e) {
+            e.preventDefault();
+            var targetUrl = $(this).data('url');
+            var $modalEl = $('#comboModal');
+
+            $('#modalContentBody').html('<div class="text-center py-5"><div class="spinner-border" style="color: #00ff87;"></div></div>');
+
+            var myModal = new bootstrap.Modal($modalEl[0]);
+            myModal.show();
+
+            $.get(targetUrl, function (data) {
+                $('#modalContentBody').html(data);
+            }).fail(function () {
+                $('#modalContentBody').html('<div class="p-4 text-center text-danger"><i class="bi bi-x-circle fs-1"></i><p>Lỗi tải form!</p></div>');
+            });
+        });
+
+        // 🚀 2. SUBMIT FORM TRONG MODAL
+        $(document).off('submit', '#modalContentBody form').on('submit', '#modalContentBody form', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var formData = new FormData(this);
+            $form.css('opacity', '0.5');
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(res) {
+                    var $res = $(res);
+                    // Lọc tìm cái div comboContainer bên trong kết quả trả về
+                    var $newContainer = $res.find('#comboContainer');
+
+                    if ($newContainer.length > 0) {
+                        $('#comboContainer').html($newContainer.html());
+                        window.closeComboModal(); // Gọi hàm global
+                        Swal.fire({
+                            title: 'Thành công!',
+                            text: 'Dữ liệu đã được cập nhật.',
+                            icon: 'success',
+                            background: '#111827', color: '#fff', confirmButtonColor: '#00ff87'
+                        });
+                    } else {
+                        $('#modalContentBody').html(res);
+                        $form.css('opacity', '1');
+                    }
+                },
+                error: function() {
+                    alert('Lỗi kết nối!');
+                    $form.css('opacity', '1');
+                }
+            });
+        });
+
+        // DỌN RÁC MODAL
+        $('#comboModal').on('hidden.bs.modal', function () {
+            $('#modalContentBody').html('');
+        });
+
+        // ── LIVE SEARCH KHÔNG TẢI TRANG LẠI (AJAX) ──
+        var searchTimer;
+        $(document).off('input', '#searchInput').on('input', '#searchInput', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                $('#searchComboForm').trigger('submit');
+            }, 600); // Đợi 600ms sau khi người dùng ngừng gõ
+        });
+
+        $(document).off('submit', '#searchComboForm').on('submit', '#searchComboForm', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var url = $form.attr('action') + '?' + $form.serialize();
+            var $box  = $('#comboContainer');
+            
+            $box.css('opacity', '0.3');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (data) {
+                    var $dummy = $('<div>').append($.parseHTML(data, document, true));
+                    var $inner = $dummy.find('#comboContainer');
+                    
+                    if ($inner.length > 0) {
+                        $box.html($inner.html());
+                    } else {
+                        $box.html(data); // Trả về partial chỉ chứa content bên trong
+                    }
+                    
+                    // Lấy lại focus (con trỏ chuột) vào ô tìm kiếm
+                    var currentVal = $('#searchInput').val();
+                    $('#searchInput').focus().val('').val(currentVal);
+
+                    $box.css('opacity', '1');
+                    
+                    window.history.pushState({path: url}, '', url);
+                },
+                error: function() {
+                    $box.css('opacity', '1');
+                }
+            });
+        });
+    })();
+</script>

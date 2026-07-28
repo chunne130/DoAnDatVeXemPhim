@@ -1,0 +1,265 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Cinema>
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                <i class="bi bi-buildings me-2"></i> HỆ THỐNG CỤM RẠP
+            </h4>
+            <p class="text-muted small m-0 mt-1">Danh sách các chi nhánh rạp đang vận hành</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="/AdminControllers/Index" class="btn btn-outline-secondary rounded-pill px-4 fw-bold ajax-link shadow-sm text-light" style="border-color: rgba(255,255,255,0.2);">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+
+            <a asp-action="Create" class="btn-action-pill ajax-link shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Thêm chi nhánh
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="cinema-card h-100 d-flex flex-column">
+                        <div class="card-top">
+                            <i class="bi bi-building-fill text-center d-block"></i>
+                            <span class="badge-active"><i class="bi bi-circle-fill me-1" style="font-size: 0.4rem;"></i> Đang HĐ</span>
+                        </div>
+
+                        <div class="card-body-custom flex-grow-1">
+                            <div class="cinema-name">@item.Name</div>
+
+                            <div class="mb-3">
+                                <span class="info-label">Địa chỉ</span>
+                                <span class="info-value">
+                                    <i class="bi bi-geo-alt-fill" style="color: #fbbf24;"></i> @item.Address
+                                </span>
+                            </div>
+
+                            <div class="mb-3">
+                                <span class="info-label">Hotline</span>
+                                <span class="info-value">
+                                    <i class="bi bi-telephone-fill" style="color: #00ff87;"></i> @item.Hotline
+                                </span>
+                            </div>
+
+                            <div class="info-row">
+                                <div>
+                                    <span class="info-label">Quận/Huyện</span>
+                                    <span class="info-value text-white fw-bold" style="font-size: 0.85rem;">@item.District</span>
+                                </div>
+                                <div>
+                                    <span class="info-label">Thành phố</span>
+                                    <span class="city-badge">
+                                        <i class="bi bi-map-fill"></i> @item.City
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer-custom mt-auto">
+                            <div class="action-group">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-action edit ajax-link" title="Chỉnh sửa">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-action view ajax-link" title="Chi tiết">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn-action del ajax-link" title="Xóa">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                            <span class="card-id">ID: #@item.Id</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-buildings text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                <p class="text-muted fw-bold mb-0">Hệ thống chưa có cụm rạp nào.</p>
+                <p class="text-muted small">Hãy thêm chi nhánh đầu tiên ngay nhé!</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .slide-in-bottom {
+        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+    @@keyframes slideIn {
+        0%
+
+    {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    }
+
+    /* CSS Cards Dark Neon */
+    .cinema-card {
+        background: rgba(17, 24, 39, 0.6);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+
+        .cinema-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0,255,135,0.3);
+            box-shadow: 0 10px 30px rgba(0,255,135,0.1);
+            background: rgba(17, 24, 39, 0.8);
+        }
+
+    .card-top {
+        background: rgba(0,0,0,0.3);
+        padding: 24px;
+        position: relative;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+        .card-top i.bi-building-fill {
+            font-size: 2.5rem;
+            color: #00ff87;
+            text-shadow: 0 0 15px rgba(0,255,135,0.3);
+        }
+
+    .badge-active {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(0,255,135,0.1);
+        color: #00ff87;
+        border: 1px solid rgba(0,255,135,0.3);
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .card-body-custom {
+        padding: 20px;
+    }
+
+    .cinema-name {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #ffffff;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+        letter-spacing: 0.5px;
+    }
+
+    .info-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        color: #6b7280;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .info-value {
+        font-size: 0.85rem;
+        color: #d1d5db;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px dashed rgba(255,255,255,0.1);
+    }
+
+    .city-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(96,165,250,0.1);
+        border: 1px solid rgba(96,165,250,0.2);
+        color: #60a5fa;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+    }
+
+    .card-footer-custom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 20px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        background: rgba(0,0,0,0.2);
+    }
+
+    .action-group {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.02);
+        color: #9ca3af;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .btn-action.edit:hover {
+            border-color: #fbbf24;
+            color: #fbbf24;
+            background: rgba(251,191,36,0.1);
+        }
+
+        .btn-action.view:hover {
+            border-color: #60a5fa;
+            color: #60a5fa;
+            background: rgba(96,165,250,0.1);
+        }
+
+        .btn-action.del:hover {
+            border-color: #ef4444;
+            color: #ef4444;
+            background: rgba(239,68,68,0.1);
+        }
+
+    .card-id {
+        font-size: 0.75rem;
+        color: #6b7280;
+        font-weight: 600;
+    }
+</style>

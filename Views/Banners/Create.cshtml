@@ -1,0 +1,113 @@
+﻿@model DoAnDatVeXemPhim.Models.Banner
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom" style="max-width: 800px; margin: 0 auto;">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div class="page-header-left d-flex align-items-center gap-3">
+            <button onclick="$('.sidebar-link[href=\'/Banners/Index\']').click()" class="btn btn-outline-secondary rounded-circle" style="width: 40px; height: 40px; padding: 0;">
+                <i class="bi bi-arrow-left"></i>
+            </button>
+            <div>
+                <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87;">
+                    THÊM BANNER MỚI
+                </h4>
+            </div>
+        </div>
+    </div>
+
+    <form id="bannerForm" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        
+        <div class="row g-4">
+            <div class="col-md-12">
+                <label class="form-label text-white small fw-bold">Tiêu đề Banner <span class="text-danger">*</span></label>
+                <input asp-for="Title" class="form-control" style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); color: white;" required />
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label text-white small fw-bold">Link đích (Khi bấm vào banner)</label>
+                <input asp-for="TargetUrl" class="form-control" placeholder="https://..." style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); color: white;" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-white small fw-bold">Ngày bắt đầu chạy <span class="text-danger">*</span></label>
+                <input asp-for="StartDate" class="form-control" type="datetime-local" style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); color: white; color-scheme: dark;" required />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-white small fw-bold">Ngày kết thúc chạy <span class="text-danger">*</span></label>
+                <input asp-for="EndDate" class="form-control" type="datetime-local" style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); color: white; color-scheme: dark;" required />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-white small fw-bold">Thứ tự hiển thị (Càng nhỏ càng lên trước)</label>
+                <input asp-for="DisplayOrder" type="number" class="form-control" style="background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); color: white;" value="0" />
+            </div>
+
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch fs-5 mb-1">
+                    <input class="form-check-input" type="checkbox" role="switch" asp-for="IsActive" checked style="background-color: #00ff87; border-color: #00ff87;">
+                    <label class="form-check-label text-white ms-2" style="font-size: 1rem;">Kích hoạt ngay</label>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <label class="form-label text-white small fw-bold">Hình ảnh Banner <span class="text-danger">*</span></label>
+                <div class="card bg-dark border-secondary p-4 text-center" style="border-style: dashed !important; cursor: pointer;" onclick="document.getElementById('imageFile').click()">
+                    <i class="bi bi-cloud-arrow-up display-4 text-muted mb-2"></i>
+                    <p class="mb-0 text-muted">Bấm vào đây để chọn ảnh (Tỉ lệ khuyến nghị 16:9)</p>
+                    <input type="file" name="imageFile" id="imageFile" style="display: none;" accept="image/*" required onchange="previewImage(event)" />
+                    <img id="preview" style="max-width: 100%; max-height: 300px; display: none; margin-top: 15px; border-radius: 8px;" />
+                </div>
+            </div>
+
+            <div class="col-12 mt-5 text-end">
+                <button type="button" class="btn btn-action-pill px-5 py-2 fs-6" onclick="submitBannerForm()">
+                    <i class="bi bi-save me-2"></i> LƯU BANNER
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function(){
+            var output = document.getElementById('preview');
+            output.src = reader.result;
+            output.style.display = 'inline-block';
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function submitBannerForm() {
+        var form = $('#bannerForm')[0];
+        
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        var formData = new FormData(form);
+
+        $.ajax({
+            url: '/Banners/Create',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (result) {
+                // Return Html của Index nếu thành công
+                $('#admin-dynamic-content').html(result);
+            },
+            error: function () {
+                alert('Có lỗi xảy ra khi lưu banner.');
+            }
+        });
+    }
+</script>
+

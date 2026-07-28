@@ -1,0 +1,253 @@
+﻿@model DoAnDatVeXemPhim.Models.Combo
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+    bool isEdit = Model != null && Model.Id > 0;
+    string actionName = isEdit ? "Edit" : "Create";
+}
+
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .form-wrap {
+        background: #0f1f13;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px;
+        background: rgba(0,0,0,0.3);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .form-header-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .header-accent {
+        width: 4px;
+        height: 22px;
+        background: @(isEdit ? "#fbbf24" : "#00ff87");
+        border-radius: 2px;
+    }
+
+    .form-header h5 {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        margin: 0;
+        letter-spacing: 0.3px;
+    }
+
+    .btn-close-modal {
+        background: transparent;
+        border: none;
+        color: #6b8c78;
+        font-size: 1.1rem;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+        .btn-close-modal:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+        }
+
+    .form-body {
+        padding: 22px 24px 20px;
+    }
+
+    /* Field */
+    .field-label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d7a52;
+        margin-bottom: 6px;
+    }
+
+    .input-dark {
+        width: 100%;
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 8px;
+        outline: none;
+        color: #fff;
+        font-size: 0.85rem;
+        font-family: 'Inter', sans-serif;
+        padding: 10px 14px;
+        transition: all 0.2s;
+    }
+
+        .input-dark:focus {
+            border-color: @(isEdit ? "#fbbf24" : "#00ff87");
+            box-shadow: 0 0 0 3px @(isEdit ? "rgba(251,191,36,0.12)" : "rgba(0,255,135,0.12)");
+        }
+
+        .input-dark::placeholder {
+            color: #3d6650;
+        }
+
+    textarea.input-dark {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    /* Image preview */
+    .img-preview-wrap {
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .img-preview-wrap img {
+            width: 100%;
+            max-height: 110px;
+            object-fit: cover;
+            border-radius: 7px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .img-preview-wrap .input-dark {
+            font-size: 0.78rem;
+            padding: 8px 12px;
+        }
+
+    /* Footer buttons */
+    .form-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding-top: 18px;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        margin-top: 18px;
+    }
+
+    .btn-cancel {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #9ca3af;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 9px 18px;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-cancel:hover {
+            border-color: rgba(255,255,255,0.28);
+            color: #fff;
+        }
+
+    .btn-save {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: @(isEdit ? "#fbbf24" : "#00ff87");
+        color: @(isEdit ? "#1a0f00" : "#022c22");
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 9px 22px;
+        border-radius: 7px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .btn-save:hover {
+            background: @(isEdit ? "#f59e0b" : "#00e676");
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px @(isEdit ? "rgba(251,191,36,0.3)" : "rgba(0,255,135,0.3)");
+        }
+</style>
+
+<div class="form-wrap">
+    <div class="form-header">
+        <div class="form-header-title">
+            <div class="header-accent"></div>
+            <h5>@(isEdit ? "Cập nhật Combo" : "Tạo Combo mới")</h5>
+        </div>
+        <button type="button" class="btn-close-modal" onclick="window.closeComboModal()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <div class="form-body">
+        <form asp-action="@actionName" method="post" id="comboForm">
+            @if (isEdit)
+            {
+                <input type="hidden" asp-for="Id" />
+            }
+
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <div class="mb-3">
+                        <label class="field-label"><i class="bi bi-cup-straw me-1"></i> Tên Combo *</label>
+                        <input asp-for="Name" class="input-dark" placeholder="VD: Combo Couple, Combo Solo..." required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="field-label"><i class="bi bi-cash me-1"></i> Giá bán (VNĐ) *</label>
+                        <input asp-for="Price" class="input-dark" type="number" min="0" placeholder="VD: 75000" required />
+                    </div>
+                    <div>
+                        <label class="field-label"><i class="bi bi-card-text me-1"></i> Mô tả</label>
+                        <textarea asp-for="Description" class="input-dark" placeholder="VD: 1 Bắp lớn + 2 Nước lớn..."></textarea>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <label class="field-label"><i class="bi bi-image me-1"></i> Ảnh minh họa</label>
+                    <div class="img-preview-wrap">
+                        <img id="imgPreview"
+                             src="@(string.IsNullOrEmpty(Model?.ImageUrl) ? "https://via.placeholder.com/300x150/0d1f10/00ff87?text=Combo" : Model.ImageUrl)"
+                             alt="Preview" />
+                        <input asp-for="ImageUrl" id="imgInput" class="input-dark"
+                               placeholder="Dán link ảnh vào đây..." />
+                        <span style="font-size:0.65rem;color:#3d6650;">Dán URL ảnh để xem trước</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-footer">
+                <button type="button" class="btn-cancel" onclick="window.closeComboModal()">
+                    <i class="bi bi-x"></i> Hủy
+                </button>
+                <button type="submit" class="btn-save">
+                    <i class="bi bi-@(isEdit ? "floppy-fill" : "send-fill")"></i>
+                    @(isEdit ? "Lưu thay đổi" : "Tạo Combo")
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('imgInput').addEventListener('input', function () {
+        var src = this.value;
+        if (src) document.getElementById('imgPreview').src = src;
+    });
+</script>
+

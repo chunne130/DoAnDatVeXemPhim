@@ -1,0 +1,540 @@
+@model IEnumerable<DoAnDatVeXemPhim.Models.Combo>
+@{
+    ViewData["Title"] = "Chọn bắp nước - Cinema Hub";
+}
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-image: radial-gradient(ellipse at 0% 100%, rgba(0,160,70,0.55) 0%, rgba(0,80,30,0.3) 30%, transparent 55%), radial-gradient(ellipse at 100% 0%, rgba(0,160,70,0.45) 0%, rgba(0,80,30,0.25) 28%, transparent 50%);
+        background-color: #010a04;
+        background-attachment: fixed;
+        color: #fff;
+    }
+
+    .footer-custom {
+        padding-bottom: 100px !important;
+    }
+
+    .page-wrap {
+        padding-top: 28px;
+        padding-bottom: 20px;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .accent-bar {
+        width: 4px;
+        height: 28px;
+        background: #fbbf24;
+        border-radius: 2px;
+    }
+
+    .page-title {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+    }
+
+    .page-sub {
+        font-size: 0.75rem;
+        color: #4b6b58;
+        margin: 2px 0 0;
+    }
+
+    /* ── COMBO CARD ── */
+    .combo-card {
+        background: rgba(10,22,13,0.7);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        transition: all 0.25s ease;
+        height: 100%;
+    }
+
+        .combo-card:hover {
+            border-color: rgba(251,191,36,0.35);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 28px rgba(251,191,36,0.1);
+        }
+
+    .combo-img {
+        width: 110px;
+        height: 110px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .combo-body {
+        padding: 14px 16px;
+        flex: 1;
+    }
+
+    .combo-name {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.2px;
+    }
+
+    .combo-desc {
+        font-size: 0.72rem;
+        color: #4b6b58;
+        margin-bottom: 12px;
+        line-height: 1.45;
+    }
+
+    .combo-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .combo-price {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #fbbf24;
+        white-space: nowrap;
+    }
+
+    /* Qty control */
+    .qty-control {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .qty-btn {
+        width: 28px;
+        height: 28px;
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 6px;
+        color: #9ca3af;
+        font-size: 1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+        .qty-btn:hover {
+            background: #1a3320;
+            color: #fff;
+            border-color: #00ff87;
+        }
+
+        .qty-btn.active {
+            background: #00ff87;
+            color: #022c22;
+            border-color: #00ff87;
+        }
+
+    .qty-input {
+        width: 36px;
+        text-align: center;
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 6px;
+        color: #fff;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 4px 0;
+        outline: none;
+    }
+
+    /* ── FOOTER BAR ── */
+    .booking-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: rgba(5,15,7,0.95);
+        backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(251,191,36,0.2);
+        padding: 12px 0;
+    }
+
+    .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .footer-combos {
+        flex: 1;
+    }
+
+    .footer-label {
+        font-size: 0.68rem;
+        color: #4b6b58;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .footer-names {
+        font-size: 0.78rem;
+        color: #c8e6d0;
+        font-weight: 500;
+    }
+
+    .footer-total-wrap {
+        text-align: right;
+    }
+
+    .footer-total-label {
+        font-size: 0.68rem;
+        color: #4b6b58;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .footer-total {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #00ff87;
+        line-height: 1;
+    }
+
+    .btn-payment {
+        background: #00ff87;
+        color: #022c22;
+        font-size: 0.88rem;
+        font-weight: 700;
+        padding: 12px 28px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        flex-shrink: 0;
+    }
+
+        .btn-payment:hover {
+            background: #00e676;
+            box-shadow: 0 5px 16px rgba(0,255,135,0.4);
+            transform: translateY(-1px);
+        }
+
+    .skip-link {
+        font-size: 0.72rem;
+        color: #4b6b58;
+        text-decoration: none;
+        text-align: center;
+        display: block;
+        margin-top: 4px;
+        transition: color 0.2s;
+    }
+
+        .skip-link:hover {
+            color: #9ca3af;
+        }
+
+        @@media (max-width: 576px) {
+            .footer-inner {
+                gap: 8px;
+            }
+            .btn-payment {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+            .summary-label {
+                font-size: 0.65rem;
+            }
+            .summary-total {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* ── APRIORI RECOMMENDATIONS ANIMATIONS ── */
+        @@keyframes fadeInSlide {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.15);
+                opacity: 0.8;
+            }
+        }
+
+        .animate-pulse {
+            display: inline-block;
+            animation: pulse 1.8s infinite ease-in-out;
+        }
+
+        #apriori-recommendations {
+            animation: fadeInSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        #recommendations-container .combo-card {
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(251, 191, 36, 0.15) !important;
+        }
+
+        #recommendations-container .combo-card:hover {
+            border-color: #fbbf24 !important;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.15) !important;
+            background: rgba(10, 22, 13, 0.95) !important;
+        }
+
+        .btn-add-recommend {
+            transition: all 0.2s ease !important;
+        }
+
+        .btn-add-recommend:hover {
+            background: #fbbf24 !important;
+            color: #022c22 !important;
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+        }
+</style>
+
+<div class="container-xl page-wrap">
+
+    <div class="page-header">
+        <div class="accent-bar"></div>
+        <div>
+            <h2 class="page-title">Chọn Bắp & Nước</h2>
+            <p class="page-sub">Thêm combo để trải nghiệm rạp phim trọn vẹn hơn</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="combo-card">
+                    <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "https://via.placeholder.com/110x110/0d1f10/fbbf24?text=Combo" : item.ImageUrl)"
+                         class="combo-img" alt="@item.Name" />
+                    <div class="combo-body">
+                        <div class="combo-name">@item.Name</div>
+                        <div class="combo-desc">@item.Description</div>
+                        <div class="combo-footer">
+                            <span class="combo-price">@item.Price.ToString("N0")đ</span>
+                            <div class="qty-control">
+                                <button class="qty-btn btn-minus" type="button">−</button>
+                                <input class="qty-input combo-qty" type="text" value="0" readonly
+                                       data-id="@item.Id" data-price="@item.Price" data-name="@item.Name" />
+                                <button class="qty-btn btn-plus" type="button">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Hộp gợi ý thông minh Apriori -->
+    <div id="apriori-recommendations" class="mt-5 p-4" style="display: none; background: rgba(251, 191, 36, 0.04); border: 1px dashed rgba(251, 191, 36, 0.35); border-radius: 14px; box-shadow: 0 0 20px rgba(251, 191, 36, 0.05);">
+        <h5 class="text-warning fw-bold mb-3 d-flex align-items-center gap-2" style="font-size: 0.95rem;">
+            <i class="bi bi-sparkles text-warning animate-pulse"></i> CÓ THỂ BẠN CŨNG THÍCH (GỢI Ý MUA KÈM)
+        </h5>
+        <div class="row g-3" id="recommendations-container">
+            <!-- Danh sách các combo được gợi ý động sẽ chèn vào đây qua JS -->
+        </div>
+    </div>
+
+</div>
+
+@* ── FOOTER BAR ── *@
+<div class="booking-footer">
+    <div class="container-xl">
+        <div class="footer-inner">
+            <div class="footer-combos">
+                <div class="footer-label">Combo đã chọn</div>
+                <div class="footer-names" id="selectedCombosDisplay">Chưa chọn combo nào</div>
+            </div>
+            <div class="footer-total-wrap">
+                <div class="footer-total-label">Tổng (Vé + Combo)</div>
+                <div class="footer-total" id="finalPriceDisplay">0đ</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;">
+                <button class="btn-payment" id="btnToPayment">
+                    <i class="bi bi-credit-card-fill"></i> Thanh toán
+                </button>
+                <a href="#" class="skip-link" id="btnSkip">Bỏ qua, không chọn combo</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const seatData    = JSON.parse('@Html.Raw(ViewBag.SelectedSeats)');
+        let ticketTotal   = @(ViewBag.TicketTotal ?? 0);
+        let comboTotal    = 0;
+        let selectedCombos = [];
+
+        function updateUI() {
+            document.getElementById('finalPriceDisplay').innerText =
+                (ticketTotal + comboTotal).toLocaleString('vi-VN') + 'đ';
+            const names = selectedCombos.filter(c => c.qty > 0).map(c => `${c.qty}x ${c.name}`).join(', ');
+            document.getElementById('selectedCombosDisplay').innerText = names || 'Chưa chọn combo nào';
+        }
+
+        function updateComboData(input) {
+            const id    = input.dataset.id;
+            const price = parseFloat(input.dataset.price);
+            const name  = input.dataset.name;
+            const qty   = parseInt(input.value);
+            const idx   = selectedCombos.findIndex(c => c.id === id);
+            if (idx > -1) selectedCombos[idx].qty = qty;
+            else selectedCombos.push({ id, name, price, qty });
+            comboTotal = selectedCombos.reduce((sum, c) => sum + c.price * c.qty, 0);
+            updateUI();
+            fetchRecommendations();
+        }
+
+        function fetchRecommendations() {
+            // Lọc ra các ID của các combo có số lượng > 0
+            const selectedIds = selectedCombos.filter(c => c.qty > 0).map(c => parseInt(c.id));
+            
+            if (selectedIds.length === 0) {
+                document.getElementById('apriori-recommendations').style.display = 'none';
+                return;
+            }
+
+            fetch('/Booking/GetComboRecommendations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(selectedIds)
+            })
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('recommendations-container');
+                const section = document.getElementById('apriori-recommendations');
+                
+                if (!data || data.length === 0) {
+                    section.style.display = 'none';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.forEach(item => {
+                    const imgUrl = item.imageUrl || 'https://via.placeholder.com/110x110/0d1f10/fbbf24?text=Combo';
+                    const cardHtml = `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="combo-card" style="border-color: rgba(251, 191, 36, 0.2); background: rgba(10, 22, 13, 0.9);">
+                                <img src="${imgUrl}" class="combo-img" alt="${item.name}" style="width: 90px; height: 90px;" />
+                                <div class="combo-body" style="padding: 10px 12px;">
+                                    <div class="combo-name" style="font-size: 0.78rem; color: #fbbf24; margin-bottom: 2px;">${item.name}</div>
+                                    <div class="combo-desc" style="font-size: 0.65rem; margin-bottom: 8px; line-height: 1.3;">${item.description || ''}</div>
+                                    <div class="combo-footer">
+                                        <span class="combo-price" style="font-size: 0.85rem;">${item.price.toLocaleString('vi-VN')}đ</span>
+                                        <button class="qty-btn btn-add-recommend active" data-id="${item.id}" type="button" style="width: auto; padding: 4px 10px; font-size: 0.72rem;">
+                                            + Thêm nhanh
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', cardHtml);
+                });
+
+                // Gán sự kiện click cho các nút thêm nhanh
+                document.querySelectorAll('.btn-add-recommend').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const targetId = this.dataset.id;
+                        const input = document.querySelector(`.combo-qty[data-id="${targetId}"]`);
+                        if (input) {
+                            input.value = parseInt(input.value) + 1;
+                            updateComboData(input);
+                        }
+                    });
+                });
+
+                section.style.display = 'block';
+            })
+            .catch(err => {
+                console.error("Error loading recommendations: ", err);
+                document.getElementById('apriori-recommendations').style.display = 'none';
+            });
+        }
+
+        document.querySelectorAll('.btn-plus').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = this.parentElement.querySelector('.combo-qty');
+                input.value = parseInt(input.value) + 1;
+                updateComboData(input);
+            });
+        });
+
+        document.querySelectorAll('.btn-minus').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const input = this.parentElement.querySelector('.combo-qty');
+                input.value = Math.max(0, parseInt(input.value) - 1);
+                updateComboData(input);
+            });
+        });
+
+        function submitForm(combos, total) {
+            const form = document.createElement('form');
+            form.method = 'POST'; form.action = '/Booking/ConfirmCombo';
+            const i1 = document.createElement('input');
+            i1.type = 'hidden'; i1.name = 'selectedCombosJson';
+            i1.value = JSON.stringify(combos);
+            const i2 = document.createElement('input');
+            i2.type = 'hidden'; i2.name = 'finalTotal';
+            i2.value = total;
+            form.appendChild(i1); form.appendChild(i2);
+            document.body.appendChild(form); form.submit();
+        }
+
+        document.getElementById('btnToPayment').addEventListener('click', function () {
+            submitForm(selectedCombos.filter(c => c.qty > 0), ticketTotal + comboTotal);
+        });
+
+        document.getElementById('btnSkip').addEventListener('click', function (e) {
+            e.preventDefault();
+            submitForm([], ticketTotal);
+        });
+
+        updateUI();
+    </script>
+}

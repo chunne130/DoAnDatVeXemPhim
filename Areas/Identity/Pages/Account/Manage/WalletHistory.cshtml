@@ -1,0 +1,172 @@
+﻿@page
+@model WalletHistoryModel
+@{
+    ViewData["Title"] = "Lịch sử giao dịch Ví";
+    ViewData["ActivePage"] = "WalletHistory"; // Để nav active nếu có
+    Layout = "/Views/Shared/_Layout.cshtml"; // Sử dụng Layout chung
+}
+
+<div class="container-xl mt-5 pt-4 pb-5" style="font-family: 'Inter', sans-serif;">
+    @* --- HEADER --- *@
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white text-uppercase mb-1" style="letter-spacing: 4px;">
+            LỊCH SỬ <span style="color: #0dcaf0; text-shadow: 0 0 15px rgba(13, 202, 240, 0.4);">VÍ CINEMA</span>
+        </h2>
+        <div class="d-flex justify-content-center align-items-center mt-3">
+            <div style="width: 40px; height: 3px; background: rgba(13, 202, 240, 0.5); border-radius: 2px;"></div>
+            <p class="small fw-bold mb-0 mx-3 text-uppercase" style="letter-spacing: 1px; color: #9ca3af;">
+                Chi tiết biến động số dư
+            </p>
+            <div style="width: 40px; height: 3px; background: rgba(13, 202, 240, 0.5); border-radius: 2px;"></div>
+        </div>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        @* Sidebar Menu bên trái *@
+        <div class="col-lg-3 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 sidebar-glassmorphism" style="border-radius: 16px !important;">
+                <div class="card-body p-0">
+                    <p class="small fw-bold mb-3 px-3 text-uppercase" style="color: #6b7280; letter-spacing: 1px;">Danh mục</p>
+                    <partial name="_ManageNav" />
+
+                    <a href="/Identity/Account/Manage/WalletHistory" class="nav-link text-decoration-none mt-2 d-flex align-items-center active-neon-blue" style="font-weight: 600; padding: 10px 16px; border-radius: 8px; transition: all 0.25s ease;">
+                        <i class="bi bi-clock-history me-3" style="font-size: 1.15rem;"></i> Lịch sử Ví
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* Content bên phải *@
+        <div class="col-lg-8 col-md-8">
+
+            @* Thẻ Tổng quan số dư *@
+            <div class="card border-0 rounded-4 overflow-hidden mb-4 shadow-lg wallet-card-hover" style="background: rgba(13, 202, 240, 0.08); border: 1px solid rgba(13, 202, 240, 0.3) !important; border-radius: 16px !important;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-info bg-opacity-25 text-info rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 50px; height: 50px;">
+                            <i class="bi bi-wallet2 fs-4"></i>
+                        </div>
+                        <div>
+                            <span class="text-uppercase fw-bold text-info opacity-75" style="font-size: 0.75rem; letter-spacing: 0.1em;">SỐ DƯ HIỆN TẠI</span>
+                            <div class="d-flex align-items-baseline gap-1">
+                                <h3 class="fw-black mb-0" style="color: #0dcaf0; font-size: 1.8rem; text-shadow: 0 0 10px rgba(13, 202, 240, 0.3);">
+                                    @string.Format("{0:N0}", Model.CurrentBalance)
+                                </h3>
+                                <span class="fw-bold" style="color: #0dcaf0; font-size: 0.9rem;">VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="/Identity/Account/Manage" class="btn btn-outline-secondary rounded-pill btn-sm px-4 py-2 text-uppercase fw-bold">
+                        <i class="bi bi-arrow-left"></i> Về Hồ Sơ
+                    </a>
+                </div>
+            </div>
+
+            @* Bảng Sao Kê Kính Mờ *@
+            <div class="identity-content-wrapper p-4 rounded-4 shadow-sm" style="background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05);">
+                <h5 class="fw-bold mb-4 text-info text-uppercase border-bottom border-secondary pb-3" style="letter-spacing: 1px;">Sao kê giao dịch</h5>
+
+                @if (Model.Transactions != null && Model.Transactions.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-cyberpunk align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Loại giao dịch</th>
+                                    <th>Số tiền</th>
+                                    <th>Nội dung</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tx in Model.Transactions)
+                                {
+                                    <tr>
+                                        <td class="text-muted small fw-semibold">
+                                            @tx.CreatedAt.ToString("HH:mm")<br />
+                                            <span style="font-size: 0.7rem;">@tx.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                        </td>
+                                        <td>
+                                            @if (tx.Type == "REFUND")
+                                            {
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success"><i class="bi bi-arrow-down-left-circle me-1"></i> HOÀN TIỀN</span>
+                                            }
+                                            else if (tx.Type == "PAYMENT")
+                                            {
+                                                <span class="badge bg-danger bg-opacity-25 text-danger border border-danger"><i class="bi bi-arrow-up-right-circle me-1"></i> THANH TOÁN</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info bg-opacity-25 text-info border border-info"><i class="bi bi-plus-circle me-1"></i> NẠP TIỀN</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (tx.Type == "REFUND" || tx.Type == "TOPUP")
+                                            {
+                                                <span class="fw-bold text-success">+@string.Format("{0:N0}", tx.Amount)đ</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="fw-bold text-danger">-@string.Format("{0:N0}", tx.Amount)đ</span>
+                                            }
+                                        </td>
+                                        <td class="text-light small">@tx.Description</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5 opacity-50">
+                        <i class="bi bi-journal-x display-3 text-muted mb-3 d-block"></i>
+                        <p class="text-muted text-uppercase fw-bold letter-spacing-1">Chưa có giao dịch nào!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* CSS cho Sidebar và Wrapper giống trang cũ */
+    .sidebar-glassmorphism {
+        background: rgba(17, 24, 39, 0.6) !important;
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .active-neon-blue {
+        background: rgba(13, 202, 240, 0.1) !important;
+        color: #0dcaf0 !important;
+        box-shadow: 0 4px 15px rgba(13, 202, 240, 0.05);
+        border: 1px solid rgba(13, 202, 240, 0.3);
+    }
+
+    /* Style cho Bảng Cyberpunk */
+    .table-cyberpunk thead th {
+        background: rgba(255, 255, 255, 0.03);
+        color: #9ca3af;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 15px 10px;
+    }
+
+    .table-cyberpunk tbody tr {
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        transition: background 0.2s ease;
+    }
+
+        .table-cyberpunk tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+    .table-cyberpunk td {
+        padding: 15px 10px;
+        color: #e5e7eb;
+        background: transparent !important;
+    }
+</style>

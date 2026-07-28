@@ -1,0 +1,97 @@
+@page
+@model ExternalLoginsModel
+@{
+    ViewData["Title"] = "LIÊN KẾT TÀI KHOẢN NGOÀI";
+    ViewData["ActivePage"] = ManageNavPages.ExternalLogins;
+}
+
+<div class="card bg-transparent border-0">
+    <div class="card-header bg-transparent border-bottom border-secondary mb-3 pb-2">
+        <h6 class="mb-0 fw-bold text-uppercase" style="color: #00ff87; letter-spacing: 1px;">
+            <i class="bi bi-link-45deg me-2"></i> TÀI KHOẢN ĐÃ LIÊN KẾT
+        </h6>
+    </div>
+
+    <div class="card-body p-0">
+        <partial name="_StatusMessage" for="StatusMessage" />
+        
+        @if (Model.CurrentLogins?.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle text-white" style="background: #0d1f10; border-radius: 8px; overflow: hidden;">
+                    <tbody>
+                        @foreach (var login in Model.CurrentLogins)
+                        {
+                            <tr style="border-bottom: 1px solid #1a3320;">
+                                <td id="@($"login-provider-{login.LoginProvider}")" class="py-3 px-4 fw-bold" style="color: #e0e6e4;">
+                                    @if (login.ProviderDisplayName.Contains("Google"))
+                                    {
+                                        <i class="bi bi-google me-2 text-danger"></i>
+                                    }
+                                    else if (login.ProviderDisplayName.Contains("Facebook"))
+                                    {
+                                        <i class="bi bi-facebook me-2 text-primary"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-person-circle me-2 text-success"></i>
+                                    }
+                                    @login.ProviderDisplayName
+                                </td>
+                                <td class="text-end py-3 px-4">
+                                    @if (Model.ShowRemoveButton)
+                                    {
+                                        <form id="@($"remove-login-{login.LoginProvider}")" asp-page-handler="RemoveLogin" method="post" class="d-inline">
+                                            <input asp-for="@login.LoginProvider" name="LoginProvider" type="hidden" />
+                                            <input asp-for="@login.ProviderKey" name="ProviderKey" type="hidden" />
+                                            <button type="submit" class="btn btn-sm text-uppercase fw-bold" 
+                                                    style="background: transparent; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; padding: 4px 12px;"
+                                                    title="Gỡ bỏ liên kết @login.ProviderDisplayName khỏi tài khoản của bạn">
+                                                Gỡ bỏ
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Không thể gỡ</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted fst-italic">Bạn chưa liên kết tài khoản mạng xã hội nào.</p>
+        }
+
+        @if (Model.OtherLogins?.Count > 0)
+        {
+            <div class="mt-5">
+                <h6 class="fw-bold text-uppercase" style="color: #9ca3af; letter-spacing: 0.5px;">Thêm liên kết mới</h6>
+                <hr style="border-color: rgba(255,255,255,0.1);" />
+                <form id="link-login-form" asp-page-handler="LinkLogin" method="post" class="form-horizontal">
+                    <div id="socialLoginList" class="d-flex flex-wrap gap-3">
+                        @foreach (var provider in Model.OtherLogins)
+                        {
+                            <button id="@($"link-login-button-{provider.Name}")" type="submit" class="btn text-white fw-bold d-flex align-items-center gap-2" name="provider" value="@provider.Name" title="Đăng nhập bằng @provider.DisplayName"
+                                    style="background: #1a3320; border: 1px solid rgba(0, 255, 135, 0.2); border-radius: 8px; padding: 8px 20px;">
+                                @if (provider.DisplayName.Contains("Google"))
+                                {
+                                    <i class="bi bi-google text-danger"></i>
+                                }
+                                else if (provider.DisplayName.Contains("Facebook"))
+                                {
+                                    <i class="bi bi-facebook text-primary"></i>
+                                }
+                                @provider.DisplayName
+                            </button>
+                        }
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+</div>

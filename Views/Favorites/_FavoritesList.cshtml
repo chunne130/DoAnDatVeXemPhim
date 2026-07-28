@@ -1,0 +1,40 @@
+﻿@using DoAnDatVeXemPhim.Models
+@model IEnumerable<Movie>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row row-cols-2 row-cols-md-4 g-4" id="favorites-grid">
+        @foreach (var item in Model)
+        {
+            <div class="col" id="fav-item-@item.Id">
+                <div class="movie-card">
+                    <div class="poster-container shadow">
+                        <button class="fav-toggle-btn" onclick="removeFavorite(@item.Id)" title="Bỏ yêu thích">
+                            <i class="bi bi-heart-fill"></i>
+                        </button>
+                        <img src="@item.PosterUrl" class="img-fluid w-100"
+                             style="aspect-ratio:2/3;object-fit:cover;display:block;" alt="@item.Title">
+                        <div class="movie-overlay">
+                            <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })"
+                               class="btn-overlay-action btn-overlay-book">Đặt vé</a>
+                            <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })"
+                               class="btn-overlay-action btn-overlay-detail">Chi tiết</a>
+                        </div>
+                    </div>
+                    <div class="movie-title-text">@item.Title</div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <i class="bi bi-heart"></i>
+        <h4>Bạn chưa có phim yêu thích nào</h4>
+        <p>Nhấn vào biểu tượng trái tim trên các phim bạn thích để lưu vào đây nhé!</p>
+        <a href="@Url.Action("Index", "Home")" class="btn-browse">
+            <i class="bi bi-film"></i> Khám phá phim ngay
+        </a>
+    </div>
+}

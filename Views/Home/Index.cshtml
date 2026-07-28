@@ -1,0 +1,1008 @@
+@using DoAnDatVeXemPhim.Models
+@model IEnumerable<Movie>
+
+@{
+    ViewData["Title"] = "Trang chủ - Cinema Hub";
+}
+
+@* 🚀 GIỮ NGUYÊN: Hàm Helper tự động giải thích và bọc badge tuổi *@
+@functions {
+    public Microsoft.AspNetCore.Html.IHtmlContent RenderAgeBadge(string age)
+    {
+        if (string.IsNullOrEmpty(age)) return Microsoft.AspNetCore.Html.HtmlString.Empty;
+
+        string bgStyle = age switch
+        {
+            "P" => "background-color: #00ff87; color: #022c22; box-shadow: 0 0 12px rgba(0, 255, 135, 0.6); text-shadow: 0 0 2px rgba(0, 255, 135, 0.3);",
+            "K" => "background-color: #0dcaf0; color: #000000; box-shadow: 0 0 12px rgba(13, 202, 240, 0.6);",
+            "T13" => "background-color: #fbbf24; color: #1a0f00; box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);",
+            "T16" => "background-color: #f97316; color: #ffffff; box-shadow: 0 0 12px rgba(249, 115, 22, 0.6);",
+            "T18" => "background-color: #ef4444; color: #ffffff; box-shadow: 0 0 12px rgba(239, 68, 68, 0.7); text-shadow: 0 0 3px rgba(239, 68, 68, 0.5);",
+            _ => "background-color: #6b7280; color: #ffffff;"
+        };
+
+        string text = age switch
+        {
+            "P" => "P - Mọi độ tuổi",
+            "K" => "K - Dưới 13",
+            "T13" => "T13 - Từ 13+",
+            "T16" => "T16 - Từ 16+",
+            "T18" => "T18 - Từ 18+",
+            _ => "Chưa rõ"
+        };
+
+        return new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"age-tag-custom\" style=\"{bgStyle}\">{text}</span>");
+    }
+}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-image: radial-gradient(ellipse at 0% 100%, rgba(0,160,70,0.55) 0%, rgba(0,80,30,0.3) 30%, transparent 55%), radial-gradient(ellipse at 100% 0%, rgba(0,160,70,0.45) 0%, rgba(0,80,30,0.25) 28%, transparent 50%);
+        background-color: #010a04;
+        background-attachment: fixed;
+        background-size: cover;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        color: #ffffff;
+    }
+
+    /* ── BANNER ── */
+
+    .cinema-banner {
+        position: relative;
+        height: 380px;
+        overflow: hidden;
+    }
+
+        .cinema-banner .banner-bg-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.28);
+            display: block;
+            animation: kenburns 20s ease-out infinite alternate;
+        }
+
+    .banner-gradient-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to right, rgba(1,10,4,0.92) 0%, rgba(1,10,4,0.5) 55%, transparent 100%);
+    }
+
+    .banner-content {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 48px;
+        max-width: 560px;
+    }
+
+    .banner-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0,255,135,0.1);
+        border: 1px solid rgba(0,255,135,0.25);
+        color: #00ff87;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 4px;
+        margin-bottom: 14px;
+        width: fit-content;
+    }
+
+    .banner-badge-dot {
+        width: 6px;
+        height: 6px;
+        background: #00ff87;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .banner-title {
+        font-size: 2.1rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.15;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: -0.5px;
+    }
+
+    .banner-desc {
+        font-size: 0.83rem;
+        color: rgba(255,255,255,0.52);
+        line-height: 1.65;
+        margin-bottom: 22px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .banner-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: #00ff87;
+        color: #022c22;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 11px 22px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        width: fit-content;
+        transition: all 0.2s ease;
+    }
+
+        .banner-btn:hover {
+            background: #00e676;
+            color: #022c22;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 135, 0.6);
+        }
+
+    .banner-carousel-dots {
+        position: absolute;
+        bottom: 18px;
+        left: 48px;
+        display: flex;
+        gap: 6px;
+    }
+
+    .banner-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255,255,255,0.2);
+        transition: all 0.3s;
+    }
+
+        .banner-dot.active {
+            width: 20px;
+            background: #00ff87;
+        }
+
+    .carousel-control-prev, .carousel-control-next {
+        width: 42px;
+        height: 42px;
+        background: rgba(0,0,0,0.45);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0;
+        transition: opacity 0.25s;
+    }
+
+    .cinema-banner:hover .carousel-control-prev,
+    .cinema-banner:hover .carousel-control-next {
+        opacity: 1;
+    }
+
+    .carousel-control-prev {
+        left: 16px;
+    }
+
+    .carousel-control-next {
+        right: 16px;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-section {
+        position: relative;
+        z-index: 30;
+        padding: 20px 0 8px;
+    }
+
+    .search-bar-wrap {
+        background: rgba(10,22,13,0.7);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .sf-field {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 8px;
+        padding: 0 12px;
+        height: 40px;
+        flex: 1;
+        min-width: 120px;
+        transition: border-color 0.2s;
+    }
+
+        .sf-field:focus-within {
+            border-color: #00ff87;
+            box-shadow: 0 0 0 3px rgba(0,255,135,0.12);
+        }
+
+        .sf-field i {
+            font-size: 0.85rem;
+            color: #3d7a52;
+            flex-shrink: 0;
+        }
+
+    /* ── SKELETON LOADING BONE ── */
+    
+    .poster-container {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: linear-gradient(90deg, #111827 25%, #1f2937 50%, #111827 75%);
+        background-size: 200% 100%;
+        animation: shimmer 2s infinite linear;
+    }
+
+    .poster-container img {
+        position: relative;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+    .poster-container img.loaded {
+        opacity: 1;
+    }
+
+        .sf-field input, .sf-field select {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 0.83rem;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            font-weight: 500;
+        }
+
+            .sf-field input::placeholder {
+                color: #3d6650;
+            }
+
+            .sf-field select option {
+                background: #0d1f10;
+                color: #fff;
+            }
+
+    .sf-divider {
+        width: 1px;
+        height: 22px;
+        background: rgba(255,255,255,0.06);
+        flex-shrink: 0;
+    }
+
+    .btn-find {
+        height: 40px;
+        background: #00ff87;
+        border: none;
+        border-radius: 8px;
+        color: #022c22;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.18s;
+    }
+
+        .btn-find:hover {
+            background: #00e676;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(0,255,135,0.35);
+        }
+
+    .btn-reset {
+        height: 40px;
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 8px;
+        color: #5a8a6a;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0 14px;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+        .btn-reset:hover {
+            background: #1a3320;
+            color: #fff;
+        }
+
+    /* ── SECTION CHUNG ── */
+    .section-block {
+        background: transparent;
+        padding: 0;
+        margin-bottom: 48px;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+        padding-bottom: 13px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .section-title h2 {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+        }
+
+    .accent-bar {
+        width: 4px;
+        height: 20px;
+        background: #00ff87;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .accent-bar-yellow {
+        width: 4px;
+        height: 20px;
+        background: #fbbf24;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+</style>
+
+@* ─── BANNER CHÍNH (DÀNH CHO PHIM) ─── *@
+<div id="movieCarousel" class="carousel slide carousel-fade cinema-banner mb-0" data-bs-ride="carousel">
+    <div class="carousel-inner" style="height:100%;">
+        @for (int i = 0; i < Model.Take(3).Count(); i++)
+        {
+            var movie = Model.ElementAt(i);
+            <div class="carousel-item @(i == 0 ? "active" : "")" style="height:100%;">
+                <img src="@movie.PosterUrl" class="banner-bg-img" alt="@movie.Title">
+                <div class="banner-gradient-overlay"></div>
+                <div class="banner-content">
+                    <span class="banner-badge">
+                        <span class="banner-badge-dot"></span> Đang chiếu
+                    </span>
+                    <h1 class="banner-title">@movie.Title</h1>
+                    <p class="banner-desc">@movie.Description</p>
+                    <a asp-action="SelectShowtime" asp-controller="Booking" asp-route-movieId="@movie.Id" class="banner-btn">
+                        <i class="bi bi-ticket-perforated"></i> Đặt vé ngay
+                    </a>
+                </div>
+                <div class="banner-carousel-dots">
+                    @for (int d = 0; d < Model.Take(3).Count(); d++)
+                    {
+                        <div class="banner-dot @(d == i ? "active" : "")"></div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#movieCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#movieCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    </button>
+</div>
+
+@* ─── GỢI Ý PHIM THEO GU ─── *@
+@if (ViewBag.RecommendedMovies != null && ((List<Movie>)ViewBag.RecommendedMovies).Count > 0)
+{
+    <div class="container-xl mt-5">
+        <div class="section-block mb-3">
+            <div class="recommend-banner">
+                <i class="bi bi-stars"></i>
+                <span><strong>Dành riêng cho bạn</strong> — Gợi ý dựa theo thể loại bạn xem nhiều nhất</span>
+            </div>
+            <div class="section-header">
+                <div class="section-title">
+                    <div class="accent-bar-yellow"></div>
+                    <h2 style="color:#fbbf24;">Có thể bạn sẽ thích</h2>
+                </div>
+            </div>
+            <div class="row row-cols-2 row-cols-md-4 g-4">
+                @foreach (var item in (List<Movie>)ViewBag.RecommendedMovies)
+                {
+                    <div class="col">
+                        <div class="movie-card movie-card-recommend" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                            <div class="poster-container shadow">
+                                @if (!string.IsNullOrEmpty(item.AgeRestriction))
+                                {
+                                    <div class="badge-age-cyber-floating">
+                                        @RenderAgeBadge(item.AgeRestriction)
+                                    </div>
+                                }
+
+                                @* 🚀 BỔ SUNG: Nút tim góc phải cho danh mục GỢI Ý PHIM 🚀 *@
+                                @{
+                                    bool isFavRec = ViewBag.FavoriteMovieIds != null && ((List<int>)ViewBag.FavoriteMovieIds).Contains(item.Id);
+                                }
+                                <button class="btn-favorite-heart @(isFavRec ? "active" : "")" data-movie-id="@item.Id">
+                                    <i class="bi @(isFavRec ? "bi-heart-fill" : "bi-heart")"></i>
+                                </button>
+
+                                <img src="@item.PosterUrl" class="img-fluid w-100"
+                                     style="aspect-ratio:2/3;object-fit:cover;display:block;" alt="@item.Title" onload="this.classList.add('loaded')">
+                                
+                                @* 🚀 BỔ SUNG: Hiển thị Điểm số đánh giá trên Poster 🚀 *@
+                                @{
+                                    double avgRating = item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0;
+                                }
+                                @if (avgRating > 0)
+                                {
+                                    <div style="position: absolute; bottom: 8px; right: 8px; background-color: rgba(0, 0, 0, 0.75); color: #fbbf24; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2); z-index: 2; display: flex; align-items: center;">
+                                        <i class="bi bi-star-fill me-1"></i>@avgRating.ToString("F1")
+                                    </div>
+                                }
+                                <div class="movie-overlay">
+                                    <span class="badge mb-1" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);font-size:0.6rem;">
+                                        <i class="bi bi-stars me-1"></i>GỢI Ý
+                                    </span>
+                                    <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })"
+                                       class="btn-overlay-action btn-overlay-book">Đặt vé</a>
+                                    <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })"
+                                       class="btn-overlay-action btn-overlay-detail">Chi tiết</a>
+                                </div>
+                            </div>
+                            <div class="movie-title-text" style="color:#9ca3af;">@item.Title</div>
+                            
+                            @* --- ĐÃ THÊM: Tính năng Behavior Tracking (ViewCount) đổi thành Tickets Sold --- *@
+                            @{
+                                var ticketsDict = ViewBag.TicketsSold as Dictionary<int, int>;
+                                int sold = ticketsDict != null && ticketsDict.ContainsKey(item.Id) ? ticketsDict[item.Id] : 0;
+                            }
+                            <div class="d-flex justify-content-between align-items-center mt-1" style="padding: 0 10px 10px 10px;">
+                                <small class="text-muted"><i class="bi bi-clock me-1"></i> @item.Duration phút</small>
+                                <span class="fw-bold" style="color:#fbbf24; font-size:0.75rem;"><i class="bi bi-eye-fill me-1"></i>@sold</span>
+                            </div>
+                            <div class="movie-mobile-actions">
+                                <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })" class="btn btn-sm btn-success w-100" style="background:#00ff87; color:#022c22; border:none;">Đặt vé</a>
+                                <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="btn btn-sm btn-outline-light w-100">Chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@* ─── SEARCH BAR ─── *@
+<div class="container-xl search-section d-none d-md-block" id="searchSection">
+    <div class="search-bar-wrap">
+        <form id="realtimeSearchForm" method="get" autocomplete="off"
+              style="display:flex;align-items:center;gap:8px;flex:1;flex-wrap:wrap;">
+            <div class="sf-field" style="flex:2;min-width:160px;">
+                <i class="bi bi-search"></i>
+                <input type="text" id="ajaxSearchString" placeholder="Tìm tên phim..." value="@ViewBag.CurrentSearch">
+            </div>
+            <div class="sf-divider d-none d-md-block"></div>
+            <div class="sf-field" style="min-width:120px;">
+                <i class="bi bi-tags"></i>
+                <select id="ajaxGenreId">
+                    <option value="">Thể loại</option>
+                    @if (ViewBag.Genres != null)
+                    {
+                        foreach (var g in ViewBag.Genres)
+                        {
+                            <option value="@g.Id">@g.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="sf-divider d-none d-md-block"></div>
+            <div class="sf-field" style="min-width:100px;">
+                <i class="bi bi-badge-hd"></i>
+                <select id="ajaxFormat">
+                    <option value="">Định dạng</option>
+                    <option value="2D">2D</option>
+                    <option value="3D">3D</option>
+                    <option value="IMAX">IMAX</option>
+                </select>
+            </div>
+            <div class="sf-divider d-none d-md-block"></div>
+            <div class="sf-field" style="min-width:130px;">
+                <i class="bi bi-calendar3"></i>
+                <input type="date" id="ajaxShowDate" style="color-scheme:dark;">
+            </div>
+            <button type="submit" class="btn-find">
+                <i class="bi bi-search"></i> Tìm phim
+            </button>
+            <button type="button" id="btnResetFilters" class="btn-reset">
+                <i class="bi bi-x-circle"></i> Xóa lọc
+            </button>
+        </form>
+    </div>
+
+    @* --- ĐÃ THÊM: Tính năng Behavior Tracking (Trending Searches) --- *@
+    @if (ViewBag.TrendingSearches != null && ((List<string>)ViewBag.TrendingSearches).Count > 0)
+    {
+        <div class="trending-searches mt-2 d-flex align-items-center flex-wrap gap-2" style="padding: 0 12px; font-size: 0.85rem; color: #a1a1aa;">
+            <span><i class="bi bi-fire text-warning"></i> Xu hướng:</span>
+            @foreach (var keyword in (List<string>)ViewBag.TrendingSearches)
+            {
+                <span class="badge rounded-pill bg-dark border border-secondary trending-keyword" 
+                      style="cursor:pointer; transition: all 0.2s;" 
+                      onclick="document.getElementById('ajaxSearchString').value='@keyword'; document.getElementById('realtimeSearchForm').dispatchEvent(new Event('submit'));">
+                    @keyword
+                </span>
+            }
+        </div>
+    }
+</div>
+
+@* ─── CẤU TRÚC LƯỚI CHÍNH (MAIN + SIDEBAR) ─── *@
+<div class="container-xl mt-4 pb-5">
+    <div class="row gx-4">
+        
+        @* CỘT TRÁI (DANH SÁCH PHIM CHÍNH) *@
+        <div class="col-lg-9">
+            @* ─── NOW SHOWING ─── *@
+            <div class="section-block" id="movie-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <div class="accent-bar"></div>
+                        <h2>Now Showing</h2>
+                    </div>
+                </div>
+                <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-4" id="movie-grid-container">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col">
+                            <div class="movie-card" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                                <div class="poster-container shadow">
+                                    @if (!string.IsNullOrEmpty(item.AgeRestriction))
+                                    {
+                                        <div class="badge-age-cyber-floating">
+                                            @RenderAgeBadge(item.AgeRestriction)
+                                        </div>
+                                    }
+
+                                    @* 🚀 BỔ SUNG: Nút tim góc phải cho danh mục NOW SHOWING 🚀 *@
+                                    @{
+                                        bool isFav = ViewBag.FavoriteMovieIds != null && ((List<int>)ViewBag.FavoriteMovieIds).Contains(item.Id);
+                                    }
+                                    <button class="btn-favorite-heart @(isFav ? "active" : "")" data-movie-id="@item.Id">
+                                        <i class="bi @(isFav ? "bi-heart-fill" : "bi-heart")"></i>
+                                    </button>
+
+                                    <img src="@item.PosterUrl" class="img-fluid w-100"
+                                         style="aspect-ratio:2/3;object-fit:cover;display:block;" alt="@item.Title" onload="this.classList.add('loaded')">
+
+                                    @* 🚀 BỔ SUNG: Hiển thị Điểm số đánh giá trên Poster 🚀 *@
+                                    @{
+                                        double avgRating = item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0;
+                                    }
+                                    @if (avgRating > 0)
+                                    {
+                                        <div style="position: absolute; bottom: 8px; right: 8px; background-color: rgba(0, 0, 0, 0.75); color: #fbbf24; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2); z-index: 2; display: flex; align-items: center;">
+                                            <i class="bi bi-star-fill me-1"></i>@avgRating.ToString("F1")
+                                        </div>
+                                    }
+                                    <div class="movie-overlay">
+                                        <span class="badge bg-danger mb-1" style="font-size:0.6rem;letter-spacing:0.05em;">HOT</span>
+                                        <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })"
+                                           class="btn-overlay-action btn-overlay-book">Đặt vé</a>
+                                        <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })"
+                                           class="btn-overlay-action btn-overlay-detail">
+                                            Chi tiết
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="movie-title-text">@item.Title</div>
+                                
+                                @* --- ĐÃ THÊM: Tính năng Behavior Tracking (ViewCount) đổi thành Tickets Sold --- *@
+                                @{
+                                    var ticketsDictMain = ViewBag.TicketsSold as Dictionary<int, int>;
+                                    int soldMain = ticketsDictMain != null && ticketsDictMain.ContainsKey(item.Id) ? ticketsDictMain[item.Id] : 0;
+                                }
+                                <div class="d-flex justify-content-between align-items-center mt-1" style="padding: 0 10px 10px 10px;">
+                                    <small class="text-muted"><i class="bi bi-clock me-1"></i> @item.Duration phút</small>
+                                    <span class="fw-bold" style="color:#fbbf24; font-size:0.75rem;"><i class="bi bi-eye-fill me-1"></i>@soldMain</span>
+                                </div>
+                                <div class="movie-mobile-actions">
+                                    <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })" class="btn btn-sm btn-success w-100" style="background:#00ff87; color:#022c22; border:none;">Đặt vé</a>
+                                    <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="btn btn-sm btn-outline-light w-100">Chi tiết</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @* CỘT PHẢI (THỊNH HÀNH) *@
+        <div class="col-lg-3">
+            @if (ViewBag.TrendingMovies != null && ((List<Movie>)ViewBag.TrendingMovies).Count > 0)
+            {
+                var trendingMovies = (List<Movie>)ViewBag.TrendingMovies;
+                
+                <div class="sticky-top" style="top: 100px;">
+                    <div class="d-flex align-items-center mb-3">
+                        <h5 class="mb-0 text-uppercase fw-900" style="letter-spacing: 0.5px;">
+                            <i class="bi bi-fire text-warning me-2"></i> Xu hướng: <span class="text-white">Thịnh Hành</span>
+                        </h5>
+                    </div>
+                    
+                    <div class="p-3 rounded-4 d-flex flex-column shadow-lg" style="background: rgba(10,22,13,0.5); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex flex-column gap-3">
+                            @{ int rank = 1; }
+                            @foreach (var m in trendingMovies)
+                            {
+                                <a href="@Url.Action("MovieDetails", "Home", new { id = m.Id })" class="text-decoration-none text-white trending-list-item">
+                                    <div class="d-flex gap-3 align-items-center p-2 rounded-3 transition-all" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.02);">
+                                        <div class="position-relative">
+                                            <img src="@m.PosterUrl" class="rounded-2" style="width: 60px; height: 85px; object-fit: cover;" alt="@m.Title">
+                                        </div>
+                                        <div class="d-flex flex-column flex-grow-1 overflow-hidden">
+                                            <h6 class="fw-bold mb-1 text-truncate" style="font-size: 0.9rem;">@m.Title</h6>
+                                            <div class="d-flex align-items-center justify-content-between mt-1" style="font-size: 0.8rem; color: #9ca3af;">
+                                                <span class="fw-bold fs-6" style="color: @(rank == 1 ? "#fbbf24" : (rank == 2 ? "#d1d5db" : (rank == 3 ? "#b45309" : "#00ff87")));">#@rank</span>
+                                                <span><i class="bi bi-fire text-danger me-1"></i>@m.ViewCount</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                                rank++;
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+    </div>
+</div>
+
+@* ─── FLOATING CHATBOX ─── *@
+<div id="chatbot-wrapper" style="position:fixed;bottom:25px;right:25px;z-index:9999;">
+    <button id="btn-toggle-chat" class="btn rounded-circle d-flex align-items-center justify-content-center"
+            style="width:54px;height:54px;background:#00ff87;color:#022c22;border:none;box-shadow:0 6px 20px rgba(0,255,135,0.35);">
+        <i class="bi bi-chat-dots-fill" style="font-size:1.3rem;"></i>
+    </button>
+    <div id="cinema-chatbox" class="card d-none"
+         style="position:absolute;bottom:65px;right:0;width:350px;background:#0f1f13;border:1px solid #1a3320;border-radius:12px;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,0.5);">
+        <div class="card-header text-white d-flex justify-content-between align-items-center"
+             style="background:#142a18;padding:12px 16px;border-bottom:1px solid #1a3320;">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-robot" style="color:#00ff87;"></i>
+                <span class="fw-bold" style="font-size:0.85rem;">Trợ lý Cinema Hub</span>
+            </div>
+            <button id="btn-close-chat" class="btn-close btn-close-white" style="font-size:0.7rem;"></button>
+        </div>
+        <div id="chat-logs" style="height:280px;background:#010a04;overflow-y:auto;padding:15px;font-size:0.85rem;">
+            <div class="mb-3">
+                <div style="font-size:0.62rem;color:#3d6650;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Bot</div>
+                <div style="background:#142a18;color:#d1fae5;border-radius:4px 12px 12px 12px;padding:10px 14px;max-width:88%;font-size:0.83rem;line-height:1.55;">
+                    Xin chào! 👋 Tui là AI trợ lý Cinema Hub. Bạn cần tư vấn phim hay hỗ trợ đặt vé thì cứ hỏi nhé!
+                </div>
+            </div>
+        </div>
+        <div style="padding:12px;background:#0d1f10;border-top:1px solid #1a3320;">
+            <div style="display:flex;align-items:center;background:#142a18;border:1px solid #1a3320;border-radius:20px;overflow:hidden;padding:4px 4px 4px 12px;gap:6px;">
+                <input type="text" id="txtMessage" placeholder="Hỏi AI..."
+                       style="flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:0.83rem;font-family:'Inter',sans-serif;">
+                <button id="btnSend"
+                        style="background:#00ff87;color:#022c22;border:none;border-radius:16px;padding:6px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // ─── XỬ LÝ TÌM KIẾM PHIM ───
+            function triggerSearch() {
+                var payload = {
+                    searchString: $('#ajaxSearchString').val(),
+                    genreId:      $('#ajaxGenreId').val(),
+                    format:       $('#ajaxFormat').val(),
+                    showDate:     $('#ajaxShowDate').val()
+                };
+                $('#movie-section').css('opacity', '0.5');
+                $.ajax({
+                    url: '@Url.Action("Index", "Home")',
+                    type: 'GET',
+                    data: payload,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function (html) {
+                        $('#movie-grid-container').html(html);
+                        $('#movie-section').css('opacity', '1');
+                    },
+                    error: function () { $('#movie-section').css('opacity', '1'); }
+                });
+            }
+
+            var debounce;
+            $('#ajaxSearchString').on('input', function () {
+                clearTimeout(debounce);
+                debounce = setTimeout(triggerSearch, 300);
+            });
+            $('#ajaxGenreId, #ajaxFormat, #ajaxShowDate').on('change', triggerSearch);
+            $('#btnResetFilters').on('click', function () {
+                $('#realtimeSearchForm')[0].reset();
+                triggerSearch();
+            });
+            $('#realtimeSearchForm').on('submit', function (e) {
+                e.preventDefault();
+                triggerSearch();
+            });
+
+            // ─── ĐÓNG MỞ CHATBOX ───
+            $('#btn-toggle-chat').on('click', function () { $('#cinema-chatbox').toggleClass('d-none'); });
+            $('#btn-close-chat').on('click',  function () { $('#cinema-chatbox').addClass('d-none'); });
+
+            // 🚀 BỔ SUNG KHỐI MỚI: XỬ LÝ THẢ TIM / BỎ TIM PHIM YÊU THÍCH BẰNG AJAX 🚀
+            $(document).on('click', '.btn-favorite-heart', function (e) {
+                e.preventDefault();
+                e.stopPropagation(); // Ngăn hành vi nhảy trang khi click trúng tim
+
+                const $btn = $(this);
+                const movieId = $btn.data('movie-id');
+
+                $.ajax({
+                    url: '/Favorites/ToggleFavorite',
+                    type: 'POST',
+                    data: { movieId: movieId },
+                    success: function (response) {
+                        if (response.success) {
+                            if (response.isFavorite) {
+                                // Nếu kích hoạt yêu thích thành công
+                                $btn.addClass('active');
+                                $btn.find('i').removeClass('bi-heart').addClass('bi-heart-fill');
+                            } else {
+                                // Nếu hủy kích hoạt yêu thích thành công
+                                $btn.removeClass('active');
+                                $btn.find('i').removeClass('bi-heart-fill').addClass('bi-heart');
+                            }
+                        } else {
+                            alert('⚠️ ' + response.message);
+                            // Nếu chưa đăng nhập, đá văng qua trang Login của Identity luôn
+                            window.location.href = '/Identity/Account/Login';
+                        }
+                    },
+                    error: function () {
+                        alert('❌ Không thể kết nối đến máy chủ hệ thống!');
+                    }
+                });
+            });
+
+            // ─── XỬ LÝ GỬI TIN NHẮN CHATBOT ───
+            var currentChatSessionId = 0;
+
+            function sendChatMessage() {
+                var msg = $('#txtMessage').val().trim();
+                if (msg === '') return;
+
+                var userBubble = `
+                    <div class="mb-3 d-flex flex-column align-items-end">
+                        <div style="font-size:0.62rem;color:#3d6650;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Bạn</div>
+                        <div style="background:#00ff87;color:#022c22;border-radius:12px 4px 12px 12px;padding:10px 14px;max-width:88%;font-size:0.83rem;line-height:1.55;font-weight:600;box-shadow:0 4px 10px rgba(0,255,135,0.2);">
+                            ${msg}
+                        </div>
+                    </div>`;
+
+                $('#chat-logs').append(userBubble);
+                $('#txtMessage').val('');
+                $('#chat-logs').scrollTop($('#chat-logs')[0].scrollHeight);
+
+                var typingId = 'typing-' + Date.now();
+                var typingBubble = `
+                    <div id="${typingId}" class="mb-3">
+                        <div style="font-size:0.62rem;color:#3d6650;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Bot</div>
+                        <div style="background:#142a18;color:#00ff87;border-radius:4px 12px 12px 12px;padding:10px 14px;max-width:fit-content;font-size:0.83rem;">
+                            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" style="width: 10px; height: 10px;"></span>
+                            <span class="spinner-grow spinner-grow-sm mx-1" role="status" aria-hidden="true" style="width: 10px; height: 10px;"></span>
+                            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" style="width: 10px; height: 10px;"></span>
+                        </div>
+                    </div>`;
+                $('#chat-logs').append(typingBubble);
+                $('#chat-logs').scrollTop($('#chat-logs')[0].scrollHeight);
+
+                $.ajax({
+                    url: '/Chatbot/SendMessage',
+                    type: 'POST',
+                    data: {
+                        message: msg,
+                        sessionId: currentChatSessionId
+                    },
+                    success: function (response) {
+                        $('#' + typingId).remove();
+
+                        if(response.success) {
+                            if(response.sessionId) {
+                                currentChatSessionId = response.sessionId;
+                            }
+
+                            var botBubble = `
+                                <div class="mb-3">
+                                    <div style="font-size:0.62rem;color:#3d6650;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;">Bot</div>
+                                    <div style="background:#142a18;color:#d1fae5;border-radius:4px 12px 12px 12px;padding:10px 14px;max-width:88%;font-size:0.83rem;line-height:1.55;border:1px solid #1a3320;">
+                                        ${response.reply}
+                                    </div>
+                                </div>`;
+                            $('#chat-logs').append(botBubble);
+                        } else {
+                            $('#chat-logs').append(`<div class="mb-3"><div style="background:rgba(220,53,69,0.2);color:#ff6b6b;border-radius:4px;padding:8px;font-size:0.8rem;">Lỗi: ${response.error}</div></div>`);
+                        }
+                        $('#chat-logs').scrollTop($('#chat-logs')[0].scrollHeight);
+                    },
+                    error: function () {
+                        $('#' + typingId).remove();
+                        var errBubble = `
+                            <div class="mb-3">
+                                <div style="background:rgba(220, 53, 69, 0.2);color:#ff6b6b;border-radius:4px 12px 12px 12px;padding:10px 14px;font-size:0.83rem;">
+                                    Hệ thống AI đang bảo trì kết nối. Vui lòng thử lại sau!
+                                </div>
+                            </div>`;
+                        $('#chat-logs').append(errBubble);
+                        $('#chat-logs').scrollTop($('#chat-logs')[0].scrollHeight);
+                    }
+                });
+            }
+
+            $('#btnSend').on('click', sendChatMessage);
+
+            $('#txtMessage').on('keypress', function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    sendChatMessage();
+                }
+            });
+        });
+    </script>
+
+    @* ─── POPUP BANNER QUẢNG CÁO (CHỈ HIỆN 1 LẦN/PHIÊN) ─── *@
+    @{
+        var activeBannersPopup = ViewBag.Banners as List<Banner>;
+    }
+    @if (activeBannersPopup != null && activeBannersPopup.Any())
+    {
+        <style>
+            /* Hiệu ứng Scale-in mượt mà cho Popup */
+            #promoBannerModal .modal-dialog {
+                transform: scale(0.85);
+                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            #promoBannerModal.show .modal-dialog {
+                transform: scale(1);
+            }
+            
+            /* Tùy chỉnh nút Close Glassmorphism */
+            .glass-close-btn {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                z-index: 1055;
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                color: #fff;
+                border: 1px solid rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                width: 36px;
+                height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+            .glass-close-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: rotate(90deg);
+                color: #fff;
+            }
+        </style>
+
+        <div class="modal fade" id="promoBannerModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 1200px; width: 95vw;">
+                <div class="modal-content bg-transparent border-0">
+                    <div class="modal-body p-0 position-relative">
+                        
+                        <!-- Nút X Glassmorphism -->
+                        <button type="button" class="btn glass-close-btn" data-bs-dismiss="modal" aria-label="Close">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                        
+                        <div id="promoCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+                            <div class="carousel-inner" style="border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 255, 135, 0.4) !important; border: 2px solid rgba(0, 255, 135, 0.3);">
+                                @for (int i = 0; i < activeBannersPopup.Count; i++)
+                                {
+                                    var banner = activeBannersPopup[i];
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        <a href="@(string.IsNullOrEmpty(banner.TargetUrl) ? "#" : banner.TargetUrl)">
+                                            <!-- max-height: 85vh đảm bảo dù màn hình nhỏ thì ảnh vẫn không bị rớt ra ngoài -->
+                                            <img src="@banner.ImageUrl" class="d-block w-100" alt="@banner.Title" style="max-height: 85vh; object-fit: contain;">
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                            @if (activeBannersPopup.Count > 1)
+                            {
+                                <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"></span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));"></span>
+                                </button>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function() {
+                var currentUser = '@(User.Identity != null && User.Identity.IsAuthenticated ? User.Identity.Name : "guest")';
+                var storageKey = 'promoBannerShown_' + currentUser;
+                
+                // Kiểm tra xem đã hiển thị popup cho user này trong phiên này chưa
+                if (!sessionStorage.getItem(storageKey)) {
+                    // Đợi 1 giây sau khi load trang rồi hiện popup để đỡ bị giật
+                    setTimeout(function() {
+                        var promoModal = new bootstrap.Modal(document.getElementById('promoBannerModal'));
+                        promoModal.show();
+                        // Đánh dấu là đã hiển thị
+                        sessionStorage.setItem(storageKey, 'true');
+                        
+                        // Kích hoạt auto-slide cho carousel khi popup hiện lên
+                        var myCarousel = document.getElementById('promoCarousel');
+                        if(myCarousel) {
+                            new bootstrap.Carousel(myCarousel, {
+                                interval: 3000,
+                                ride: 'carousel'
+                            });
+                        }
+                    }, 1000);
+                }
+            });
+        </script>
+    }
+}

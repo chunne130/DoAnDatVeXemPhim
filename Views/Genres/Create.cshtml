@@ -1,0 +1,88 @@
+﻿@model DoAnDatVeXemPhim.Models.Genre
+
+@{
+    ViewData["Title"] = "Thêm Thể Loại Mới";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            @* --- CARD FORM --- *@
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                @* Header Card *@
+                <div class="card-header bg-dark text-warning py-3 text-center border-0">
+                    <h4 class="fw-bold mb-0 text-uppercase" style="letter-spacing: 2px;">
+                        <i class="bi bi-tag-fill me-2"></i>Thêm Thể Loại
+                    </h4>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        @* Input Tên thể loại *@
+                        <div class="mb-4">
+                            <label asp-for="Name" class="form-label fw-bold text-dark small">TÊN THỂ LOẠI PHIM</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-2 border-end-0"><i class="bi bi-fonts"></i></span>
+                                <input asp-for="Name" class="form-control form-control-lg border-2 border-start-0 shadow-none bg-light"
+                                       placeholder="Ví dụ: Hành động, Kinh dị..." />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        @* Nút thao tác *@
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg fw-bold rounded-pill shadow-sm py-3 transition-hover">
+                                <i class="bi bi-check-circle-fill me-2"></i>XÁC NHẬN TẠO
+                            </button>
+                            <a asp-action="Index" class="btn btn-link text-muted text-decoration-none mt-2 small">
+                                <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                @* Footer trang trí *@
+                <div class="card-footer bg-light border-0 py-3 text-center">
+                    <small class="text-muted italic">Mẹo: Hãy đặt tên thể loại ngắn gọn và dễ hiểu!</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<style>
+    body {
+        background-color: #f0f2f5;
+    }
+
+    .card {
+        transition: transform 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #ffc107 !important;
+        background-color: #fff !important;
+    }
+
+    .input-group-text {
+        border-color: #dee2e6;
+    }
+
+    .transition-hover:hover {
+        background-color: #e5ac00 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3) !important;
+    }
+
+    .bg-dark {
+        background-color: #1a1a1a !important;
+    }
+</style>

@@ -1,0 +1,361 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<ul class="navbar-nav flex-row align-items-center gap-3">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        @* KHỐI CHUÔNG THÔNG BÁO (DROPDOWN) *@
+        <li class="nav-item dropdown d-flex align-items-center">
+            <a class="nav-link position-relative notification-bell p-2 dropdown-toggle" href="#" id="notiDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo" onclick="markAllNotificationsRead()">
+                <i class="bi bi-bell text-white" id="notiBellIcon" style="font-size: 1.1rem; transition: color 0.2s;"></i>
+                @* Chấm đỏ *@
+                <span id="notiRedDot" class="position-absolute top-25 start-75 translate-middle p-1 bg-danger border border-dark rounded-circle d-none" style="width: 8px; height: 8px;">
+                    <span class="visually-hidden">Thông báo mới</span>
+                </span>
+            </a>
+            
+            <div class="dropdown-menu dropdown-menu-end dropdown-menu-custom shadow-lg mt-3 p-0" aria-labelledby="notiDropdown" style="width: 340px; border-radius: 16px; overflow: hidden; right: -10px;">
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom" style="background: rgba(0,255,135,0.03); border-color: rgba(0,255,135,0.1) !important;">
+                    <h6 class="mb-0 fw-bold text-white fs-6">Thông báo</h6>
+                    <a href="javascript:void(0)" class="text-decoration-none small fw-semibold" style="color: #00ff87; letter-spacing: 0.5px;" onclick="fetchNotifications()">Làm mới</a>
+                </div>
+                <div id="notiList" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;" class="custom-scrollbar">
+                    <div class="p-5 text-center" style="background: rgba(2,28,14,0.3);">
+                        <i class="bi bi-bell-slash text-white-50 mb-3" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                        <p class="text-white-50 small mb-0 fw-medium">Chưa có thông báo mới</p>
+                    </div>
+                </div>
+            </div>
+        </li>
+
+        <li class="nav-item dropdown">
+            @* 🟢 KHỐI CHÀO USER PHẲNG - BƠM HIỆU ỨNG PHÁT SÁNG EMERALD LÀM NÚT DROPDOWN *@
+            <a class="nav-link d-flex align-items-center px-3 py-1.5 user-account-pill dropdown-toggle"
+               href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false"
+               title="Tài khoản của bạn">
+
+                <!-- Icon cho Desktop (circle xanh) -->
+                <i class="bi bi-person-circle d-none d-md-inline-block me-md-2" style="color: #00ff87 !important; font-size: 1.2rem;"></i>
+                
+                <!-- Icon cho Mobile (outline đơn giản như ảnh tham khảo) -->
+                <i class="bi bi-person d-md-none" style="color: #fff !important; font-size: 1.2rem;"></i>
+                
+                <span class="text-white fw-semibold d-none d-md-inline" style="font-size: 0.9rem;">
+                    Xin chào, <span style="color: #00ff87;">@await Component.InvokeAsync("UserName")</span>
+                </span>
+            </a>
+            
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom shadow-lg mt-2" aria-labelledby="userDropdown">
+                <!-- Logged in as Header -->
+                <li class="px-3 py-2 border-bottom mb-2" style="border-color: rgba(255,255,255,0.08) !important;">
+                    <div class="text-uppercase" style="font-size: 0.6rem; font-weight: 700; letter-spacing: 1px; color: #718096; margin-bottom: 4px;">Đã đăng nhập bởi</div>
+                    <div class="text-white fw-bold" style="font-size: 1.05rem;">@await Component.InvokeAsync("UserName")</div>
+                </li>
+                <li>
+                    <a class="dropdown-item dropdown-item-custom" asp-area="Identity" asp-page="/Account/Manage/Index">
+                        <i class="bi bi-person-lines-fill me-2"></i> Quản lý tài khoản
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item dropdown-item-custom" asp-controller="Rewards" asp-action="Index">
+                        <i class="bi bi-gift-fill me-2"></i> Trung tâm Ưu đãi
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item dropdown-item-custom" asp-controller="Booking" asp-action="MyTickets">
+                        <i class="bi bi-ticket-perforated-fill me-2"></i> Vé của tôi
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item dropdown-item-custom" asp-controller="Favorites" asp-action="MyFavorites">
+                        <i class="bi bi-heart-fill me-2"></i> Phim yêu thích
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                
+                @if (User.IsInRole("Admin"))
+                {
+                    <li>
+                        <a class="dropdown-item dropdown-item-custom fw-bold" style="color: #00ff87 !important;" href="/AdminControllers/Index">
+                            <i class="bi bi-shield-lock-fill me-2"></i> Trang Quản Trị
+                        </a>
+                    </li>
+                }
+                else if (User.IsInRole("Staff"))
+                {
+                    <li>
+                        <a class="dropdown-item dropdown-item-custom fw-bold" style="color: #00ff87 !important;" href="/AdminControllers/ScanTicket">
+                            <i class="bi bi-qr-code-scan me-2"></i> Khu Vực Nhân Viên
+                        </a>
+                    </li>
+                }
+
+                <li>
+                    <form class="form-inline w-100" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button type="submit" class="dropdown-item dropdown-item-custom w-100 text-start">
+                            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        @* 🚨 ĐÃ FIX THEO FIGMA: NÚT REGISTER VIỀN MẢNH TRONG SUỐT HOÀN TOÀN *@
+        <li class="nav-item">
+            <a class="nav-link btn-register-figma" asp-area="Identity" asp-page="/Account/Register">
+                Đăng ký
+            </a>
+        </li>
+
+        @* 🚨 ĐÃ FIX THEO FIGMA: NÚT LOGIN PHỦ KHỐI XANH NEON RỰC RỠ CHỮ ĐEN *@
+        <li class="nav-item">
+            <a class="nav-link btn-login-figma" asp-area="Identity" asp-page="/Account/Login">
+                Đăng nhập
+            </a>
+        </li>
+    }
+</ul>
+
+<style>
+    /* ═══════════════════════════════════════════
+           🟢 ĐỘ STYLE CHO NAVBAR & DROPDOWN 
+        ═══════════════════════════════════════════ */
+
+    /* 1. NÚT LOGIN: Phủ khối màu xanh Neon rực rỡ chữ đen */
+    .btn-login-figma {
+        background-color: #00ff87 !important;
+        color: #022c22 !important;
+        font-weight: 700 !important;
+        font-size: 0.88rem !important;
+        padding: 8px 22px !important;
+        border-radius: 8px !important;
+        transition: all 0.25s ease-in-out !important;
+        display: inline-block;
+        text-align: center;
+        border: none !important;
+        white-space: nowrap !important;
+    }
+
+        .btn-login-figma:hover {
+            background-color: #00e676 !important;
+            box-shadow: 0 0 16px rgba(0, 255, 135, 0.5) !important;
+            transform: translateY(-1px);
+            color: #022c22 !important;
+        }
+
+    /* 2. NÚT REGISTER: Viền mảnh mờ, nền trong suốt phẳng lỳ */
+    .btn-register-figma {
+        background-color: transparent !important;
+        color: #ffffff !important;
+        font-weight: 500 !important;
+        font-size: 0.88rem !important;
+        padding: 8px 22px !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        border-radius: 8px !important;
+        transition: all 0.25s ease-in-out !important;
+        display: inline-block;
+        text-align: center;
+        white-space: nowrap !important;
+    }
+
+        .btn-register-figma:hover {
+            border-color: #00ff87 !important;
+            color: #00ff87 !important;
+            background-color: rgba(0, 255, 135, 0.05) !important;
+            text-decoration: none;
+        }
+
+    /* 2.5 Tắt thanh gạch ngang (underline) mặc định của nav-link cho 2 nút này */
+    .btn-login-figma::after, .btn-register-figma::after {
+        display: none !important;
+    }
+
+    /* 3. KHỐI CHÀO USER: Viên thuốc mờ tinh tế */
+    .user-account-pill {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 50px !important;
+        transition: all 0.25s;
+        cursor: pointer;
+    }
+
+        .user-account-pill:hover, .user-account-pill[aria-expanded="true"] {
+            background: rgba(0, 255, 135, 0.08) !important;
+            border-color: rgba(0, 255, 135, 0.3) !important;
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.1);
+        }
+
+        /* Ẩn mũi tên dropdown mặc định cho đẹp */
+        .user-account-pill.dropdown-toggle::after {
+            display: none;
+        }
+
+    /* 5. HIỆU ỨNG CHUÔNG THÔNG BÁO */
+    .notification-bell:hover i {
+        color: #00ff87 !important;
+        text-shadow: 0 0 10px rgba(0, 255, 135, 0.5);
+    }
+    
+    .noti-item {
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+    .noti-item:hover {
+        background: rgba(0, 255, 135, 0.08) !important;
+        padding-left: 1.8rem !important;
+    }
+    .noti-item.unread {
+        background: rgba(0, 255, 135, 0.04);
+        border-left: 3px solid #00ff87;
+    }
+    .noti-item.unread::before {
+        content: '';
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        width: 8px;
+        height: 8px;
+        background: #00ff87;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #00ff87;
+    }
+    .noti-item .noti-title {
+        transition: color 0.3s ease;
+    }
+    .noti-item:hover .noti-title {
+        color: #00ff87 !important;
+    }
+
+    /* Tùy chỉnh thanh cuộn cho Dropdown */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.02);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(0,255,135,0.2);
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,255,135,0.5);
+    }
+
+    /* ĐỊNH DẠNG LẠI DROPDOWN BÊN PHẢI TRÊN MOBILE CHO ĐẸP (Không bị lệch/tràn) */
+    @@media (max-width: 991.98px) {
+        .navbar-nav .dropdown-menu-custom {
+            position: fixed !important;
+            top: 70px !important;
+            left: 5% !important;
+            right: 5% !important;
+            width: 90% !important;
+            margin: 0 !important;
+            transform: none !important;
+            border-radius: 16px !important;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+        }
+        
+        #notiDropdown + .dropdown-menu-custom {
+            width: 90% !important;
+            right: 5% !important;
+        }
+
+        /* Biến nút User thành dạng icon đơn giản (không có nền pill) trên mobile */
+        .user-account-pill {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 4px !important;
+            box-shadow: none !important;
+        }
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchNotifications();
+
+        const notiConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/notificationHub")
+            .build();
+
+        notiConnection.on("ReceiveNotification", function (notification) {
+            // Hiển thị chấm đỏ
+            document.getElementById("notiRedDot").classList.remove("d-none");
+            
+            // Hiện Toast popup
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                icon: 'info',
+                title: notification.title,
+                text: notification.message
+            });
+
+            // Tự động fetch lại list
+            fetchNotifications();
+        });
+
+        notiConnection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+    });
+
+    function fetchNotifications() {
+        fetch('/api/Notifications/GetMyNotifications')
+            .then(res => res.json())
+            .then(data => {
+                if (data.unreadCount > 0) {
+                    document.getElementById("notiRedDot").classList.remove("d-none");
+                } else {
+                    document.getElementById("notiRedDot").classList.add("d-none");
+                }
+
+                const listDiv = document.getElementById("notiList");
+                listDiv.innerHTML = "";
+                
+                if (data.notifications && data.notifications.length > 0) {
+                    data.notifications.forEach(n => {
+                        let unreadClass = n.isRead ? "" : "unread";
+                        let bg = n.isRead ? "background: #121212;" : "";
+                        let html = `
+                        <div class="px-4 py-3 border-bottom border-dark noti-item ${unreadClass}" style="${bg}">
+                            <h6 class="text-white mb-1 fw-bold noti-title" style="font-size:0.95rem; padding-right: 15px;">
+                                ${n.isRead ? '<i class="bi bi-check2-all me-2 text-muted"></i>' : '<i class="bi bi-stars me-2" style="color: #00ff87;"></i>'}
+                                ${n.title}
+                            </h6>
+                            <p class="text-white-50 mb-2 mt-2" style="font-size:0.85rem; line-height: 1.4;">${n.message}</p>
+                            <small class="text-muted d-flex align-items-center" style="font-size:0.75rem;">
+                                <i class="bi bi-clock me-1"></i> ${new Date(n.createdAt).toLocaleString('vi-VN')}
+                            </small>
+                        </div>`;
+                        listDiv.innerHTML += html;
+                    });
+                } else {
+                    listDiv.innerHTML = `
+                    <div class="p-5 text-center" style="background: rgba(2,28,14,0.3);">
+                        <i class="bi bi-bell-slash text-white-50 mb-3" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                        <p class="text-white-50 small mb-0 fw-medium">Chưa có thông báo mới</p>
+                    </div>`;
+                }
+            });
+    }
+
+    function markAllNotificationsRead() {
+        // Gọi API đánh dấu tất cả đã đọc
+        fetch('/api/Notifications/MarkAllAsRead', { method: 'POST' })
+            .then(() => {
+                document.getElementById("notiRedDot").classList.add("d-none");
+                // Fetch lại list để bỏ màu chưa đọc
+                fetchNotifications();
+            });
+    }
+</script>

@@ -1,0 +1,290 @@
+@using DoAnDatVeXemPhim.Models
+@model IEnumerable<Movie>
+
+@{
+    ViewData["Title"] = "Phim yêu thích - Cinema Hub";
+}
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    .favorites-page {
+        font-family: 'Inter', sans-serif;
+        padding-top: 32px;
+        padding-bottom: 60px;
+        min-height: 60vh;
+    }
+
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .accent-bar {
+        width: 4px;
+        height: 28px;
+        background: #00ff87;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .page-title i {
+            color: #ef4444;
+            font-size: 1.2rem;
+        }
+
+    .page-sub {
+        font-size: 0.78rem;
+        color: #4b6b58;
+        margin: 2px 0 0;
+    }
+
+    /* ── MOVIE CARD (đồng bộ Now Showing) ── */
+    .poster-container {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.04);
+        transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .movie-card:hover .poster-container {
+        transform: translateY(-7px);
+        box-shadow: 0 14px 32px rgba(0,255,135,0.22) !important;
+        border-color: rgba(0,255,135,0.35);
+    }
+
+    .fav-toggle-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 6;
+        width: 32px;
+        height: 32px;
+        background: rgba(0,0,0,0.55);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .fav-toggle-btn i {
+            color: #ef4444;
+            font-size: 0.95rem;
+        }
+
+        .fav-toggle-btn:hover {
+            background: rgba(239,68,68,0.2);
+            border-color: #ef4444;
+            transform: scale(1.1);
+        }
+
+    .movie-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.72);
+        opacity: 0;
+        transition: opacity 0.28s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 20px;
+        z-index: 5;
+    }
+
+    .movie-card:hover .movie-overlay {
+        opacity: 1;
+    }
+
+    .btn-overlay-action {
+        width: 78%;
+        padding: 9px 0;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-radius: 50px;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: block;
+        letter-spacing: 0.04em;
+    }
+
+    .btn-overlay-book {
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+    }
+
+        .btn-overlay-book:hover {
+            background-color: #b02a37;
+            transform: scale(1.04);
+            color: #fff;
+        }
+
+    .btn-overlay-detail {
+        background-color: transparent;
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.6);
+    }
+
+        .btn-overlay-detail:hover {
+            background-color: #fff;
+            color: #000;
+            transform: scale(1.04);
+        }
+
+    .movie-title-text {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #6b8c78;
+        text-align: center;
+        margin-top: 10px;
+        transition: color 0.2s;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .movie-card:hover .movie-title-text {
+        color: #00ff87;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+        text-align: center;
+        padding: 70px 20px;
+        background: rgba(10,22,13,0.5);
+        border: 1px dashed rgba(255,255,255,0.08);
+        border-radius: 14px;
+    }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            color: rgba(239,68,68,0.2);
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h4 {
+            font-size: 1rem;
+            color: #9ca3af;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            font-size: 0.82rem;
+            color: #4b6b58;
+            margin-bottom: 18px;
+        }
+
+    .btn-browse {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #00ff87;
+        color: #022c22;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 10px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+        .btn-browse:hover {
+            background: #00e676;
+            color: #022c22;
+            box-shadow: 0 5px 14px rgba(0,255,135,0.35);
+            transform: translateY(-1px);
+        }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container-xl favorites-page">
+
+    <div class="page-header">
+        <div class="accent-bar"></div>
+        <div>
+            <h2 class="page-title"><i class="bi bi-heart-fill"></i> Phim yêu thích</h2>
+            <p class="page-sub">Danh sách những bộ phim bạn đã đánh dấu quan tâm</p>
+        </div>
+    </div>
+
+    <div id="favorites-wrapper">
+        @await Html.PartialAsync("_FavoritesList", Model)
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        function removeFavorite(movieId) {
+            Swal.fire({
+                title: 'Bỏ yêu thích phim này?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#1a3320',
+                confirmButtonText: 'Bỏ thích',
+                cancelButtonText: 'Giữ lại',
+                background: '#0f1f13',
+                color: '#ffffff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/Favorites/ToggleFavorite',
+                        type: 'POST',
+                        data: { movieId: movieId },
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        success: function (res) {
+                            if (res.success) {
+                                const el = document.getElementById('fav-item-' + movieId);
+                                if (el) {
+                                    el.style.transition = 'opacity 0.25s, transform 0.25s';
+                                    el.style.opacity = '0';
+                                    el.style.transform = 'scale(0.9)';
+                                    setTimeout(() => {
+                                        el.remove();
+                                        if (document.querySelectorAll('#favorites-grid .col').length === 0) {
+                                            location.reload();
+                                        }
+                                    }, 250);
+                                }
+                            } else {
+                                Swal.fire({ title: 'Lỗi!', text: res.message || 'Không thể bỏ thích.', icon: 'error', background: '#0f1f13', color: '#fff' });
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({ title: 'Lỗi kết nối!', icon: 'error', background: '#0f1f13', color: '#fff' });
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+}

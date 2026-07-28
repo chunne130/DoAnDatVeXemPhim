@@ -1,0 +1,24 @@
+﻿@page
+@model ConfirmEmailChangeModel
+@{
+    ViewData["Title"] = "Cập nhật Email thành công";
+}
+
+<div class="container mt-5 mb-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden border-top border-warning border-5">
+                <div class="card-body p-5 bg-light">
+                    <div class="mb-4">
+                        <i class="bi bi-envelope-heart-fill text-danger" style="font-size: 3.5rem;"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark text-uppercase">Cập nhật hoàn tất!</h3>
+                    <p class="text-muted">Email đăng nhập mới của bạn đã được kích hoạt. Hãy dùng Email mới này cho lần đăng nhập tới.</p>
+                    <a asp-page="/Account/Manage/Index" class="btn btn-warning btn-lg w-100 rounded-pill fw-bold mt-4 shadow">
+                        VỀ TRANG CÁ NHÂN
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,100 @@
+﻿@page
+@model PersonalDataModel
+@{
+    ViewData["Title"] = "DỮ LIỆU CÁ NHÂN";
+}
+
+<div class="card border-0 shadow-sm rounded-0 bg-white">
+    @* Header Đen chữ Vàng *@
+    <div class="card-header bg-dark py-3 rounded-0 border-bottom border-warning">
+        <h6 class="mb-0 fw-bold text-uppercase" style="color: #ffc107; letter-spacing: 1px;">
+            <i class="bi bi-database-fill-lock me-2"></i> QUẢN LÝ DỮ LIỆU CÁ NHÂN
+        </h6>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+        <partial name="_StatusMessage" for="StatusMessage" />
+        <div class="row justify-content-center">
+            <div class="col-md-10 text-center">
+
+                @* Icon minh họa cho xịn *@
+                <div class="mb-4">
+                    <i class="bi bi-shield-lock text-warning" style="font-size: 3rem;"></i>
+                </div>
+
+                <p class="text-muted mb-4">
+                    Tài khoản của bạn chứa các thông tin cá nhân mà bạn đã cung cấp cho chúng tôi.
+                    Trang này cho phép bạn tải xuống hoặc yêu cầu xóa các dữ liệu đó.
+                </p>
+
+                @* Box cảnh báo *@
+                <div class="alert alert-dark rounded-0 border-warning border-start-4 mb-5 text-start">
+                    <div class="d-flex">
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-3 fs-4"></i>
+                        <div>
+                            <strong class="text-warning text-uppercase d-block mb-1">Cảnh báo quan trọng</strong>
+                            <span class="text-white-50 small">Việc xóa dữ liệu này sẽ xóa vĩnh viễn tài khoản của bạn và không thể khôi phục lại được. Hãy cân nhắc kỹ trước khi thực hiện.</span>
+                        </div>
+                    </div>
+                </div>
+
+                @* Nhóm nút bấm *@
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mt-4">
+                    @* Nút Tải về *@
+                    <form id="download-data" asp-page="DownloadPersonalData" method="post">
+                        <button class="btn btn-outline-dark rounded-0 px-4 fw-bold text-uppercase" type="submit">
+                            <i class="bi bi-download me-2"></i> Tải dữ liệu
+                        </button>
+                    </form>
+
+                    @* Nút Xóa (Màu đỏ để cảnh báo) *@
+                    <a id="delete" asp-page="DeletePersonalData" class="btn btn-danger rounded-0 px-4 fw-bold text-uppercase shadow-sm">
+                        <i class="bi bi-trash3 me-2"></i> Xóa tài khoản
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    /* Style đặc trưng Cinema Hub */
+    .card {
+        border-top: 4px solid #ffc107 !important;
+    }
+
+    .alert-dark {
+        background-color: #1a1a1a;
+        border: none;
+    }
+
+    .border-start-4 {
+        border-left: 4px solid #ffc107 !important;
+    }
+
+    .btn-danger {
+        background-color: #ed1c24;
+        border: none;
+        transition: 0.3s;
+    }
+
+        .btn-danger:hover {
+            background-color: #b31217;
+            transform: scale(1.05);
+        }
+
+    .btn-outline-dark:hover {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: #000;
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+</style>

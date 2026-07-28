@@ -1,0 +1,194 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.CustomerProfile>
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                <i class="bi bi-people-fill me-2"></i> QUẢN LÝ THÀNH VIÊN
+            </h4>
+            <p class="text-muted small m-0 mt-1">Quản trị tài khoản và thông tin cá nhân khách hàng Cinema Hub</p>
+        </div>
+        <a href="/AdminControllers/Index" class="btn btn-outline-secondary rounded-pill px-4 fw-bold ajax-link shadow-sm text-light" style="border-color: rgba(255,255,255,0.2);">
+            <i class="bi bi-house-door me-1"></i> Dashboard
+        </a>
+    </div>
+
+    @* THANH TÌM KIẾM NEON *@
+    <div class="row mb-4">
+        <div class="col-md-8 col-lg-6">
+            <form id="searchUserForm" action="/CustomerProfiles/Index" method="get" class="d-flex align-items-center p-1 rounded-pill" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="px-3 text-muted"><i class="bi bi-search" style="color: #00ff87;"></i></div>
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control border-0 bg-transparent text-white shadow-none px-0" placeholder="Tìm tên, email, khu vực..." style="box-shadow: none !important; outline: none !important;" />
+                <button type="submit" class="btn btn-save-neon rounded-pill px-4 ms-1 fw-bold text-nowrap flex-shrink-0" style="font-size: 0.85rem;">TÌM KIẾM</button>
+            </form>
+        </div>
+    </div>
+
+    @* BẢNG DANH SÁCH *@
+    <div class="table-responsive custom-scrollbar">
+        <table class="table table-dark table-borderless align-middle table-hover m-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.02);">
+            <thead>
+                <tr class="text-muted small uppercase border-bottom" style="border-color: rgba(255,255,255,0.1) !important; font-size: 0.75rem;">
+                    <th class="ps-4 py-3" style="width: 280px;">Khách hàng & Liên hệ</th>
+                    <th style="width: 150px;">Phân hạng VIP</th>
+                    <th style="width: 100px;">Giới tính</th>
+                    <th style="width: 120px;">Ngày sinh</th>
+                    <th>Khu vực</th>
+                    <th class="text-center" style="width: 120px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="border-bottom transition-all" style="border-color: rgba(255,255,255,0.03) !important;">
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3 fw-bold d-flex align-items-center justify-content-center" style="background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.3); color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.5);">
+                                        @(!string.IsNullOrEmpty(item.FullName) ? item.FullName.Substring(0, 1).ToUpper() : "U")
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-white mb-1" style="font-size: 0.95rem;">@item.FullName</div>
+                                        <small style="color: #60a5fa; font-size: 0.75rem;"><i class="bi bi-envelope me-1"></i>@(item.User?.Email ?? "N/A")</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                @{
+                                    string lvlName = item.MembershipLevel?.LevelName ?? "Hạng Đồng";
+                                    string badgeClass = "badge-dong";
+                                    if (lvlName.Contains("Bạc")) badgeClass = "badge-bac";
+                                    else if (lvlName.Contains("Vàng")) badgeClass = "badge-vang";
+                                    else if (lvlName.Contains("Bạch Kim")) badgeClass = "badge-bachkim";
+                                    else if (lvlName.Contains("Kim Cương")) badgeClass = "badge-kimcuong";
+                                }
+                                <span class="badge @badgeClass rounded-pill px-3 py-1 shadow-sm fw-bold" style="letter-spacing: 0.5px;">
+                                    👑 @lvlName
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.Gender == "Nam")
+                                {
+                                    <span class="badge" style="background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3);">Nam</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge" style="background: rgba(244,114,182,0.15); color: #f472b6; border: 1px solid rgba(244,114,182,0.3);">Nữ</span>
+                                }
+                            </td>
+                            <td class="text-light small">
+                                <i class="bi bi-calendar3 me-1 text-muted"></i> @(item.Birthday?.ToString("dd/MM/yyyy") ?? "Chưa nhập")
+                            </td>
+                            <td>
+                                <div class="text-white fw-bold" style="font-size: 0.85rem;">@item.City</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">@item.District</div>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Sửa & Đổi Pass">
+                                        <i class="bi bi-pencil" style="color: #fbbf24;"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(239, 68, 68, 0.1); width: 32px; height: 32px; border-radius: 6px;" title="Xóa">
+                                        <i class="bi bi-trash" style="color: #ef4444;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-search text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                            <p class="text-muted fw-bold mb-0">Không tìm thấy khách hàng nào khớp với từ khóa!</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .avatar-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        font-size: 1.1rem;
+    }
+
+    .btn-save-neon {
+        background-color: #00ff87;
+        color: #022c22;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-save-neon:hover {
+            background-color: #00e676;
+            box-shadow: 0 4px 15px rgba(0, 255, 135, 0.3);
+        }
+
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* GRADIENT BADGES TONE MÀU TỐI */
+    .badge-dong {
+        background: linear-gradient(135deg, rgba(186,139,75,0.2) 0%, rgba(106,70,26,0.5) 100%);
+        color: #ba8b4b;
+        border: 1px solid rgba(186,139,75,0.5);
+    }
+
+    .badge-bac {
+        background: linear-gradient(135deg, rgba(203,213,225,0.2) 0%, rgba(100,116,139,0.5) 100%);
+        color: #cbd5e1;
+        border: 1px solid rgba(203,213,225,0.5);
+    }
+
+    .badge-vang {
+        background: linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(180,83,9,0.5) 100%);
+        color: #fbbf24;
+        border: 1px solid rgba(251,191,36,0.5);
+    }
+
+    .badge-bachkim {
+        background: linear-gradient(135deg, rgba(226,234,252,0.2) 0%, rgba(109,121,147,0.5) 100%);
+        color: #e2eafc;
+        border: 1px solid rgba(226,234,252,0.5);
+    }
+
+    .badge-kimcuong {
+        background: linear-gradient(135deg, rgba(34,211,238,0.2) 0%, rgba(3,105,161,0.5) 100%);
+        color: #22d3ee;
+        border: 1px solid rgba(34,211,238,0.5);
+    }
+</style>
+
+<script>
+    // Xử lý Search AJAX
+    $('#searchUserForm').on('submit', function(e) {
+        e.preventDefault();
+        var targetUrl = $(this).attr('action') + '?' + $(this).serialize();
+        var $contentBox = $('#admin-dynamic-content');
+        var $loader = $('#admin-loader');
+        $contentBox.css('opacity', '0.3'); $loader.fadeIn(200);
+        $.ajax({
+            url: targetUrl, type: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(res) {
+                var $dummy = $('<div>').append($.parseHTML(res));
+                var $inner = $dummy.find('#admin-dynamic-content');
+                if ($inner.length > 0) { $contentBox.html($inner.html()); } else { $contentBox.html(res); }
+                $loader.fadeOut(200, function() { $contentBox.css('opacity', '1'); });
+                window.history.pushState({path: targetUrl}, '', targetUrl);
+            }
+        });
+    });
+</script>

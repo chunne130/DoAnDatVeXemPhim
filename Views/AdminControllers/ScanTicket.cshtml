@@ -1,0 +1,161 @@
+@{
+    ViewData["Title"] = "Soát Vé & Check-in";
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold m-0" style="font-size: 1.2rem; letter-spacing: -0.2px;">Quét Mã QR Soát Vé</h5>
+        <span class="badge bg-success text-dark px-3 py-2" style="font-size: 0.8rem;"><i class="bi bi-circle-fill text-success" style="font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> Real-time</span>
+    </div>
+
+    <div class="row gx-5">
+        <div class="col-lg-7">
+            <div id="reader" style="width: 100%; border-radius: 12px; overflow: hidden; background: #000;"></div>
+            <div class="mt-4 p-3 rounded" style="background: rgba(255,255,255,0.05);">
+                <label class="form-label text-muted small fw-bold">Nhập tay mã đơn hàng (Nút dự phòng)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-white"><i class="bi bi-hash"></i></span>
+                    <input type="number" id="manualOrderId" class="form-control bg-dark border-secondary text-white" placeholder="Ví dụ: 105">
+                    <button class="btn btn-action-pill ms-2" style="border-radius: 8px;" type="button" onclick="verifyTicketManual()"><i class="bi bi-check-circle me-1"></i> Xác nhận</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div id="scanResult" class="h-100 p-4 rounded d-flex flex-column justify-content-center align-items-center text-center" style="background: rgba(255,255,255,0.03); border: 2px dashed rgba(255,255,255,0.1); min-height: 300px;">
+                <i class="bi bi-qr-code text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
+                <h6 class="text-muted mt-3">Sẵn sàng chờ quét mã...</h6>
+                <p class="small text-muted mb-0">Hướng camera vào mã QR trên vé của khách hàng</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+    var html5QrcodeScanner = null;
+    var lastScannedId = null;
+
+    function initScanner() {
+        if(html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+        }
+        
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { 
+                fps: 30, 
+                // Bỏ qrbox để cho phép quét ở bất kỳ góc nào trên màn hình camera
+                formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+                disableFlip: false,
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true // Kích hoạt lõi quét Native siêu tốc của trình duyệt
+                }
+            },
+            false);
+            
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
+    }
+
+    // Nếu là load lần đầu
+    if (document.getElementById("reader")) {
+        initScanner();
+    }
+    
+    // Nếu load qua AJAX của _AdminLayout
+    $(document).ready(function() {
+        if (!html5QrcodeScanner && document.getElementById("reader")) {
+            initScanner();
+        }
+    });
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Tránh quét liên tục 1 mã trong 3 giây
+        if (decodedText === lastScannedId) return;
+        lastScannedId = decodedText;
+        setTimeout(() => { lastScannedId = null; }, 3000);
+
+        var match = decodedText.match(/TICKET-(\d+)/i);
+        var orderIdMatch = decodedText.match(/orderId=(\d+)/i);
+        
+        var orderId = parseInt(decodedText);
+        
+        if (match && match[1]) {
+            callVerifyApi(parseInt(match[1]));
+        } else if (orderIdMatch && orderIdMatch[1]) {
+            callVerifyApi(parseInt(orderIdMatch[1]));
+        } else if (!isNaN(orderId)) {
+            callVerifyApi(orderId);
+        } else {
+            showResult(false, "Mã QR không đúng định dạng của rạp chiếu phim!");
+        }
+    }
+
+    function onScanError(errorMessage) {
+        // Bỏ qua lỗi không quét được (xảy ra liên tục mỗi khung hình)
+    }
+
+    function verifyTicketManual() {
+        var val = $('#manualOrderId').val();
+        if (val) {
+            callVerifyApi(val);
+        }
+    }
+
+    function callVerifyApi(orderId) {
+        var $resultBox = $('#scanResult');
+        $resultBox.html('<div class="spinner-border text-success" role="status"></div><h6 class="mt-3">Đang kiểm tra...</h6>').removeClass('border-success border-danger').css('background', 'rgba(255,255,255,0.03)');
+
+        $.ajax({
+            url: '/AdminControllers/VerifyTicket',
+            type: 'POST',
+            data: { orderId: orderId },
+            success: function(res) {
+                if (res.success) {
+                    showResult(true, res.message, res.customerName, res.movieName);
+                } else {
+                    showResult(false, res.message);
+                }
+            },
+            error: function() {
+                showResult(false, "Lỗi kết nối tới máy chủ, vui lòng thử lại!");
+            }
+        });
+    }
+
+    function showResult(isSuccess, message, customerName, movieName) {
+        var $resultBox = $('#scanResult');
+        $resultBox.empty();
+        
+        if (isSuccess) {
+            $resultBox.removeClass('border-danger').addClass('border-success')
+                .css('background', 'rgba(0, 255, 135, 0.1)');
+            $resultBox.html(`
+                <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: #00ff87;"></i>
+                <h5 class="fw-bold mt-3 text-white">` + message + `</h5>
+                <div class="mt-3 text-start w-100 px-3">
+                    <p class="mb-1"><span class="text-muted small">Khách hàng:</span> <strong class="text-white">`+customerName+`</strong></p>
+                    <p class="mb-1"><span class="text-muted small">Phim:</span> <strong class="text-warning">`+movieName+`</strong></p>
+                </div>
+            `);
+        } else {
+            $resultBox.removeClass('border-success').addClass('border-danger')
+                .css('background', 'rgba(239, 68, 68, 0.1)');
+            $resultBox.html(`
+                <i class="bi bi-x-circle-fill" style="font-size: 4rem; color: #ef4444;"></i>
+                <h5 class="fw-bold mt-3 text-white">VÉ KHÔNG HỢP LỆ</h5>
+                <p class="text-danger mt-2">` + message + `</p>
+            `);
+        }
+        
+        // Sau 8 giây trả về mặc định
+        setTimeout(function() {
+            $resultBox.removeClass('border-success border-danger').css('background', 'rgba(255,255,255,0.03)');
+            $resultBox.html(`
+                <i class="bi bi-qr-code text-muted" style="font-size: 4rem; opacity: 0.5;"></i>
+                <h6 class="text-muted mt-3">Sẵn sàng chờ quét mã tiếp theo...</h6>
+                <p class="small text-muted mb-0">Hướng camera vào mã QR trên vé của khách hàng</p>
+            `);
+        }, 8000);
+    }
+</script>

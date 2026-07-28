@@ -1,0 +1,641 @@
+@model DoAnDatVeXemPhim.Models.Showtime
+@using Newtonsoft.Json
+@using DoAnDatVeXemPhim.Controllers
+@{
+    ViewData["Title"] = "Thanh toán - Cinema Hub";
+    var seatsJson = ViewBag.SelectedSeats as string ?? "[]";
+    var combosJson = ViewBag.SelectedCombos as string ?? "[]";
+    var seats = JsonConvert.DeserializeObject<List<SelectedSeatDto>>(seatsJson) ?? new List<SelectedSeatDto>();
+    var combos = JsonConvert.DeserializeObject<List<SelectedComboDto>>(combosJson) ?? new List<SelectedComboDto>();
+    decimal originalTotal = ViewBag.OriginalTotal != null ? (decimal)ViewBag.OriginalTotal : 0;
+    decimal vipDiscountAmount = ViewBag.VipDiscountAmount != null ? (decimal)ViewBag.VipDiscountAmount : 0;
+    decimal finalTotal = ViewBag.FinalTotal != null ? (decimal)ViewBag.FinalTotal : 0;
+    string vipLevelName = ViewBag.VipLevelName as string ?? "Hạng Đồng";
+    int vipDiscountRate = ViewBag.VipDiscountRate != null ? (int)ViewBag.VipDiscountRate : 0;
+    decimal walletBalance = ViewBag.WalletBalance != null ? (decimal)ViewBag.WalletBalance : 0;
+
+    // 🚀 Lấy số lượng vé và tổng tiền combo để phục vụ tính toán giảm giá 20% động phía Client
+    int totalTickets = seats.Count;
+    decimal totalComboPrice = combos.Sum(c => c.price * c.qty);
+}
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-image: radial-gradient(ellipse at 0% 100%, rgba(0,160,70,0.55) 0%, rgba(0,80,30,0.3) 30%, transparent 55%), radial-gradient(ellipse at 100% 0%, rgba(0,160,70,0.45) 0%, rgba(0,80,30,0.25) 28%, transparent 50%);
+        background-color: #010a04;
+        background-attachment: fixed;
+        color: #fff;
+    }
+
+    .page-wrap {
+        padding-top: 28px;
+        padding-bottom: 40px;
+    }
+
+    /* ── CARD ── */
+    .checkout-card {
+        background: rgba(10,22,13,0.75);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 16px;
+        overflow: hidden;
+        max-width: 680px;
+        margin: 0 auto;
+    }
+
+    .card-top {
+        background: rgba(0,0,0,0.3);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .card-top-accent {
+        width: 4px;
+        height: 22px;
+        background: #00ff87;
+        border-radius: 2px;
+    }
+
+    .card-top h3 {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        margin: 0;
+        letter-spacing: 0.3px;
+    }
+
+    .card-body-custom {
+        padding: 24px;
+    }
+
+    /* ── MOVIE INFO ── */
+    .movie-info-row {
+        display: flex;
+        gap: 16px;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+        .movie-info-row img {
+            width: 90px;
+            height: 128px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+    .movie-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+
+    .movie-meta-item {
+        font-size: 0.78rem;
+        color: #6b8c78;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 5px;
+    }
+
+        .movie-meta-item i {
+            font-size: 0.75rem;
+        }
+
+        .movie-meta-item span {
+            color: #c8e6d0;
+        }
+
+    /* ── SECTION ── */
+    .section-label {
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #3d7a52;
+        margin-bottom: 10px;
+    }
+
+    .info-box {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+    }
+
+    .seat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .seat-names {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .seat-price {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #00ff87;
+    }
+
+    .combo-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #9ca3af;
+        margin-bottom: 4px;
+    }
+
+        .combo-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .combo-row span:last-child {
+            color: #c8e6d0;
+            font-weight: 600;
+        }
+
+    .no-combo {
+        font-size: 0.78rem;
+        color: #3d6650;
+        font-style: italic;
+    }
+
+    /* ── VOUCHER & STUDENT ── */
+    .voucher-wrap {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 18px;
+    }
+
+    .voucher-label {
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #fbbf24;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .voucher-input-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .voucher-input {
+        flex: 1;
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 8px;
+        outline: none;
+        color: #fff;
+        font-size: 0.85rem;
+        font-family: monospace;
+        font-weight: 700;
+        padding: 10px 14px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: border-color 0.2s;
+    }
+
+        .voucher-input:focus {
+            border-color: #00ff87;
+            box-shadow: 0 0 0 3px rgba(0,255,135,0.1);
+        }
+
+        .voucher-input::placeholder {
+            color: #3d6650;
+            font-weight: 400;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
+    .btn-apply {
+        background: #fbbf24;
+        color: #1a0f00;
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s;
+    }
+
+        .btn-apply:hover {
+            background: #f59e0b;
+        }
+
+    .voucher-msg {
+        font-size: 0.75rem;
+        margin-top: 8px;
+        font-weight: 600;
+        display: none;
+    }
+
+    /* ── TOTAL BOX ── */
+    .total-box {
+        background: rgba(0,0,0,0.25);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        color: #6b8c78;
+        margin-bottom: 8px;
+    }
+
+        .total-row span:last-child {
+            color: #c8e6d0;
+            font-weight: 600;
+        }
+
+        .total-row.discount span:last-child {
+            color: #4ade80;
+        }
+
+        .total-row.voucher-row span:last-child {
+            color: #4ade80;
+        }
+
+    .total-divider {
+        border: none;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        margin: 10px 0;
+    }
+
+    .total-final {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .total-final-label {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .total-final-amount {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: #00ff87;
+        line-height: 1;
+    }
+
+    /* ── PAYMENT METHOD ── */
+    .payment-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .payment-option {
+        background: #0d1f10;
+        border: 1px solid #1a3320;
+        border-radius: 10px;
+        padding: 14px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .payment-option img {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            margin-bottom: 8px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .payment-option span {
+            font-size: 0.75rem;
+            color: #6b8c78;
+            display: block;
+        }
+
+        .payment-option:hover {
+            border-color: rgba(0,255,135,0.3);
+            background: rgba(0,255,135,0.04);
+        }
+
+        .payment-option.active {
+            border-color: #00ff87 !important;
+            background: rgba(0,255,135,0.08) !important;
+            box-shadow: 0 0 0 3px rgba(0,255,135,0.1);
+        }
+
+            .payment-option.active span {
+                color: #00ff87;
+            }
+
+    /* ── SUBMIT ── */
+    .btn-confirm {
+        width: 100%;
+        background: #00ff87;
+        color: #022c22;
+        font-size: 0.95rem;
+        font-weight: 800;
+        padding: 15px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-confirm:hover {
+            background: #00e676;
+            box-shadow: 0 6px 20px rgba(0,255,135,0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-confirm:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+    .terms-text {
+        text-align: center;
+        font-size: 0.7rem;
+        color: #3d6650;
+        margin-top: 12px;
+    }
+
+    .form-check-input:checked {
+        background-color: #00ff87 !important;
+        border-color: #00ff87 !important;
+    }
+</style>
+
+<div class="container-xl page-wrap">
+    <div class="checkout-card">
+
+        <div class="card-top">
+            <div class="card-top-accent"></div>
+            <h3>Xác nhận đơn hàng</h3>
+        </div>
+
+        <div class="card-body-custom">
+
+            @* ── MOVIE INFO ── *@
+            <div class="movie-info-row">
+                <img src="@Model.Movie?.PosterUrl" alt="@Model.Movie?.Title" />
+                <div>
+                    <div class="movie-title">@Model.Movie?.Title</div>
+                    <div class="movie-meta-item"><i class="bi bi-geo-alt-fill" style="color:#ef4444;"></i><span>@Model.CinemaHall?.Cinema?.Name</span></div>
+                    <div class="movie-meta-item"><i class="bi bi-door-open-fill"></i><span>@Model.CinemaHall?.Name</span></div>
+                    <div class="movie-meta-item"><i class="bi bi-calendar-check-fill" style="color:#00ff87;"></i><span>@Model.StartTime.ToString("dd/MM/yyyy HH:mm")</span></div>
+                </div>
+            </div>
+
+            @* ── GHẾ & LOẠI VÉ ── *@
+            <div class="section-label"><i class="bi bi-ticket-perforated-fill me-1"></i> Loại vé & Ghế đã chọn</div>
+            <div class="info-box">
+                <div class="seat-row mb-2">
+                    <span class="seat-names" style="font-size:0.8rem; color:#6b8c78;">
+                        @(ViewBag.AdultQty > 0 ? $"{ViewBag.AdultQty} Người lớn" : "")
+                        @(ViewBag.StudentQty > 0 ? $" | {ViewBag.StudentQty} Học sinh" : "")
+                        @(ViewBag.ChildQty > 0 ? $" | {ViewBag.ChildQty} Trẻ em" : "")
+                    </span>
+                </div>
+                <div class="seat-row">
+                    <span class="seat-names">@string.Join(", ", seats.Select(s => s.name))</span>
+                    <span class="seat-price" id="lblSeatPrice">@((originalTotal - totalComboPrice).ToString("N0"))đ</span>
+                </div>
+            </div>
+
+            @* ── COMBO ── *@
+            <div class="section-label"><i class="bi bi-cup-straw me-1"></i> Bắp & Nước</div>
+            <div class="info-box">
+                @if (combos != null && combos.Any(c => c.qty > 0))
+                {
+                    @foreach (var c in combos.Where(c => c.qty > 0))
+                    {
+                        <div class="combo-row">
+                            <span>@c.qty x @c.name</span>
+                            <span>@((c.price * c.qty).ToString("N0"))đ</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <span class="no-combo">Không chọn bắp nước kèm theo</span>
+                }
+            </div>
+
+
+            @* ── VOUCHER ── *@
+            <div class="voucher-wrap">
+                <div class="voucher-label"><i class="bi bi-ticket-perforated-fill"></i> Mã Voucher (nếu có)</div>
+                
+                @if (ViewBag.UserPromotions != null && ((List<UserPromotion>)ViewBag.UserPromotions).Any())
+                {
+                    <div class="mb-3">
+                        <select id="userVoucherSelect" class="form-select border-0 shadow-none" style="background: rgba(255,255,255,0.05); color: #fff; font-size: 0.85rem;" onchange="selectUserVoucher(this.value)">
+                            <option value="" style="background: #111827; color: #fff;">-- Chọn voucher từ Ví của bạn --</option>
+                            @foreach (var up in (List<UserPromotion>)ViewBag.UserPromotions)
+                            {
+                                <option value="@up.Promotion.VoucherCode" style="background: #111827; color: #fff;">
+                                    @up.Promotion.VoucherCode - @(up.Promotion.IsPercentage ? $"Giảm {up.Promotion.DiscountValue}%" : $"Giảm {up.Promotion.DiscountValue:N0}đ")
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
+
+                <div class="voucher-input-row">
+                    <input type="text" id="voucherInput" class="voucher-input" placeholder="Nhập mã voucher..." />
+                    <button class="btn-apply" type="button" onclick="applyVoucher()">Áp dụng</button>
+                </div>
+                <div id="voucherMessage" class="voucher-msg"></div>
+            </div>
+
+            @* ── TOTAL ── *@
+            <div class="total-box">
+                <div class="total-row">
+                    <span>Tạm tính (Vé + Combo)</span>
+                    <span id="lblOriginalTotal">@originalTotal.ToString("N0")đ</span>
+                </div>
+                <div class="total-row discount" id="vipDiscountRow">
+                    <span>Ưu đãi <strong style="color:#fbbf24;">@vipLevelName</strong> (-@vipDiscountRate%)</span>
+                    <span id="lblVipDiscountAmount">-@vipDiscountAmount.ToString("N0")đ</span>
+                </div>
+
+
+                <div class="total-row voucher-row">
+                    <span>Giảm giá voucher</span>
+                    <span id="voucherDiscountAmount">0đ</span>
+                </div>
+                <hr class="total-divider">
+                <div class="total-final">
+                    <span class="total-final-label">Tổng thanh toán</span>
+                    <span class="total-final-amount" id="finalTotalAmount">@finalTotal.ToString("N0")đ</span>
+                </div>
+            </div>
+
+            @* ── PAYMENT METHOD ── *@
+            <div class="section-label" style="margin-bottom:12px;"><i class="bi bi-credit-card me-1"></i> Phương thức thanh toán</div>
+            <div class="payment-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="payment-option" data-value="PayOS" onclick="selectPayment(this)">
+                    <img src="https://payos.vn/wp-content/uploads/2025/06/Casso-payOSLogo-1.svg" alt="PayOS" />
+                    <span>Thanh toán QR (payOS)</span>
+                </div>
+                <div class="payment-option" data-value="VietQR" onclick="selectPayment(this)">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/VietQR_Logo.svg" alt="VietQR" />
+                    <span>Chuyển khoản VietQR</span>
+                </div>
+                <div class="payment-option" data-value="Wallet" onclick="selectPayment(this)">
+                    <i class="bi bi-wallet2-fill" style="font-size:2rem;color:#00ff87;display:block;margin:0 auto 8px;"></i>
+                    <span>Ví Cinema Hub</span>
+                    <span style="color:#00ff87;font-weight:700;font-size:0.7rem;margin-top:3px;">
+                        Số dư: @walletBalance.ToString("N0")đ
+                    </span>
+                </div>
+            </div>
+
+            @* ── FORM SUBMIT ── *@
+            <form id="orderForm" asp-action="CreateOrder" asp-controller="Booking" method="POST">
+                <input type="hidden" name="paymentMethod" id="selectedPaymentMethod" value="" />
+                <input type="hidden" name="voucherCode" id="hiddenVoucherCode" value="" />
+
+
+                <button type="button" class="btn-confirm" id="btnFinalOrder">
+                    <i class="bi bi-check-circle-fill"></i> Xác nhận & Đặt vé
+                </button>
+            </form>
+
+            <div class="terms-text">Bằng việc nhấn xác nhận, bạn đồng ý với điều khoản của Cinema Hub.</div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Các biến cấu hình tĩnh từ Server đổ ra làm gốc để tính toán phần trăm
+        const constTicketCount = @totalTickets;
+        const constComboTotal = @totalComboPrice;
+        const constVipRate = @(vipDiscountRate / 100.0);
+        const constOriginalSeatTotal = @(seats.Sum(s => s.price));
+
+        let currentVoucherDiscount = 0;
+        let priceAfterVip = @finalTotal;
+        const walletBal   = @walletBalance;
+
+        // Bỏ logic JS xử lý ưu đãi sinh viên đi vì đã được xử lý phía trước
+
+        function applyVoucher() {
+            const code   = document.getElementById('voucherInput').value.trim().toUpperCase();
+            const msgDiv = document.getElementById('voucherMessage');
+            if (!code) {
+                msgDiv.style.display = 'block';
+                msgDiv.style.color   = '#fbbf24';
+                msgDiv.innerHTML     = '⚠️ Vui lòng nhập mã voucher trước!';
+                return;
+            }
+            fetch('@Url.Action("CheckVoucher", "Promotions")' + `?code=${code}&orderValue=${priceAfterVip}`)
+                .then(r => r.json())
+                .then(data => {
+                    msgDiv.style.display = 'block';
+                    if (data.success) {
+                        msgDiv.style.color = '#4ade80';
+                        msgDiv.innerHTML   = `🎉 ${data.message}`;
+                        document.getElementById('voucherDiscountAmount').innerText = '-' + Number(data.discountValue).toLocaleString('vi-VN') + 'đ';
+                        document.getElementById('finalTotalAmount').innerText      = Number(priceAfterVip - data.discountValue).toLocaleString('vi-VN') + 'đ';
+                        document.getElementById('hiddenVoucherCode').value         = code;
+                    } else {
+                        msgDiv.style.color = '#ef4444';
+                        msgDiv.innerHTML   = `❌ ${data.message}`;
+                        document.getElementById('voucherDiscountAmount').innerText = '0đ';
+                        document.getElementById('finalTotalAmount').innerText      = Number(priceAfterVip).toLocaleString('vi-VN') + 'đ';
+                        document.getElementById('hiddenVoucherCode').value         = '';
+                    }
+                })
+                .catch(() => {
+                    msgDiv.style.display = 'block';
+                    msgDiv.style.color   = '#ef4444';
+                    msgDiv.innerHTML     = '❌ Lỗi kết nối hệ thống!';
+                });
+        }
+
+        function selectUserVoucher(code) {
+            const input = document.getElementById('voucherInput');
+            input.value = code;
+            if (code) {
+                applyVoucher();
+            } else {
+                document.getElementById('voucherMessage').innerHTML = '';
+                document.getElementById('voucherDiscountAmount').innerText = '0đ';
+                document.getElementById('finalTotalAmount').innerText = Number(priceAfterVip).toLocaleString('vi-VN') + 'đ';
+                document.getElementById('hiddenVoucherCode').value = '';
+            }
+        }
+
+        function selectPayment(el) {
+            document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('selectedPaymentMethod').value = el.dataset.value;
+        }
+
+        document.getElementById('btnFinalOrder').addEventListener('click', function () {
+            const method = document.getElementById('selectedPaymentMethod').value;
+
+            if (!method) {
+                alert('Vui lòng chọn phương thức thanh toán!');
+                return;
+            }
+
+            if (method === 'Wallet') {
+                const finalAmtText = document.getElementById('finalTotalAmount').innerText;
+                const finalAmt     = parseFloat(finalAmtText.replace(/[^0-9]/g, ''));
+                if (walletBal < finalAmt) {
+                    alert('⚠️ Số dư ví không đủ để thanh toán!\nSố dư hiện tại: ' + walletBal.toLocaleString('vi-VN') + 'đ\nVui lòng chọn phương thức khác.');
+                    return;
+                }
+            }
+
+            this.innerHTML      = '<span class="spinner-border spinner-border-sm"></span> Đang khởi tạo đơn hàng...';
+            this.disabled       = true;
+            document.getElementById('orderForm').submit();
+        });
+    </script>
+}

@@ -1,0 +1,329 @@
+﻿@using DoAnDatVeXemPhim.Models
+@model IEnumerable<CinemaHall>
+
+@{
+    ViewData["Title"] = "Quản lý Phòng Chiếu";
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+<div class="dashboard-panel-card slide-in-bottom">
+    @* Header đồng bộ tông Cyberpunk với hiệu ứng Border Glow xanh neon *@
+    <div class="d-flex justify-content-between align-items-center mb-4 border-start border-warning border-5 ps-3 py-2" style="border-color: #00ff87 !important;">
+        <div>
+            <h2 class="fw-bold mb-0 text-uppercase text-white" style="text-shadow: 0 0 10px rgba(0,255,135,0.3);">DANH SÁCH PHÒNG CHIẾU</h2>
+            <p class="text-muted small mb-0">Quản lý không gian và sức chứa của từng cụm rạp</p>
+        </div>
+        <div>
+        <a href="/AdminControllers/Index" class="btn fw-bold px-4 py-2 rounded-pill ajax-link shadow-sm" style="background: transparent; color: #e5e7eb; border: 1px solid rgba(255,255,255,0.2); white-space: nowrap; display: inline-flex; align-items: center; width: auto; height: auto; text-decoration: none;">
+            <i class="bi bi-house-door me-1"></i> Dashboard
+        </a>
+        <button data-url="@Url.Action("Create")" class="btn btn-cyber-success fw-bold rounded-pill px-4 text-uppercase shadow-sm btn-trigger-modal">
+            <i class="bi bi-plus-circle-fill me-2"></i>Thêm Phòng Mới
+        </button>
+        </div>
+    </div>
+
+    @* THANH TÌM KIẾM PHÒNG CHIẾU (LIVE SEARCH) *@
+    <form id="searchCinemaHallForm" action="/CinemaHalls/Index" method="get" class="mb-4 mt-2">
+        <div class="search-wrap d-flex align-items-center p-2 rounded-pill" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); max-width: 600px;">
+            <div class="search-field flex-grow-1 d-flex align-items-center px-3">
+                <i class="bi bi-search me-2" style="color: #00ff87;"></i>
+                <input type="text" name="searchString" id="searchInput" value="@ViewData["CurrentFilter"]" class="form-control border-0 bg-transparent text-white shadow-none p-0" placeholder="Tìm tên phòng chiếu, tên rạp..." style="outline: none !important;" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-save-neon rounded-pill px-4 fw-bold" style="background: #00ff87; color: #000;">TÌM KIẾM</button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()))
+            {
+                <a href="/CinemaHalls/Index" class="btn ajax-link text-danger ms-2" title="Xóa bộ lọc"><i class="bi bi-x-circle-fill fs-5"></i></a>
+            }
+        </div>
+    </form>
+
+    @* Bảng danh sách phòng phong cách Dark Card *@
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden style-dark-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 text-white">
+                <thead class="style-dark-thead">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase small fw-bold text-muted" style="letter-spacing: 1px;">Tên Phòng</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted" style="letter-spacing: 1px;">Sức Chứa</th>
+                        <th class="py-3 text-uppercase small fw-bold text-muted" style="letter-spacing: 1px;">Thuộc Cụm Rạp</th>
+                        <th class="py-3 text-center text-uppercase small fw-bold text-muted" style="letter-spacing: 1px;">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="p-2 rounded-3 me-3 style-icon-box">
+                                        <i class="bi bi-door-open fs-5 text-warning" style="color: #fbbf24 !important;"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-bold text-white d-block">@item.Name</span>
+                                        <small class="text-muted text-uppercase" style="font-size: 0.7rem;">ID: #@item.Id</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-cyber-badge px-3 py-2 rounded-pill fw-bold border border-success border-opacity-20">
+                                    <i class="bi bi-people-fill me-1 text-success"></i> @item.TotalSeats Ghế
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-building text-danger me-2" style="color: #ef4444 !important;"></i>
+                                    <span class="text-white fw-bold">@item.Cinema?.Name</span>
+                                </div>
+                                <small class="text-muted ms-4">@item.Cinema?.City</small>
+                            </td>
+                            <td class="text-center">
+                                <div class="hall-action-wrap">
+                                    <a asp-controller="Seats" asp-action="Index" asp-route-hallId="@item.Id"
+                                       class="hall-btn-map ajax-link">
+                                        <i class="bi bi-grid-3x3-gap-fill me-1"></i> SƠ ĐỒ GHẾ
+                                    </a>
+                                    <button data-url="@Url.Action("Edit", new { id = item.Id })" class="hall-btn-icon edit btn-trigger-modal" title="Sửa">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button data-url="@Url.Action("Details", new { id = item.Id })" class="hall-btn-icon view btn-trigger-modal" title="Chi tiết">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+                                    <button data-url="@Url.Action("Delete", new { id = item.Id })" class="hall-btn-icon del btn-trigger-modal" title="Xóa">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@* THÀNH PHẦN MODAL POPUP CHUNG CHO TOÀN PHÂN HỆ PHÒNG CHIẾU *@
+<div class="modal fade" id="cinemaHallModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content style-modal-cyber">
+            <div id="modalContentBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Toàn bộ phần CSS giữ nguyên của bạn */
+    body {
+        background-color: #0b0f19 !important;
+        color: #ffffff;
+    }
+
+    .style-dark-card {
+        background-color: rgba(17, 24, 39, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(10px);
+    }
+
+    .style-dark-thead {
+        background-color: #0f172a !important;
+    }
+
+    .table {
+        --bs-table-bg: transparent !important;
+        --bs-table-hover-bg: rgba(255, 255, 255, 0.02) !important;
+    }
+
+        .table td, .table th {
+            border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+    .style-icon-box {
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.15);
+    }
+
+    .bg-cyber-badge {
+        background-color: rgba(0, 255, 135, 0.1) !important;
+        color: #00ff87 !important;
+    }
+
+
+
+    .style-modal-cyber {
+        background-color: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 0 30px rgba(0,0,0,0.6) !important;
+        border-radius: 16px !important;
+    }
+
+    .back-dashboard-link {
+        color: #9ca3af;
+        transition: all 0.3s ease;
+    }
+
+        .back-dashboard-link:hover {
+            color: #00ff87 !important;
+        }
+
+    /* Override CSS toàn cục - ép nút action về đúng kích thước */
+    .hall-action-wrap {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    .hall-btn-icon {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 6px !important;
+        border: none !important;
+        cursor: pointer !important;
+        font-size: 0.85rem !important;
+        padding: 0 !important;
+        transition: all 0.2s ease !important;
+    }
+    .hall-btn-icon.edit {
+        background: rgba(251, 191, 36, 0.1) !important;
+        color: #fbbf24 !important;
+    }
+    .hall-btn-icon.edit:hover {
+        background: #fbbf24 !important;
+        color: #000 !important;
+    }
+    .hall-btn-icon.view {
+        background: rgba(96, 165, 250, 0.1) !important;
+        color: #60a5fa !important;
+    }
+    .hall-btn-icon.view:hover {
+        background: #60a5fa !important;
+        color: #000 !important;
+    }
+    .hall-btn-icon.del {
+        background: rgba(239, 68, 68, 0.1) !important;
+        color: #ef4444 !important;
+    }
+    .hall-btn-icon.del:hover {
+        background: #ef4444 !important;
+        color: #fff !important;
+    }
+    .hall-btn-map {
+        display: inline-flex !important;
+        align-items: center !important;
+        height: 32px !important;
+        padding: 0 10px !important;
+        border-radius: 6px !important;
+        font-size: 0.72rem !important;
+        font-weight: 700 !important;
+        background: rgba(251, 191, 36, 0.15) !important;
+        color: #fbbf24 !important;
+        border: 1px solid rgba(251, 191, 36, 0.3) !important;
+        text-decoration: none !important;
+        transition: all 0.2s ease !important;
+        white-space: nowrap !important;
+    }
+    .hall-btn-map:hover {
+        background: #fbbf24 !important;
+        color: #000 !important;
+    }
+</style>
+
+<script>
+    $(document).ready(function () {
+        // Khởi tạo thực thể modal bootstrap
+        var modalElement = new bootstrap.Modal(document.getElementById('cinemaHallModal'));
+
+        // Sự kiện click mở Modal và gọi AJAX lấy view
+        $('.btn-trigger-modal').on('click', function (e) {
+            e.preventDefault();
+            var targetUrl = $(this).data('url');
+
+            // Trả về trạng thái loading trước khi nhận dữ liệu
+            $('#modalContentBody').html(`
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `);
+
+            modalElement.show();
+
+            // Đẩy AJAX lấy giao diện cục bộ (Partial View) từ Server
+            $.get(targetUrl, function (data) {
+                $('#modalContentBody').html(data);
+            }).fail(function () {
+                $('#modalContentBody').html(`
+                    <div class="p-4 text-center">
+                        <i class="bi bi-exclamation-octagon-fill text-danger display-4"></i>
+                        <p class="text-white mt-2">Có lỗi xảy ra khi tải dữ liệu. Vui lòng kiểm tra lại!</p>
+                        <button type="button" class="btn btn-secondary rounded-pill btn-sm" data-bs-dismiss="modal">Đóng</button>
+                    </div>
+                `);
+            });
+        });
+
+        // ── LIVE SEARCH KHÔNG TẢI TRANG LẠI (AJAX) ──
+        var searchTimer;
+        $(document).off('input', '#searchInput').on('input', '#searchInput', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                $('#searchCinemaHallForm').trigger('submit');
+            }, 600); // Đợi 600ms sau khi người dùng ngừng gõ
+        });
+
+        $(document).off('submit', '#searchCinemaHallForm').on('submit', '#searchCinemaHallForm', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var url = $form.attr('action') + '?' + $form.serialize();
+            var $box  = $('#admin-dynamic-content');
+            var $load = $('#admin-loader');
+            
+            $box.css('opacity', '0.3');
+            $load.fadeIn(200);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (data) {
+                    var $dummy = $('<div>').append($.parseHTML(data, document, true));
+                    var $inner = $dummy.find('#admin-dynamic-content');
+                    
+                    if ($inner.length > 0) {
+                        $box.html($inner.html());
+                    } else {
+                        $box.html(data);
+                    }
+                    
+                    // Lấy lại focus (con trỏ chuột) vào ô tìm kiếm
+                    var currentVal = $('#searchInput').val();
+                    $('#searchInput').focus().val('').val(currentVal);
+
+                    $load.fadeOut(200, function() {
+                        $box.css('opacity', '1');
+                    });
+                    
+                    window.history.pushState({path: url}, '', url);
+                },
+                error: function() {
+                    $load.fadeOut(200);
+                    $box.css('opacity', '1');
+                }
+            });
+        });
+    });
+</script>

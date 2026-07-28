@@ -1,0 +1,414 @@
+@{
+    ViewData["Title"] = "Hệ thống quản trị Cinema Hub";
+    Layout = null;
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+    /* ═══════════════════════════════════════════
+           🟢 BASE & DARK SIDEBAR BỐ CỤC THEO FIGMA mẫu
+        ═══════════════════════════════════════════ */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-image: radial-gradient(circle at 90% 15%, rgba(16, 185, 129, 0.28) 0%, rgba(4, 47, 31, 0.6) 35%, transparent 65%), radial-gradient(circle at 10% 85%, rgba(5, 150, 105, 0.22) 0%, rgba(6, 78, 59, 0.5) 30%, transparent 60%) !important;
+        background-color: #060913 !important;
+        background-attachment: fixed !important;
+        background-size: cover !important;
+        color: #ffffff;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        overflow-x: hidden; /* Chống cuộn ngang */
+    }
+
+    .admin-wrapper {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+    }
+
+    /* ═══════════════════════════════════════════
+           🟢 THANH SIDEBAR DỌC BÊN TRÁI PHẲNG MỊN
+        ═══════════════════════════════════════════ */
+    .admin-sidebar {
+        width: 260px;
+        background-color: #111827;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        padding-top: 24px;
+    }
+
+    .sidebar-brand {
+        padding: 0 24px 28px;
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: #00ff87;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .sidebar-menu {
+        list-style: none;
+        padding: 0 14px;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 18px;
+        color: #9ca3af !important;
+        text-decoration: none !important;
+        font-weight: 500;
+        font-size: 0.92rem;
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+    }
+
+        .sidebar-link:hover {
+            color: #00ff87 !important;
+            background-color: rgba(0, 255, 135, 0.05);
+        }
+
+        .sidebar-link.active {
+            background-color: rgba(0, 255, 135, 0.15) !important;
+            color: #00ff87 !important;
+            font-weight: 600;
+        }
+
+    /* ═══════════════════════════════════════════
+           🟢 KHU VỰC NỘI DUNG BÊN PHẢI RỘNG RÃI
+        ═══════════════════════════════════════════ */
+    .admin-main-content {
+        margin-left: 260px;
+        flex-grow: 1;
+        padding: 40px;
+        background-image: radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 60%);
+        min-height: 100vh;
+        position: relative;
+    }
+
+    /* 🟢 KHU VỰC HIỆU ỨNG LOADING SPA NEON */
+    #admin-loader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+        z-index: 1000;
+    }
+
+    .neon-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(0, 255, 135, 0.1);
+        border-left-color: #00ff87;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        box-shadow: 0 0 15px rgba(0, 255, 135, 0.4);
+    }
+
+    @@keyframes spin {
+        0%
+
+    {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+
+    }
+
+    #admin-dynamic-content {
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    /* Các CSS thành phần bên trong Dashboard (giữ nguyên) */
+    .admin-top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 35px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .admin-user-badge {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        padding: 8px 18px;
+        border-radius: 50px;
+    }
+
+    .dashboard-panel-card {
+        background: rgba(17, 24, 39, 0.5);
+        backdrop-filter: blur(10px);
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .summary-badge-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+
+    .summary-item {
+        background: rgba(30, 41, 59, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        transition: all 0.2s;
+    }
+
+        .summary-item:hover {
+            border-color: rgba(0, 255, 135, 0.2);
+            background: rgba(30, 41, 59, 0.45);
+        }
+
+    .summary-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.35rem;
+    }
+
+    .btn-action-pill {
+        background-color: #00ff87;
+        color: #022c22;
+        font-weight: 700;
+        font-size: 0.82rem;
+        padding: 6px 16px;
+        border-radius: 50px;
+        text-decoration: none !important;
+        transition: all 0.2s;
+        border: none;
+        display: inline-block;
+    }
+
+        .btn-action-pill:hover {
+            background-color: #00e676;
+            box-shadow: 0 0 12px rgba(0, 255, 135, 0.35);
+            color: #022c22;
+        }
+</style>
+
+<div class="admin-wrapper">
+
+    <aside class="admin-sidebar">
+        <div class="sidebar-brand">
+            <i class="bi bi-shield-lock-fill"></i>
+            <span>Admin Movie</span>
+        </div>
+        <ul class="sidebar-menu">
+            @if (User.IsInRole("Admin"))
+            {
+                <li>
+                    <a href="/Movies/Index" class="sidebar-link ajax-link">
+                        <i class="bi bi-film"></i> Movies
+                    </a>
+                </li>
+                <li>
+                    <a href="/Cinemas/Index" class="sidebar-link ajax-link">
+                        <i class="bi bi-building"></i> Theaters
+                    </a>
+                </li>
+                <li>
+                    <a href="/CustomerProfiles/Index" class="sidebar-link ajax-link">
+                        <i class="bi bi-people-fill"></i> Users
+                    </a>
+                </li>
+            }
+
+            <li>
+                <a href="/AdminControllers/ManageOrders" class="sidebar-link ajax-link">
+                    <i class="bi bi-receipt-cutoff"></i> Orders
+                </a>
+            </li>
+            <li>
+                <a href="/AdminControllers/ScanTicket" class="sidebar-link ajax-link">
+                    <i class="bi bi-qr-code-scan"></i> Soát Vé
+                </a>
+            </li>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <li>
+                    <a href="/AdminControllers/RevenueReport" class="sidebar-link ajax-link">
+                        <i class="bi bi-pie-chart-fill"></i> Report
+                    </a>
+                </li>
+                <li>
+                    <a href="/Banners/Index" class="sidebar-link ajax-link">
+                        <i class="bi bi-images"></i> Banners
+                    </a>
+                </li>
+                <li>
+                    <a href="/AdminControllers/AprioriAnalysis" class="sidebar-link ajax-link">
+                        <i class="bi bi-cpu-fill"></i> Apriori Marketing
+                    </a>
+                </li>
+            }
+            <li class="mt-4 border-top border-secondary pt-3" style="border-color: rgba(255,255,255,0.05) !important;">
+                <a href="/Home/Index" class="sidebar-link text-muted">
+                    <i class="bi bi-arrow-left-circle"></i> Quay lại trang chủ
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="admin-main-content">
+        <div id="admin-loader">
+            <div class="neon-spinner"></div>
+        </div>
+
+        <div id="admin-dynamic-content">
+            @RenderBody()
+        </div>
+    </main>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        // Tự động highlight menu dựa trên URL hiện tại (F5 hoặc truy cập trực tiếp)
+        var currentPath = window.location.pathname;
+        if (currentPath && currentPath !== "/") {
+            $('.sidebar-menu a').removeClass('active');
+            $('.sidebar-menu a').each(function() {
+                if ($(this).attr('href') === currentPath || currentPath.indexOf($(this).attr('href')) === 0) {
+                    $(this).addClass('active');
+                }
+            });
+        }
+
+
+        // 🚀 ĐỘNG CƠ AJAX BỌC THÉP CHO SPA
+        $(document).on('click', '.ajax-link', function (e) {
+            e.preventDefault();
+            var targetUrl = $(this).attr('href');
+            if (!targetUrl || targetUrl === '#') return;
+
+            // Xử lý làm sáng menu bên trái
+            if ($(this).hasClass('sidebar-link')) {
+                $('.sidebar-menu a').removeClass('active');
+                $(this).addClass('active');
+            }
+
+            var $contentBox = $('#admin-dynamic-content');
+            var $loader = $('#admin-loader');
+
+            // Mờ nội dung cũ, xoay loading
+            $contentBox.css('opacity', '0.3');
+            $loader.fadeIn(200);
+
+            $.ajax({
+                url: targetUrl,
+                type: 'GET',
+                cache: false,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (data) {
+                    // 🟢 THUẬT TOÁN THÔNG MINH: Moi ruột chống lồng Layout
+                    var $dummy = $('<div>').append($.parseHTML(data, document, true));
+                    var $inner = $dummy.find('#admin-dynamic-content');
+
+                    if ($inner.length > 0) {
+                        // Nếu trang trả về chứa cả Layout -> Moi đúng cái ruột ra
+                        $contentBox.html($inner.html());
+                    } else {
+                        // Nếu trả về PartialView chuẩn -> Nhét thẳng vào
+                        $contentBox.html(data);
+                    }
+
+                    $loader.fadeOut(200, function() {
+                        $contentBox.css('opacity', '1');
+                    });
+
+                    window.history.pushState({path: targetUrl}, '', targetUrl);
+                },
+                error: function () {
+                    $loader.fadeOut(200);
+                    $contentBox.css('opacity', '1');
+                    alert('Lỗi tải trang, vui lòng thử lại!');
+                }
+            });
+        });
+
+        // 🟢 FIX SPA: Xử lý khi bấm nút Back/Forward của trình duyệt (Popstate)
+        $(window).on('popstate', function(e) {
+            var targetUrl = location.href;
+            var $contentBox = $('#admin-dynamic-content');
+            var $loader = $('#admin-loader');
+
+            $contentBox.css('opacity', '0.3');
+            $loader.fadeIn(200);
+
+            $.ajax({
+                url: targetUrl,
+                type: 'GET',
+                cache: false,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (data) {
+                    // Áp dụng thuật toán moi ruột cho cả nút Back
+                    var $dummy = $('<div>').append($.parseHTML(data, document, true));
+                    var $inner = $dummy.find('#admin-dynamic-content');
+
+                    if ($inner.length > 0) {
+                        $contentBox.html($inner.html());
+                    } else {
+                        $contentBox.html(data);
+                    }
+
+                    $loader.fadeOut(200, function() {
+                        $contentBox.css('opacity', '1');
+                    });
+
+                    // Sáng đúng menu khi back
+                    $('.sidebar-menu a').removeClass('active');
+                    $('.sidebar-menu a[href="'+window.location.pathname+'"]').addClass('active');
+                },
+                error: function () {
+                    location.reload();
+                }
+            });
+        });
+
+    });
+</script>

@@ -1,0 +1,35 @@
+﻿@model DoAnDatVeXemPhim.Models.Promotion
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="p-5 text-center">
+    <div class="mb-4" style="text-shadow: 0 0 20px rgba(239,68,68,0.4);">
+        <i class="bi bi-ticket-detailed text-danger display-1"></i>
+    </div>
+
+    <h3 class="fw-bold text-white mb-3 text-uppercase">XÓA MÃ KHUYẾN MÃI NÀY?</h3>
+    <p style="color: #9ca3af; font-size: 0.95rem;" class="mb-4 px-3">
+        Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa mã voucher <br />
+        <strong class="text-danger fs-4 d-block mt-2" style="letter-spacing: 2px;">@Model.VoucherCode</strong>
+    </p>
+
+    <div class="text-start p-4 rounded-4 mb-5" style="background: rgba(0,0,0,0.4); border: 1px dashed rgba(239, 68, 68, 0.3);">
+        <p class="mb-2 text-white"><i class="bi bi-card-text me-2" style="color: #60a5fa;"></i> <strong>Chi tiết:</strong> @Model.Description</p>
+        <p class="mb-0 text-white"><i class="bi bi-activity me-2" style="color: #fbbf24;"></i> <strong>Đã sử dụng:</strong> @Model.UsedCount / @Model.UsageLimit lượt</p>
+    </div>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+            <button type="button" class="btn btn-outline-light btn-lg px-5 rounded-pill fw-bold" data-bs-dismiss="modal" style="border-color: rgba(255,255,255,0.2);">
+                HỦY BỎ
+            </button>
+            <button type="submit" class="btn btn-danger btn-lg px-5 rounded-pill fw-bold shadow" style="background: #ef4444; border: none;">
+                <i class="bi bi-trash3-fill me-2"></i> XÁC NHẬN XÓA
+            </button>
+        </div>
+    </form>
+</div>

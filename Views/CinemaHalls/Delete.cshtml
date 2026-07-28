@@ -1,0 +1,48 @@
+﻿@using DoAnDatVeXemPhim.Models
+@model CinemaHall
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="p-4 p-md-5 text-center">
+    @* Biểu tượng cảnh báo phát sáng đỏ neon *@
+    <div class="mb-4" style="filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.5));">
+        <i class="bi bi-exclamation-octagon-fill text-danger" style="font-size: 4.5rem;"></i>
+    </div>
+
+    <h3 class="fw-bold text-white mb-3 text-uppercase" style="letter-spacing: 0.5px;">XÁC NHẬN GỠ PHÒNG CHIẾU?</h3>
+    <p class="text-muted mb-4 px-2" style="font-size: 0.95rem; line-height: 1.6;">
+        Hành động này sẽ gỡ vĩnh viễn <strong class="text-danger" style="text-shadow: 0 0 5px rgba(239,68,68,0.2);">@Model.Name</strong>
+        khỏi hệ thống dữ liệu rạp. Bạn có chắc chắn muốn tiếp tục thực hiện?
+    </p>
+
+    @* Hộp thông tin chi tiết phòng cần xóa *@
+    <div class="text-start p-4 rounded-4 mb-4" style="background: rgba(0, 0, 0, 0.4); border: 1px dashed rgba(239, 68, 68, 0.3);">
+        <small class="text-uppercase fw-bold d-block mb-3" style="color: #fbbf24; font-size: 0.75rem; letter-spacing: 1px;">
+            <i class="bi bi-info-circle-fill me-1"></i> Thông số phòng bị ảnh hưởng:
+        </small>
+        <div class="text-white" style="font-size: 0.95rem;">
+            <p class="mb-2"><i class="bi bi-door-open me-2" style="color: #fbbf24;"></i> <strong>Tên phòng:</strong> @Model.Name</p>
+            <p class="mb-2"><i class="bi bi-building me-2" style="color: #60a5fa;"></i> <strong>Tại rạp:</strong> @Model.Cinema?.Name</p>
+            <p class="mb-0"><i class="bi bi-people me-2" style="color: #00ff87;"></i> <strong>Sức chứa cấu hình:</strong> @Model.TotalSeats Ghế</p>
+        </div>
+    </div>
+
+    @* Form gửi yêu cầu xóa thực tế lên Server *@
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex justify-content-center gap-3 mt-4 pt-2">
+            <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal" style="border-color: rgba(255,255,255,0.15);">
+                HỦY BỎ
+            </button>
+            <button type="submit" class="btn btn-danger rounded-pill px-5 fw-bold shadow-sm" style="background: #ef4444; border: none; transition: all 0.3s;">
+                <i class="bi bi-trash3-fill me-2"></i> XÓA NGAY
+            </button>
+        </div>
+    </form>
+
+    <div class="mt-4 pt-2 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+        <small class="text-muted italic" style="font-size: 0.75rem;"><i class="bi bi-info-circle me-1"></i> Lưu ý: Hãy đảm bảo phòng này không còn suất chiếu nào đang mở bán.</small>
+    </div>
+</div>

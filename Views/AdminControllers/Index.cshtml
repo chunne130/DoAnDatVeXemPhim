@@ -1,0 +1,95 @@
+@{
+    ViewData["Title"] = "Hệ thống quản trị Cinema Hub";
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="admin-top-header">
+    <div>
+        <h1 class="h3 fw-bold m-0" style="letter-spacing: -0.5px;">Dashboard Overview</h1>
+        <p class="text-muted small m-0 mt-1">Hệ thống chuỗi rạp phim Cinema Hub vận hành ổn định.</p>
+    </div>
+    <div class="admin-user-badge">
+        <div style="width: 8px; height: 8px; background: #00ff87; border-radius: 50%;"></div>
+        <span class="small fw-semibold text-muted">administrator</span>
+    </div>
+</div>
+
+<div class="summary-badge-grid">
+    <div class="summary-item">
+        <div class="summary-icon-box" style="background: rgba(13, 148, 136, 0.15); color: #0d9488;"><i class="bi bi-calendar-check"></i></div>
+        <div>
+            <div class="text-muted small fw-medium">Suất chiếu</div>
+            <a href="/Showtimes/Index" class="text-white text-decoration-none fw-bold small mt-1 d-block ajax-link" style="color: #00ff87 !important;">Lên lịch ngay →</a>
+        </div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-icon-box" style="background: rgba(225, 29, 72, 0.15); color: #e11d48;"><i class="bi bi-ticket-perforated"></i></div>
+        <div>
+            <div class="text-muted small fw-medium">Khuyến mãi</div>
+            <a href="/Promotions/Index" class="text-white text-decoration-none fw-bold small mt-1 d-block ajax-link" style="color: #00ff87 !important;">Cấu hình mã →</a>
+        </div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-icon-box" style="background: rgba(234, 179, 8, 0.15); color: #eab308;"><i class="bi bi-door-open"></i></div>
+        <div>
+            <div class="text-muted small fw-medium">Phòng chiếu</div>
+            <a href="/CinemaHalls/Index" class="text-white text-decoration-none fw-bold small mt-1 d-block ajax-link" style="color: #00ff87 !important;">Quản lý phòng →</a>
+        </div>
+    </div>
+    <div class="summary-item">
+        <div class="summary-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;"><i class="bi bi-cup-straw"></i></div>
+        <div>
+            <div class="text-muted small fw-medium">Bắp nước</div>
+            <a href="/Comboes/Index" class="text-white text-decoration-none fw-bold small mt-1 d-block ajax-link" style="color: #00ff87 !important;">Quản lý combo →</a>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-panel-card">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold m-0" style="font-size: 1.1rem; letter-spacing: -0.2px;">Movies Management</h5>
+        <a href="/Movies/Create" class="btn-action-pill ajax-link"><i class="bi bi-plus-lg me-1"></i> Create new</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-borderless align-middle m-0" style="--bs-table-bg: transparent;">
+            <thead>
+                <tr class="text-muted small uppercase border-bottom" style="border-color: rgba(255,255,255,0.05) !important; font-size: 0.72rem;">
+                    <th style="padding-bottom: 12px; width: 60px;">#</th>
+                    <th style="padding-bottom: 12px; width: 100px;">Cover</th>
+                    <th style="padding-bottom: 12px;">Title</th>
+                    <th style="padding-bottom: 12px; width: 140px;">Status</th>
+                    <th style="padding-bottom: 12px; width: 140px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-bottom" style="border-color: rgba(255,255,255,0.03) !important;">
+                    <td class="text-muted fw-semibold">1</td>
+                    <td class="py-3">
+                        <div style="width: 48px; height: 68px; background: rgba(255,255,255,0.05); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="font-size: 0.65rem;">Poster</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-white" style="font-size: 0.92rem;">Dune: Part Two</div>
+                        <div class="text-muted small mt-0.5">Khoa học viễn tưởng · 2D/IMAX</div>
+                    </td>
+                    <td>
+                        <span class="badge" style="background: rgba(0, 255, 135, 0.1); color: #00ff87; border: 1px solid rgba(0,255,135,0.2); padding: 5px 10px; border-radius: 6px; font-size: 0.75rem;">Now Showing</span>
+                    </td>
+                    <td>
+                        <div class="d-flex justify-content-center gap-2">
+                            <button class="btn btn-sm btn-outline-light border-0" style="background: rgba(255,255,255,0.03);"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-light border-0" style="background: rgba(255,255,255,0.03);"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger border-0" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="/Movies/Index" class="text-decoration-none font-weight-bold small ajax-link" style="color: #00ff87; font-weight: 600;">Xem toàn bộ danh sách kho phim thực tế →</a>
+    </div>
+</div>

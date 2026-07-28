@@ -1,0 +1,162 @@
+@using DoAnDatVeXemPhim.Models
+@model Movie
+
+@{
+    ViewData["Title"] = Model.Title + " - Chi tiết & Đặt vé";
+}
+
+<div class="container mt-5 mb-5">
+    @* Breadcrumb *@
+    <div class="d-inline-flex align-items-center mb-4 px-4 py-2 rounded-pill" style="background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);">
+        <a asp-controller="Home" asp-action="Index" class="text-decoration-none fw-semibold" style="color: #9ca3af; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'">
+            <i class="bi bi-house-door" style="color: #00ff87;"></i> Home
+        </a>
+        <i class="bi bi-chevron-right mx-3" style="font-size: 0.7rem; color: #4b5563;"></i>
+        <a asp-controller="Home" asp-action="Movies" class="text-decoration-none fw-semibold" style="color: #9ca3af; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'">
+            Phim
+        </a>
+        <i class="bi bi-chevron-right mx-3" style="font-size: 0.7rem; color: #4b5563;"></i>
+        <span class="fw-bold text-white">@Model.Title</span>
+    </div>
+
+    <div class="card shadow-lg border-0 rounded-4 overflow-hidden bg-white">
+        <div class="card-body p-4 p-md-5">
+            <div class="row g-5">
+                @* Cột trái: Poster & Nút hành động *@
+                <div class="col-md-4">
+                    <div class="position-relative mb-4 group">
+                        <img src="@Model.PosterUrl" class="img-fluid rounded-4 shadow-lg w-100" style="object-fit: cover; min-height: 480px;" alt="Poster" />
+                        <div class="position-absolute top-0 start-0 m-3">
+                            <span class="badge bg-danger rounded-pill px-3 shadow">HOT MOVIE</span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-3">
+                        @* Nút Trailer *@
+                        @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+                        {
+                            <button id="btnPlayTrailer" class="btn btn-outline-dark btn-lg fw-bold rounded-pill shadow-sm py-2"
+                                    data-bs-toggle="modal" data-bs-target="#trailerModal" data-url="@Model.TrailerUrl">
+                                <i class="bi bi-play-circle-fill me-2"></i> XEM TRAILER
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                @* Cột phải: Thông tin phim *@
+                <div class="col-md-8">
+                    <div class="mb-4">
+                        <h1 class="display-4 fw-bold text-dark mb-2">@Model.Title</h1>
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge bg-warning text-dark px-3 rounded-pill fw-bold">@Model.Genre?.Name</span>
+                            <span class="text-muted"><i class="bi bi-clock-fill text-danger me-1"></i> @Model.Duration phút</span>
+                            <span class="text-muted"><i class="bi bi-calendar-event-fill text-danger me-1"></i> @(Model.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Đang cập nhật")</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-5 py-4 border-top border-bottom">
+                        <h5 class="fw-bold text-dark text-uppercase mb-3" style="letter-spacing: 1px;">Nội dung phim</h5>
+                        <p class="text-secondary" style="font-size: 1.1rem; line-height: 1.9; text-align: justify;">@Model.Description</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Modal Trailer  *@
+<div class="modal fade" id="trailerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark border-0 rounded-4 overflow-hidden">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title text-white fw-bold">Trailer: @Model.Title</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3">
+                <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-black shadow-lg">
+                    <iframe id="videoFrame" src="" title="YouTube video" allowfullscreen allow="autoplay"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Ép toàn bộ background trang chi tiết về màu xanh đen huyền bí theo ảnh mẫu */
+    body {
+        background-color: #060f0c !important;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .rounded-4 {
+        border-radius: 1.25rem !important;
+    }
+
+    .hover-shadow:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        border-color: #dc3545 !important;
+    }
+
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border: none;
+    }
+
+    .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: white !important;
+    }
+
+    /* Hiệu ứng nháy nhẹ cho nút Mua vé */
+    .animate-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+        }
+
+        70% {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        }
+    }
+
+    .booking-list .row {
+        background-color: #fff;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function getYouTubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        const trailerModal = document.getElementById('trailerModal');
+        const videoFrame = document.getElementById('videoFrame');
+
+        if (trailerModal) {
+            trailerModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const url = button.getAttribute('data-url');
+                const videoId = getYouTubeId(url);
+                if (videoId) { videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`; }
+            });
+            trailerModal.addEventListener('hide.bs.modal', function () { videoFrame.src = ""; });
+        }
+    </script>
+}

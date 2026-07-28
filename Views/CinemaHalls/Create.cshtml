@@ -1,0 +1,73 @@
+﻿@using DoAnDatVeXemPhim.Models
+@model CinemaHall
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="p-4 p-md-5">
+    @* Header phong cách Cyberpunk Xanh Neon *@
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; text-shadow: 0 0 10px rgba(0,255,135,0.3);">
+                <i class="bi bi-plus-circle-fill me-2"></i>THÊM PHÒNG CHIẾU MỚI
+            </h4>
+            <small class="text-muted">Thiết lập không gian xem phim mới cho hệ thống</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+
+    <form asp-action="Create" method="post" autocomplete="off">
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+        <div class="row g-4">
+            @* Thuộc Cụm Rạp *@
+            <div class="col-md-12">
+                <label asp-for="CinemaId" class="form-label fw-bold text-muted text-uppercase small">
+                    <i class="bi bi-building me-1" style="color: #00ff87;"></i> Thuộc cụm rạp nào? *
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text border-0 text-muted" style="background: rgba(255,255,255,0.05);"><i class="bi bi-sliders"></i></span>
+                    <select asp-for="CinemaId" class="form-select form-control-neon" asp-items="ViewBag.CinemaId" required>
+                        <option value="">-- Chọn chi nhánh rạp --</option>
+                    </select>
+                </div>
+                <span asp-validation-for="CinemaId" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            @* Tên Phòng Chiếu *@
+            <div class="col-md-6">
+                <label asp-for="Name" class="form-label fw-bold text-muted text-uppercase small">
+                    <i class="bi bi-tag-fill me-1" style="color: #60a5fa;"></i> Tên phòng chiếu *
+                </label>
+                <input asp-for="Name" class="form-control form-control-neon" placeholder="Ví dụ: Phòng 01 - IMAX" required />
+                <span asp-validation-for="Name" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            @* Sức Chứa (Số ghế) *@
+            <div class="col-md-6">
+                <label asp-for="TotalSeats" class="form-label fw-bold text-muted text-uppercase small">
+                    <i class="bi bi-grid-3x3-gap-fill me-1" style="color: #fbbf24;"></i> Sức chứa (Số ghế) *
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text border-0 text-warning" style="background: rgba(255,255,255,0.05);"><i class="bi bi-people-fill"></i></span>
+                    <input asp-for="TotalSeats" type="number" min="1" class="form-control form-control-neon rounded-end" placeholder="Nhập số ghế..." required />
+                </div>
+                <span asp-validation-for="TotalSeats" class="text-danger small mt-1 d-block"></span>
+            </div>
+        </div>
+
+        @* Hệ thống nút bấm điều hướng *@
+        <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+            <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal" style="border-color: rgba(255,255,255,0.1);">HỦY BỎ</button>
+            <button type="submit" class="btn btn-cyber-success fw-bold rounded-pill px-5 shadow">
+                <i class="bi bi-plus-circle-fill me-2"></i> XÁC NHẬN TẠO
+            </button>
+        </div>
+    </form>
+</div>
+
+@* Kích hoạt kiểm tra dữ liệu Client-side ngay trong lòng Modal *@
+<script>
+    $.validator.unobtrusive.parse($('form'));
+</script>

@@ -1,0 +1,461 @@
+@using DoAnDatVeXemPhim.Services
+@model IEnumerable<DoAnDatVeXemPhim.Models.AssociationRule>
+@{
+    ViewData["Title"] = "Phân tích thuật toán Apriori - Cinema Hub";
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+    var combosDict = ViewBag.CombosDict as Dictionary<int, string> ?? new Dictionary<int, string>();
+    var savedRules = ViewBag.SavedRules as List<DoAnDatVeXemPhim.Models.AssociationRule> ?? new List<DoAnDatVeXemPhim.Models.AssociationRule>();
+    var newRules = ViewBag.NewRules as List<AprioriRule<int>> ?? new List<AprioriRule<int>>();
+    double minSupport = ViewBag.MinSupport ?? 0.05;
+    double minConfidence = ViewBag.MinConfidence ?? 0.3;
+    int orderCount = ViewBag.OrderCount ?? 0;
+    bool runAnalysis = ViewBag.RunAnalysis ?? false;
+
+    Microsoft.AspNetCore.Html.IHtmlContent RenderRuleItems(string idsCsv, bool isConsequent = false)
+    {
+        if (string.IsNullOrEmpty(idsCsv)) return Microsoft.AspNetCore.Html.HtmlString.Empty;
+        try
+        {
+            var items = idsCsv.Split(',')
+                              .Select(int.Parse)
+                              .Select(id => combosDict.ContainsKey(id) ? combosDict[id] : $"Món #{id}")
+                              .ToList();
+            
+            var html = new System.Text.StringBuilder();
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (i > 0)
+                {
+                    html.Append("<span class=\"rule-plus\">+</span>");
+                }
+                var badgeClass = isConsequent ? "item-badge item-consequent" : "item-badge";
+                html.Append($"<span class=\"{badgeClass}\">{items[i]}</span>");
+            }
+            return new Microsoft.AspNetCore.Html.HtmlString(html.ToString());
+        }
+        catch
+        {
+            return new Microsoft.AspNetCore.Html.HtmlString($"<span class=\"item-badge\">{idsCsv}</span>");
+        }
+    }
+
+    Microsoft.AspNetCore.Html.IHtmlContent RenderRuleItemsFromSet(SortedSet<int> set, bool isConsequent = false)
+    {
+        var items = set.Select(id => combosDict.ContainsKey(id) ? combosDict[id] : $"Món #{id}").ToList();
+        var html = new System.Text.StringBuilder();
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (i > 0)
+            {
+                html.Append("<span class=\"rule-plus\">+</span>");
+            }
+            var badgeClass = isConsequent ? "item-badge item-consequent" : "item-badge";
+            html.Append($"<span class=\"{badgeClass}\">{items[i]}</span>");
+        }
+        return new Microsoft.AspNetCore.Html.HtmlString(html.ToString());
+    }
+}
+
+<style>
+    .apriori-container {
+        font-family: 'Inter', sans-serif;
+    }
+
+    .neon-card {
+        background: rgba(17, 24, 39, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        margin-bottom: 24px;
+        transition: border-color 0.3s;
+    }
+
+    .neon-card:hover {
+        border-color: rgba(0, 255, 135, 0.2);
+    }
+
+    .neon-header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .neon-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0;
+        letter-spacing: -0.2px;
+    }
+
+    .neon-body {
+        padding: 24px;
+    }
+
+    .stat-badge {
+        background: rgba(0, 255, 135, 0.08);
+        border: 1px solid rgba(0, 255, 135, 0.15);
+        color: #00ff87;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-neon {
+        background: #00ff87;
+        color: #022c22;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 10px 20px;
+        border-radius: 8px;
+        border: none;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-neon:hover {
+        background: #00e676;
+        box-shadow: 0 0 15px rgba(0, 255, 135, 0.4);
+        color: #022c22;
+    }
+
+    .btn-neon-outline {
+        background: rgba(255, 255, 255, 0.03);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+        font-size: 0.85rem;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .btn-neon-outline:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .form-label-neon {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .rule-table th {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #9ca3af;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        padding: 12px 16px;
+    }
+
+    .rule-table td {
+        font-size: 0.88rem;
+        color: #e5e7eb;
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+    }
+
+    .rule-arrow {
+        color: #fbbf24;
+        font-weight: 800;
+        font-size: 1.1rem;
+        margin: 0 8px;
+    }
+
+    .item-badge {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-block;
+        white-space: nowrap;
+        margin: 2px 0;
+        line-height: 1.4;
+    }
+
+    .item-consequent {
+        border-color: rgba(251, 191, 36, 0.25);
+        background: rgba(251, 191, 36, 0.05);
+        color: #fef08a;
+    }
+
+    .rule-plus {
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: bold;
+        margin: 0 6px;
+        display: inline-block;
+    }
+</style>
+
+<div class="apriori-container">
+    <!-- Top Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h1 class="h3 fw-bold m-0" style="letter-spacing: -0.5px; color: #fff;">Phân tích Tiếp thị Apriori</h1>
+            <p class="text-muted small m-0 mt-1">Khai phá quy luật kết hợp bắp nước mua kèm từ lịch sử hóa đơn bán vé.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="stat-badge">
+                <i class="bi bi-receipt"></i> @orderCount Hóa đơn hợp lệ
+            </span>
+            <span class="stat-badge" style="background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.15); color: #fbbf24;">
+                <i class="bi bi-diagram-3"></i> @savedRules.Count Luật đang chạy
+            </span>
+        </div>
+    </div>
+
+    <!-- Alert Success/Error -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success bg-success bg-opacity-10 border border-success border-opacity-25 text-success rounded-3 mb-4 py-3 px-4 d-flex align-items-center gap-2" role="alert">
+            <i class="bi bi-check-circle-fill"></i>
+            <div>@TempData["Success"]</div>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-25 text-danger rounded-3 mb-4 py-3 px-4 d-flex align-items-center gap-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>@TempData["Error"]</div>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Cấu hình (Cột trái) -->
+        <div class="col-lg-4">
+            <div class="neon-card">
+                <div class="neon-header">
+                    <h5 class="neon-title"><i class="bi bi-sliders me-2 text-success"></i>Tham số Apriori</h5>
+                </div>
+                <div class="neon-body">
+                    <form id="apriori-form" method="GET" action="/AdminControllers/AprioriAnalysis">
+                        <input type="hidden" name="runAnalysis" value="true" />
+                        
+                        <div class="mb-4">
+                            <label class="form-label-neon">Độ hỗ trợ tối thiểu (minSupport)</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <input type="range" class="form-range" min="0.01" max="0.5" step="0.01" id="supportRange" value="@minSupport" oninput="document.getElementById('supportVal').innerText = (this.value * 100).toFixed(0) + '%'">
+                                <span id="supportVal" class="badge bg-secondary p-2" style="min-width: 45px;">@(minSupport * 100)%</span>
+                            </div>
+                            <input type="hidden" name="minSupport" id="minSupportInput" value="@minSupport" />
+                            <small class="text-muted d-block mt-2">Tần suất xuất hiện tối thiểu của tổ hợp sản phẩm trên tổng số đơn hàng (Ví dụ: 5%).</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-neon">Độ tin cậy tối thiểu (minConfidence)</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <input type="range" class="form-range" min="0.1" max="1.0" step="0.05" id="confidenceRange" value="@minConfidence" oninput="document.getElementById('confidenceVal').innerText = (this.value * 100).toFixed(0) + '%'">
+                                <span id="confidenceVal" class="badge bg-secondary p-2" style="min-width: 45px;">@(minConfidence * 100)%</span>
+                            </div>
+                            <input type="hidden" name="minConfidence" id="minConfidenceInput" value="@minConfidence" />
+                            <small class="text-muted d-block mt-2">Độ tin cậy của gợi ý. Khách mua A thì bao nhiêu % mua kèm B (Ví dụ: 30%).</small>
+                        </div>
+
+                        <button type="submit" class="btn-neon w-100">
+                            <i class="bi bi-lightning-charge-fill me-1"></i> Khai phá Dữ liệu
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Báo cáo giải thích thuật ngữ -->
+            <div class="neon-card">
+                <div class="neon-header">
+                    <h5 class="neon-title"><i class="bi bi-info-circle me-2 text-warning"></i>Giải thích chỉ số</h5>
+                </div>
+                <div class="neon-body" style="font-size: 0.82rem; color: #9ca3af; line-height: 1.6;">
+                    <p class="mb-2"><strong class="text-white">Support (Độ hỗ trợ):</strong> Cho biết phần trăm các đơn hàng chứa cả 2 sản phẩm A và B.</p>
+                    <p class="mb-2"><strong class="text-white">Confidence (Độ tin cậy):</strong> Xác suất khách mua B sau khi đã mua A. Tính bằng Support(A&B) / Support(A).</p>
+                    <p class="mb-0"><strong class="text-white">Lift (Độ cải tiến):</strong> Đánh giá mức độ ngẫu nhiên. Lift > 1 nghĩa là A và B có sự liên kết thực sự (Lift càng cao, mối quan hệ mua kèm càng mạnh).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kết quả (Cột phải) -->
+        <div class="col-lg-8">
+            <!-- 1. Kết quả phân tích mới chạy (Nếu có click chạy) -->
+            @if (runAnalysis)
+            {
+                <div class="neon-card border-success border-opacity-50">
+                    <div class="neon-header bg-success bg-opacity-10 d-flex align-items-center justify-content-between">
+                        <h5 class="neon-title text-success"><i class="bi bi-check2-all me-2"></i>Luật kết hợp phát hiện được (@newRules.Count luật)</h5>
+                        
+                        @if (newRules.Count > 0)
+                        {
+                            <form id="save-rules-form" method="POST" action="/AdminControllers/SaveAprioriRules">
+                                <input type="hidden" name="minSupport" value="@minSupport" />
+                                <input type="hidden" name="minConfidence" value="@minConfidence" />
+                                <button type="submit" class="btn btn-sm btn-success fw-bold text-dark px-3" style="background:#00ff87; border:none; border-radius:6px;">
+                                    <i class="bi bi-cloud-arrow-up-fill me-1"></i> Áp Dụng & Lưu
+                                </button>
+                            </form>
+                        }
+                    </div>
+                    <div class="neon-body p-0">
+                        @if (newRules.Count == 0)
+                        {
+                            <div class="p-4 text-center text-muted">
+                                <i class="bi bi-folder-x fs-1 mb-2 d-block"></i>
+                                Không tìm thấy luật kết hợp nào thỏa mãn ngưỡng tham số hiện tại.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-dark table-borderless align-middle m-0 rule-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nếu mua (Antecedent)</th>
+                                            <th></th>
+                                            <th>Sẽ gợi ý (Consequent)</th>
+                                            <th class="text-center">Support</th>
+                                            <th class="text-center">Confidence</th>
+                                            <th class="text-center">Lift</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var rule in newRules.OrderByDescending(r => r.Lift))
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @RenderRuleItemsFromSet(rule.Antecedent)
+                                                </td>
+                                                <td class="text-center"><span class="rule-arrow">➔</span></td>
+                                                <td>
+                                                    @RenderRuleItemsFromSet(rule.Consequent, true)
+                                                </td>
+                                                <td class="text-center fw-semibold text-muted">@((rule.Support * 100).ToString("F1"))%</td>
+                                                <td class="text-center fw-semibold text-success">@((rule.Confidence * 100).ToString("F1"))%</td>
+                                                <td class="text-center fw-bold text-warning">@(rule.Lift.ToString("F2"))</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- 2. Danh sách luật đã lưu đang chạy trực tiếp trên website -->
+            <div class="neon-card">
+                <div class="neon-header bg-dark bg-opacity-20">
+                    <h5 class="neon-title text-white"><i class="bi bi-hdd-network me-2 text-warning"></i>Luật kết hợp đang chạy trong hệ thống gợi ý (@savedRules.Count luật)</h5>
+                </div>
+                <div class="neon-body p-0">
+                    @if (savedRules.Count == 0)
+                    {
+                        <div class="p-4 text-center text-muted">
+                            <i class="bi bi-info-circle fs-1 mb-2 d-block text-warning"></i>
+                            Hiện tại chưa có luật nào được áp dụng. Admin vui lòng chạy khai phá dữ liệu ở cột bên trái và bấm nút "Áp dụng & Lưu".
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive text-white">
+                            <table class="table table-dark table-borderless align-middle m-0 rule-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nếu mua (Antecedent)</th>
+                                        <th></th>
+                                        <th>Gợi ý kèm theo (Consequent)</th>
+                                        <th class="text-center">Support</th>
+                                        <th class="text-center">Confidence</th>
+                                        <th class="text-center">Lift</th>
+                                        <th class="text-center">Ngày tạo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var rule in savedRules)
+                                    {
+                                        <tr>
+                                            <td>
+                                                @RenderRuleItems(rule.Antecedent)
+                                            </td>
+                                            <td class="text-center"><span class="rule-arrow">➔</span></td>
+                                            <td>
+                                                @RenderRuleItems(rule.Consequent, true)
+                                            </td>
+                                            <td class="text-center fw-semibold text-muted">@((rule.Support * 100).ToString("F1"))%</td>
+                                            <td class="text-center fw-semibold text-success">@((rule.Confidence * 100).ToString("F1"))%</td>
+                                            <td class="text-center fw-bold text-warning">@(rule.Lift.ToString("F2"))</td>
+                                            <td class="text-center text-muted" style="font-size: 0.72rem;">@rule.CreatedAt.ToString("dd/MM HH:mm")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cập nhật giá trị range sliders vào input ẩn trước khi submit form
+    document.getElementById('supportRange').addEventListener('change', function() {
+        document.getElementById('minSupportInput').value = this.value;
+    });
+    document.getElementById('confidenceRange').addEventListener('change', function() {
+        document.getElementById('minConfidenceInput').value = this.value;
+    });
+
+    //  BỌC THÉP AJAX CHO MỌI FORM GỬI ĐI TRONG TRANG ĐỂ BẢO VỆ SPA
+    $(document).ready(function() {
+        $('#apriori-form, #seed-form, #save-rules-form').on('submit', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var actionUrl = $form.attr('action');
+            var methodType = $form.attr('method');
+            var formData = $form.serialize();
+
+            var $contentBox = $('#admin-dynamic-content');
+            var $loader = $('#admin-loader');
+
+            $contentBox.css('opacity', '0.3');
+            $loader.fadeIn(200);
+
+            $.ajax({
+                url: actionUrl,
+                type: methodType,
+                data: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (data) {
+                    var $dummy = $('<div>').append($.parseHTML(data));
+                    var $inner = $dummy.find('#admin-dynamic-content');
+
+                    if ($inner.length > 0) {
+                        $contentBox.html($inner.html());
+                    } else {
+                        $contentBox.html(data);
+                    }
+
+                    $loader.fadeOut(200, function() {
+                        $contentBox.css('opacity', '1');
+                    });
+                },
+                error: function () {
+                    $loader.fadeOut(200);
+                    $contentBox.css('opacity', '1');
+                    alert('Thao tác thất bại, vui lòng tải lại trang!');
+                }
+            });
+        });
+    });
+</script>

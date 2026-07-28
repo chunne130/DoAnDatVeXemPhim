@@ -1,0 +1,157 @@
+﻿@model DoAnDatVeXemPhim.Models.Cinema
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    var actionName = isEdit ? "Edit" : "Create";
+    var title = isEdit ? "CẬP NHẬT CỤM RẠP" : "THÊM CỤM RẠP MỚI";
+    var icon = isEdit ? "bi-pencil-square" : "bi-building-add";
+    var colorHex = "#00ff87";
+    var colorRgba = "rgba(0,255,135,0.2)";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: @colorHex; letter-spacing: 0.5px; text-shadow: 0 0 10px @colorRgba;">
+                <i class="bi @icon me-2"></i>@title
+            </h4>
+            <p class="text-muted small m-0 mt-1">Cung cấp thông tin chi nhánh rạp trên hệ thống Cinema Hub</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary text-light ajax-link rounded-pill px-4 fw-bold shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <form id="cinemaForm" asp-action="@actionName" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                @if (isEdit)
+                {
+                    <input type="hidden" asp-for="Id" />
+                }
+
+                <div class="p-4 rounded-4 mb-4" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);">
+                    <div class="mb-4">
+                        <label asp-for="Name" class="form-label fw-bold small text-muted text-uppercase">Tên chi nhánh rạp</label>
+                        <input asp-for="Name" class="form-control form-control-neon" placeholder="Ví dụ: Cinema Hub Hóc Môn..." />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Address" class="form-label fw-bold small text-muted text-uppercase">Địa chỉ chi tiết</label>
+                        <input asp-for="Address" class="form-control form-control-neon" placeholder="Số nhà, tên đường, phường/xã..." />
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <label asp-for="City" class="form-label fw-bold small text-muted text-uppercase">Tỉnh / Thành phố</label>
+                            <select asp-for="City" class="form-select form-control-neon">
+                                <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                                <option value="Hà Nội">Hà Nội</option>
+                                <option value="Đà Nẵng">Đà Nẵng</option>
+                            </select>
+                            <span asp-validation-for="City" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="District" class="form-label fw-bold small text-muted text-uppercase">Quận / Huyện</label>
+                            <select asp-for="District" class="form-select form-control-neon">
+                                <option value="">-- Chọn Quận/Huyện --</option>
+                                <optgroup label="Hồ Chí Minh">
+                                    <option value="Quận 1">Quận 1</option>
+                                    <option value="Quận 3">Quận 3</option>
+                                    <option value="Quận 10">Quận 10</option>
+                                    <option value="Hóc Môn">Hóc Môn</option>
+                                    <option value="Bình Thạnh">Bình Thạnh</option>
+                                </optgroup>
+                                <optgroup label="Hà Nội">
+                                    <option value="Hoàn Kiếm">Hoàn Kiếm</option>
+                                    <option value="Đống Đa">Đống Đa</option>
+                                </optgroup>
+                            </select>
+                            <span asp-validation-for="District" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <label asp-for="Hotline" class="form-label fw-bold small text-muted text-uppercase">Hotline</label>
+                            <input asp-for="Hotline" class="form-control form-control-neon" placeholder="VD: 1900 2026" />
+                            <span asp-validation-for="Hotline" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="OperatingHours" class="form-label fw-bold small text-muted text-uppercase">Giờ hoạt động</label>
+                            <input asp-for="OperatingHours" class="form-control form-control-neon" placeholder="VD: 08:30 - 23:00" />
+                            <span asp-validation-for="OperatingHours" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end border-top pt-4" style="border-color: rgba(255,255,255,0.05) !important;">
+                    <a asp-action="Index" class="btn btn-outline-light px-4 py-2 fw-bold rounded-pill ajax-link me-2" style="border-color: rgba(255,255,255,0.2);">
+                        HỦY BỎ
+                    </a>
+                    <button type="submit" class="btn px-5 py-2 fw-bold rounded-pill text-uppercase shadow-sm text-dark" style="background: @colorHex; transition: all 0.3s;">
+                        <i class="bi @(isEdit ? "bi-check-circle-fill" : "bi-cloud-upload-fill") me-2"></i> LƯU DỮ LIỆU
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control-neon {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+        padding: 12px 15px;
+        border-radius: 8px;
+    }
+
+        .form-control-neon:focus {
+            border-color: @colorHex !important;
+            box-shadow: 0 0 0 3px @colorRgba !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+
+    select.form-control-neon option, select.form-control-neon optgroup {
+        background-color: #111827;
+        color: #ffffff;
+    }
+</style>
+
+<script>
+    // 🚀 AJAX CHO FORM CREATE/EDIT CINEMA
+    $('#cinemaForm').on('submit', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $contentBox = $('#admin-dynamic-content');
+        var $loader = $('#admin-loader');
+
+        $contentBox.css('opacity', '0.3');
+        $loader.fadeIn(200);
+
+        $.ajax({
+            url: $form.attr('action'),
+            type: $form.attr('method'),
+            data: $form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (res) {
+                $contentBox.html(res);
+                $loader.fadeOut(200, function() {
+                    $contentBox.css('opacity', '1');
+                });
+            },
+            error: function () {
+                alert('Có lỗi xảy ra khi lưu cụm rạp!');
+                $loader.fadeOut(200);
+                $contentBox.css('opacity', '1');
+            }
+        });
+    });
+</script>

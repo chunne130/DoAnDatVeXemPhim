@@ -1,0 +1,104 @@
+﻿@model DoAnDatVeXemPhim.Models.Movie
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            @* Card Luxury Dark Neon *@
+            <div class="card border-0 shadow-lg" style="background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px;">
+
+                @* Header Cảnh báo đỏ rực *@
+                <div class="text-center py-4 border-bottom" style="border-color: rgba(239, 68, 68, 0.2) !important;">
+                    <h4 class="text-danger fw-bold mb-0 text-uppercase" style="letter-spacing: 1px; text-shadow: 0 0 15px rgba(239,68,68,0.5);">
+                        <i class="bi bi-exclamation-octagon-fill me-2"></i>XÁC NHẬN GỠ PHIM
+                    </h4>
+                </div>
+
+                <div class="card-body text-center p-5">
+                    @* Poster phim *@
+                    <div class="position-relative d-inline-block mb-4">
+                        <img src="@Model.PosterUrl" class="img-fluid rounded-3 shadow" style="max-height: 250px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1);" alt="Poster" />
+                        <div class="position-absolute bottom-0 end-0 m-n2">
+                            <span class="badge bg-danger rounded-circle shadow p-2"><i class="bi bi-x-lg fs-5"></i></span>
+                        </div>
+                    </div>
+
+                    <h2 class="fw-bold text-white mb-2 text-uppercase">@Model.Title</h2>
+                    <p style="color: #9ca3af; font-size: 0.95rem;" class="mb-4">
+                        Bạn có chắc chắn muốn gỡ bỏ bộ phim này khỏi hệ thống không?
+                        <br><span style="color: #ef4444; font-weight: 700;">Lưu ý: Hành động này không thể hoàn tác!</span>
+                    </p>
+
+                    @* Thông tin phụ mờ ảo *@
+                    <div class="p-3 rounded-3 mb-4" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
+                        <div class="row text-center">
+                            <div class="col-6 border-end" style="border-color: rgba(255,255,255,0.1) !important;">
+                                <small class="d-block text-uppercase" style="font-size: 0.65rem; color: #6b7280;">Thời lượng</small>
+                                <span class="fw-bold text-white">@Model.Duration Phút</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="d-block text-uppercase" style="font-size: 0.65rem; color: #6b7280;">Thể loại</small>
+                                <span class="fw-bold text-white">@Model.Genre?.Name</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="deleteMovieForm" asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                            <a asp-action="Index" class="btn btn-outline-light px-5 rounded-pill fw-bold shadow-sm ajax-link">
+                                HỦY BỎ
+                            </a>
+                            <button type="submit" class="btn btn-danger px-5 rounded-pill fw-bold shadow-lg" style="background: #ef4444; border: none;">
+                                <i class="bi bi-trash3-fill me-2"></i>XÁC NHẬN XÓA
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🚀 BỌC THÉP AJAX CHO FORM DELETE
+    $('#deleteMovieForm').on('submit', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $contentBox = $('#admin-dynamic-content');
+        var $loader = $('#admin-loader');
+
+        $contentBox.css('opacity', '0.3');
+        $loader.fadeIn(200);
+
+        $.ajax({
+            url: $form.attr('action'),
+            type: $form.attr('method'),
+            data: $form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (res) {
+                // Sau khi xóa xong, load lại trang Index
+                $.ajax({
+                    url: '/Movies/Index',
+                    type: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function (html) {
+                        $contentBox.html(html);
+                        $loader.fadeOut(200, function() {
+                            $contentBox.css('opacity', '1');
+                        });
+                    }
+                });
+            },
+            error: function () {
+                alert('Có lỗi xảy ra khi xóa!');
+                $loader.fadeOut(200);
+                $contentBox.css('opacity', '1');
+            }
+        });
+    });
+</script>

@@ -1,0 +1,412 @@
+@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Login - Cinema Hub";
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #010a04;
+        background-image: 
+            radial-gradient(ellipse at 10% 90%, rgba(0, 255, 135, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at 90% 10%, rgba(0, 255, 135, 0.15) 0%, transparent 50%),
+            linear-gradient(135deg, #010a04 0%, #021a0d 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        overflow-y: scroll; /* Force scrollbar to prevent layout shift */
+    }
+
+    .split-container {
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        z-index: 1;
+    }
+
+    .left-banner {
+        width: 50%;
+        background: linear-gradient(145deg, #022c22 0%, #061512 60%, #010a04 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 60px 80px;
+        color: #ffffff;
+        position: relative;
+        animation: fadeIn 0.8s ease-out forwards;
+    }
+
+    .brand-logo-area img {
+        height: 35px;
+    }
+
+    .banner-text-heading {
+        font-size: 3rem;
+        font-weight: 300;
+        line-height: 1.2;
+        max-width: 480px;
+        margin-bottom: 40px;
+    }
+
+    .banner-text-heading strong {
+        font-weight: 600;
+        display: block;
+        color: #00ff87;
+    }
+
+    .right-form-area {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 60px;
+        background: rgba(15, 25, 20, 0.45);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .register-form-wrapper {
+        width: 100%;
+        max-width: 440px;
+        animation: fadeLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    @@keyframes fadeLeft {
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .form-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 8px;
+    }
+
+    .form-subtitle {
+        color: #9ca3af;
+        font-size: 0.95rem;
+        margin-bottom: 30px;
+    }
+
+    .custom-label-small {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #d1d5db;
+        margin-bottom: 8px;
+        display: block;
+        letter-spacing: 0.3px;
+    }
+
+    .input-wrapper-figma {
+        position: relative;
+        margin-bottom: 24px;
+    }
+
+    .input-wrapper-figma input {
+        width: 100%;
+        padding: 14px 46px 14px 18px;
+        font-size: 1rem;
+        color: #ffffff;
+        background-color: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .input-wrapper-figma input::placeholder {
+        color: #6b7280;
+    }
+
+    .input-wrapper-figma input:focus {
+        outline: none;
+        border-color: #00ff87;
+        background-color: rgba(0, 255, 135, 0.03);
+        box-shadow: 0 0 0 4px rgba(0, 255, 135, 0.15), inset 0 0 0 1px #00ff87;
+    }
+
+    .password-toggle-eye {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6b7280;
+        font-size: 1.2rem;
+        transition: color 0.2s;
+        z-index: 15;
+    }
+
+    .password-toggle-eye:hover {
+        color: #00ff87;
+    }
+
+    .form-options-area {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: -8px;
+        margin-bottom: 28px;
+        font-size: 0.9rem;
+    }
+
+    .form-check-input {
+        background-color: rgba(0,0,0,0.4);
+        border-color: rgba(255,255,255,0.2);
+    }
+
+    .form-check-input:checked {
+        background-color: #00ff87 !important;
+        border-color: #00ff87 !important;
+    }
+
+    .form-check-label {
+        color: #d1d5db;
+    }
+
+    .forgot-link-style {
+        color: #00ff87;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .forgot-link-style:hover {
+        color: #00e676;
+        text-decoration: underline;
+        text-shadow: 0 0 8px rgba(0,255,135,0.4);
+    }
+
+    .btn-login-figma {
+        width: 100%;
+        background: linear-gradient(135deg, #00ff87 0%, #00c060 100%);
+        color: #010a04;
+        font-weight: 700;
+        font-size: 1.05rem;
+        padding: 14px;
+        border: none;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-login-figma:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 255, 135, 0.3);
+    }
+
+    .btn-login-figma:active {
+        transform: translateY(0);
+    }
+
+    .register-redirect-text {
+        font-size: 0.95rem;
+        color: #9ca3af;
+        text-align: center;
+    }
+
+    .register-redirect-text a {
+        color: #00ff87;
+        font-weight: 600;
+        text-decoration: none;
+        margin-left: 6px;
+        transition: all 0.2s;
+    }
+
+    .register-redirect-text a:hover {
+        text-shadow: 0 0 10px rgba(0,255,135,0.4);
+    }
+
+    /* Nút Google Login Dark Theme */
+    .btn-google-dark {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 14px 16px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-google-dark:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+        display: none;
+    }
+
+    input[type="password"]::-webkit-credentials-auto-fill-button,
+    input[type="password"]::-webkit-textfield-decoration-container {
+        display: none;
+    }
+
+    /* Responsive cho màn hình laptop nhỏ và điện thoại */
+    @@media (max-width: 992px) {
+        body { padding: 20px; }
+        .left-banner { display: none; }
+        .right-form-area {
+            width: 100%;
+            padding: 40px 20px;
+            background: transparent;
+            border-left: none;
+        }
+        .split-container {
+            width: 100%;
+            max-width: 460px;
+            min-height: auto;
+            border-radius: 20px;
+            background: rgba(15, 25, 20, 0.65);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255,255,255,0.02);
+            margin: auto;
+            overflow: hidden;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="split-container">
+    <div class="left-banner">
+        <div class="brand-logo-area">
+            <h3 class="fw-bold m-0 text-success" style="letter-spacing: 1px;"><i class="bi bi-film"></i> CinemaHub</h3>
+        </div>
+
+        <div class="banner-core-message">
+            <h1 class="banner-text-heading">
+                Welcome.
+                <strong>Begin your cinematic adventure now with our ticketing platform!</strong>
+            </h1>
+        </div>
+
+        <div class="banner-footer-small">
+            <p class="small text-white-50 mb-0">© 2026 Cinema Hub Platform. All rights reserved.</p>
+        </div>
+    </div>
+
+    <div class="right-form-area">
+        <div class="register-form-wrapper">
+        <h2 class="form-title">Chào mừng trở lại!</h2>
+        <p class="form-subtitle">Đăng nhập để trải nghiệm đặt vé xem phim</p>
+
+        <form id="account" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
+
+            @* ✉️ Trường Email *@
+            <div>
+                <label asp-for="Input.Email" class="custom-label-small">Email</label>
+                <div class="input-wrapper-figma">
+                    <input asp-for="Input.Email" autocomplete="username" aria-required="true" placeholder="Nhập địa chỉ email..." />
+                </div>
+                <span asp-validation-for="Input.Email" class="text-danger small d-block mt-1"></span>
+            </div>
+
+            @* 🔒 Trường Mật khẩu *@
+            <div>
+                <label asp-for="Input.Password" class="custom-label-small">Mật khẩu</label>
+                <div class="input-wrapper-figma">
+                    <input asp-for="Input.Password" type="password" id="txtPassword" autocomplete="current-password" aria-required="true" placeholder="Nhập mật khẩu..." />
+                    <i class="bi bi-eye-slash password-toggle-eye" id="togglePassword"></i>
+                </div>
+                <span asp-validation-for="Input.Password" class="text-danger small d-block mt-1"></span>
+            </div>
+
+            @* Ghi nhớ & Quên mật khẩu *@
+            <div class="form-options-area">
+                <div class="form-check m-0">
+                    <input class="form-check-input" asp-for="Input.RememberMe" />
+                    <label class="form-check-label" asp-for="Input.RememberMe">
+                        Ghi nhớ đăng nhập
+                    </label>
+                </div>
+                <a id="forgot-password" asp-page="./ForgotPassword" class="forgot-link-style">Quên mật khẩu?</a>
+            </div>
+
+            <button id="login-submit" type="submit" class="btn-login-figma">
+                Đăng Nhập Ngay
+            </button>
+
+            <div class="register-redirect-text mt-4 mb-3">
+                Chưa có tài khoản? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Đăng ký tại đây</a>
+            </div>
+        </form>
+
+        @* ── Divider ── *@
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px; margin-top: 12px;">
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+            <span style="font-size: 0.85rem; color: #6b7280; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">hoặc tiếp tục với</span>
+            <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.1);"></div>
+        </div>
+
+        @* ── Nút Google Login ── *@
+        <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <button type="submit" name="provider" value="Google" class="btn-google-dark">
+                <svg width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Đăng nhập với Google
+            </button>
+        </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function () {
+        var input = document.getElementById('txtPassword');
+        if (input.type === 'password') {
+            input.type = 'text';
+            this.classList.remove('bi-eye-slash');
+            this.classList.add('bi-eye');
+        } else {
+            input.type = 'password';
+            this.classList.remove('bi-eye');
+            this.classList.add('bi-eye-slash');
+        }
+    });
+</script>
+</body>
+</html>

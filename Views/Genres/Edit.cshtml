@@ -1,0 +1,87 @@
+﻿@model DoAnDatVeXemPhim.Models.Genre
+
+@{
+    ViewData["Title"] = "Chỉnh Sửa Thể Loại";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            @* --- CARD FORM EDIT --- *@
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                @* Header Card tông Xanh - Đen để phân biệt với Create *@
+                <div class="card-header bg-dark text-info py-3 text-center border-0">
+                    <h4 class="fw-bold mb-0 text-uppercase" style="letter-spacing: 2px;">
+                        <i class="bi bi-pencil-square me-2"></i>Cập Nhật Thể Loại
+                    </h4>
+                </div>
+
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form asp-action="Edit">
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                        @* Cực kỳ quan trọng: Phải có Id ẩn để Update đúng đối tượng *@
+                        <input type="hidden" asp-for="Id" />
+
+                        @* Input Tên thể loại *@
+                        <div class="mb-4">
+                            <label asp-for="Name" class="form-label fw-bold text-dark small">TÊN THỂ LOẠI HIỆN TẠI</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-2 border-end-0 text-info"><i class="bi bi-tag-fill"></i></span>
+                                <input asp-for="Name" class="form-control form-control-lg border-2 border-start-0 shadow-none"
+                                       placeholder="Nhập tên mới..." />
+                            </div>
+                            <span asp-validation-for="Name" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        @* Nút thao tác *@
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-info text-white btn-lg fw-bold rounded-pill shadow-sm py-3 transition-hover">
+                                <i class="bi bi-save-fill me-2"></i>LƯU THAY ĐỔI
+                            </button>
+                            <a asp-action="Index" class="btn btn-link text-muted text-decoration-none mt-2 small">
+                                <i class="bi bi-arrow-left"></i> Hủy bỏ và quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                @* Footer nhắc nhở *@
+                <div class="card-footer bg-light border-0 py-3 text-center">
+                    <small class="text-muted">Đang chỉnh sửa thể loại ID: <span class="fw-bold text-dark">#@Model.Id</span></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<style>
+    body {
+        background-color: #f0f2f5;
+    }
+
+    .card {
+        border-top: 5px solid #0dcaf0 !important;
+    }
+
+    .form-control:focus {
+        border-color: #0dcaf0 !important;
+        box-shadow: none !important;
+    }
+
+    .transition-hover:hover {
+        background-color: #0baccc !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(13, 202, 240, 0.3) !important;
+    }
+
+    .bg-dark {
+        background-color: #1a1a1a !important;
+    }
+</style>

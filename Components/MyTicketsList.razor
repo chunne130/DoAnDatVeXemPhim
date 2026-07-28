@@ -1,0 +1,679 @@
+@using DoAnDatVeXemPhim.Data
+@using DoAnDatVeXemPhim.Models
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ApplicationDbContext Db
+@inject AuthenticationStateProvider AuthProvider
+
+<style>
+    .my-tickets-container {
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .search-ticket-wrap {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        padding: 8px 24px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .search-ticket-wrap:focus-within {
+            background: rgba(0, 255, 135, 0.05);
+            border-color: rgba(0, 255, 135, 0.5);
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .search-ticket-input {
+        background: transparent !important;
+        border: none !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+        padding-left: 12px;
+        font-size: 0.95rem;
+        width: 100%;
+    }
+
+        .search-ticket-input::placeholder {
+            color: #9ca3af;
+        }
+
+    .ticket-card-dark {
+        background: rgba(10,22,13,0.7);
+        backdrop-filter: blur(16px);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.06);
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+        position: relative;
+    }
+
+        .ticket-card-dark:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 14px 32px rgba(0,255,135,0.12);
+            border-color: rgba(0,255,135,0.25);
+        }
+
+        .ticket-card-dark.cancelled {
+            opacity: 0.55;
+            border-color: rgba(239,68,68,0.15);
+        }
+
+            .ticket-card-dark.cancelled:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+    .ticket-header-neon {
+        background: linear-gradient(135deg, #00ff87, #00b35e);
+        color: #022c22;
+        padding: 10px 14px;
+        text-align: center;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+
+    .ticket-header-cancelled {
+        background: rgba(239,68,68,0.15);
+        border-bottom: 1px solid rgba(239,68,68,0.2);
+        color: #ef4444;
+        padding: 10px 14px;
+        text-align: center;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+
+    .seat-box {
+        background: rgba(0,255,135,0.07);
+        border: 1px dashed rgba(0,255,135,0.3);
+        border-radius: 10px;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .ticket-stub-line-dark {
+        border-top: 2px dashed rgba(255,255,255,0.1);
+        margin: 20px 0;
+        position: relative;
+    }
+
+        .ticket-stub-line-dark::before,
+        .ticket-stub-line-dark::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            width: 20px;
+            height: 20px;
+            background: #010a04;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .ticket-stub-line-dark::before {
+            left: -26px;
+            border-left: none;
+        }
+
+        .ticket-stub-line-dark::after {
+            right: -26px;
+            border-right: none;
+        }
+
+    .qr-glow:hover {
+        box-shadow: 0 0 20px rgba(0,255,135,0.5);
+        border-color: #00ff87 !important;
+    }
+
+    /* Nút hủy vé */
+    .btn-cancel-ticket {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(239,68,68,0.1);
+        border: 1px solid rgba(239,68,68,0.35);
+        color: #ef4444;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+        .btn-cancel-ticket:hover {
+            background: rgba(239,68,68,0.2);
+            border-color: #ef4444;
+            box-shadow: 0 4px 12px rgba(239,68,68,0.2);
+        }
+
+    .badge-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 20px;
+        margin-bottom: 8px;
+    }
+
+    .badge-paid {
+        background: rgba(0,255,135,0.12);
+        color: #00ff87;
+        border: 1px solid rgba(0,255,135,0.25);
+    }
+
+    .badge-pending {
+        background: rgba(251,191,36,0.12);
+        color: #fbbf24;
+        border: 1px solid rgba(251,191,36,0.25);
+    }
+
+    .badge-cancelled {
+        background: rgba(239,68,68,0.1);
+        color: #ef4444;
+        border: 1px solid rgba(239,68,68,0.2);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: rgba(10,22,13,0.5);
+        border: 1px dashed rgba(255,255,255,0.07);
+        border-radius: 14px;
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: rgba(0,255,135,0.15);
+            display: block;
+            margin-bottom: 14px;
+        }
+
+        .empty-state p {
+            color: #4b6b58;
+            font-size: 0.9rem;
+        }
+
+    .btn-book-now {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #00ff87;
+        color: #022c22;
+        font-size: 0.85rem;
+        font-weight: 700;
+        padding: 10px 24px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.2s;
+        margin-top: 12px;
+    }
+
+        .btn-book-now:hover {
+            background: #00e676;
+            color: #022c22;
+            box-shadow: 0 5px 14px rgba(0,255,135,0.35);
+        }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container-xl mt-4 pb-5 my-tickets-container">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color:#00ff87;text-shadow:0 0 15px rgba(0,255,135,0.25);text-transform:uppercase;letter-spacing:-0.5px;">
+                <i class="bi bi-ticket-detailed me-2"></i>Lịch sử đặt vé
+            </h2>
+            <p class="text-muted small m-0">
+                Mở app ra quét mã vào cổng nha bạn!
+                <span class="mx-2" style="opacity:0.4;">|</span>
+                <a href="javascript:void(0)" onclick="showRefundPolicy()" class="text-info text-decoration-none fw-semibold"><i class="bi bi-info-circle me-1"></i>Quy định hủy vé & hoàn tiền</a>
+            </p>
+        </div>
+        <div style="min-width:280px;width:30%;">
+            <div class="search-ticket-wrap">
+                <i class="bi bi-search" style="color:#00ff87;"></i>
+                <input type="text" class="form-control search-ticket-input"
+                       placeholder="Tìm tên phim..."
+                       value="@searchQuery" @oninput="OnSearchInput" />
+            </div>
+        </div>
+    </div>
+
+    @if (orders == null)
+    {
+        <div class="text-center p-5">
+            <div class="spinner-border" style="color:#00ff87;" role="status"></div>
+            <p class="mt-3" style="color:#4b6b58;">Đang bốc vé từ hệ thống...</p>
+        </div>
+    }
+    else if (!FilteredOrders.Any())
+    {
+        <div style="background: rgba(10,22,13,0.7); backdrop-filter: blur(16px); border: 1px dashed rgba(0,255,135,0.2); border-radius: 16px; padding: 60px 20px; text-align: center; min-height: 40vh; display: flex; flex-direction: column; justify-content: center; align-items: center; margin-top: 20px;">
+            <i class="bi bi-emoji-frown" style="font-size: 3.5rem; color: #3d7a52; margin-bottom: 15px;"></i>
+            <p style="color: #9ca3af; font-size: 1.05rem; margin-bottom: 25px;">Bạn chưa có vé nào hoặc không tìm thấy phim này.</p>
+            <a href="/Home/Index" style="background-color: #00ff87; color: #022c22; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(0, 255, 135, 0.25); display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s;">
+                <i class="bi bi-ticket-perforated-fill" style="font-size: 1.2rem;"></i> Đặt vé ngay
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var order in FilteredOrders)
+            {
+               
+                bool isCancelled = order.Status == "CANCELLED";
+
+                // Lấy thời gian chiếu của vé
+                var firstDetail = order.OrderDetails.FirstOrDefault();
+                DateTime showtime = firstDetail?.Showtime.StartTime ?? DateTime.MinValue;
+
+                // KIỂM TRA ĐỒNG BỘ ĐIỀU KIỆN HỦY
+                bool isMoreThan1Hour = showtime > DateTime.Now.AddHours(1);
+                bool isWithinGracePeriod = (DateTime.Now - order.OrderDate).TotalMinutes <= 10 && showtime > DateTime.Now;
+
+                // canCancel: Đơn PENDING chưa thanh toán OR Đơn PAID có đủ điều kiện thời gian
+                bool canCancel = (!order.IsPaid && order.Status == "PENDING")
+                              || (order.IsPaid && order.Status == "PAID" && (isMoreThan1Hour || isWithinGracePeriod));
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="ticket-card-dark @(isCancelled ? "cancelled" : "")">
+
+                        @* Header *@
+                        @if (isCancelled)
+                        {
+                            <div class="ticket-header-cancelled">
+                                <i class="bi bi-x-circle-fill me-1"></i> VÉ ĐÃ HỦY
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="ticket-header-neon">
+                                <i class="bi bi-film me-1"></i> CINEMA HUB TICKET
+                            </div>
+                        }
+
+                        <div class="p-4">
+                            @{
+                                var firstShowtime = order.OrderDetails.FirstOrDefault()?.Showtime;
+                                var hall = firstShowtime?.CinemaHall;
+                                var cinema = hall?.Cinema;
+                            }
+
+                            @* --- THÔNG TIN RẠP & CHI NHÁNH --- *@
+                            @if (cinema != null || hall != null)
+                            {
+                                <div class="mb-3 pb-3" style="border-bottom:1px dashed rgba(0,255,135,0.12);">
+                                    @if (cinema != null)
+                                    {
+                                        <div class="fw-bold" style="color:#00ff87;font-size:0.95rem;">
+                                            <i class="bi bi-geo-alt-fill me-1"></i>@cinema.Name
+                                        </div>
+                                    }
+                                    <div class="d-flex gap-3 mt-1 flex-wrap" style="font-size:0.78rem;color:#6b8c78;">
+                                        @if (hall != null)
+                                        {
+                                            <span><i class="bi bi-door-open me-1"></i>@hall.Name</span>
+                                        }
+                                        @if (firstShowtime != null && !string.IsNullOrEmpty(firstShowtime.Format))
+                                        {
+                                            <span style="background:rgba(99,102,241,0.18);color:#a5b4fc;padding:1px 7px;border-radius:4px;font-weight:600;">@firstShowtime.Format</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            @foreach (var detail in order.OrderDetails)
+                            {
+                                <h5 class="fw-bold text-white mb-2" style="font-size:1rem;line-height:1.4;">
+                                    @detail.Showtime.Movie.Title
+                                </h5>
+                                <div class="small mb-3" style="color:#6b8c78;">
+                                    <i class="bi bi-calendar3 me-1" style="color:#c8e6d0;"></i>
+                                    @detail.Showtime.StartTime.ToString("dd/MM/yyyy")
+                                    <span class="mx-2" style="opacity:0.4;">|</span>
+                                    <i class="bi bi-clock me-1" style="color:#c8e6d0;"></i>
+                                    @detail.Showtime.StartTime.ToString("HH:mm")
+                                </div>
+                                <div class="seat-box mb-3">
+                                    <span class="text-uppercase fw-semibold d-block"
+                                          style="font-size:0.6rem;color:#3d7a52;letter-spacing:1px;">Ghế của bạn</span>
+                                    <span class="fs-4 fw-bold"
+                                          style="color:#00ff87;text-shadow:0 0 8px rgba(0,255,135,0.35);">
+                                        @detail.Seat.SeatNumber
+                                    </span>
+                                </div>
+                            }
+
+                            <div class="ticket-stub-line-dark"></div>
+
+                            <div class="d-flex justify-content-between align-items-end">
+                                @* QR Code *@
+                                <div>
+                                    @{
+                                        string qrContent = $"TICKET-{order.Id}-{order.OrderDate:yyyyMMdd}";
+                                        string qrUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={qrContent}";
+                                    }
+                                    <img src="@qrUrl" alt="QR" class="qr-glow"
+                                         style="width:72px;height:72px;background:#fff;padding:4px;border:2px solid transparent;border-radius:8px;transition:all 0.2s;" />
+                                </div>
+
+                                @* Trạng thái + giá *@
+                                <div class="text-end">
+                                    @if (isCancelled)
+                                    {
+                                        <span class="badge-status badge-cancelled">
+                                            <i class="bi bi-x-circle-fill"></i> Đã hủy
+                                        </span>
+                                    }
+                                    else if (order.Status == "WAITING_CONFIRM")
+                                    {
+                                        <span class="badge-status badge-pending" style="background: rgba(249,115,22,0.12); color: #f97316; border: 1px solid rgba(249,115,22,0.25);">
+                                            <i class="bi bi-hourglass-split"></i> Đang chờ duyệt
+                                        </span>
+                                    }
+                                    else if (order.IsPaid && order.Status == "PAID")
+                                    {
+                                        <span class="badge-status badge-paid">
+                                            <i class="bi bi-check-circle-fill"></i> Đã thanh toán
+                                        </span>
+                                    }
+                                    else if (order.IsPaid && order.Status == "CHECKED_IN")
+                                    {
+                                        <span class="badge-status badge-paid" style="background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25);">
+                                            <i class="bi bi-qr-code-scan"></i> Đã soát vé
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-status badge-pending">
+                                            <i class="bi bi-clock-history"></i> Chờ thanh toán
+                                        </span>
+                                    }
+                                    <div>
+                                        <small class="d-block text-uppercase fw-semibold"
+                                               style="font-size:0.6rem;color:#3d7a52;letter-spacing:0.5px;">Tổng tiền</small>
+                                        <span class="fw-bold fs-5" style="color:#fff;">
+                                            @order.TotalAmount.ToString("N0")<span style="font-size:0.85rem;color:#4b6b58;">đ</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                             @* Nút hủy vé *@
+                             @if (canCancel)
+                             {
+                                 <button class="btn-cancel-ticket" onclick="cancelTicket(@order.Id)">
+                                     <i class="bi bi-x-circle"></i> @(order.IsPaid ? "Hủy vé & Hoàn tiền" : "Hủy giữ ghế")
+                                 </button>
+                             }
+
+                            <div class="text-center mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.04);">
+                                <small style="font-size:0.65rem;color:#3d6650;font-family:monospace;">
+                                    TICKET ID: #@order.Id.ToString().PadLeft(6, '0')
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    function cancelTicket(orderId) {
+        Swal.fire({
+            title: 'Đang tính toán tiền hoàn...',
+            background: '#0f1f13',
+            color: '#ffffff',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        $.ajax({
+            url: '/Booking/GetRefundEstimate',
+            type: 'GET',
+            data: { orderId: orderId },
+            success: function (res) {
+                if (!res.success) {
+                    Swal.fire({
+                        title: 'Lỗi!',
+                        text: res.message,
+                        icon: 'error',
+                        background: '#0f1f13',
+                        color: '#ffffff',
+                        confirmButtonColor: '#ef4444'
+                    });
+                    return;
+                }
+
+                if (!res.canCancel) {
+                    Swal.fire({
+                        title: 'Không thể hủy!',
+                        text: res.policy,
+                        icon: 'warning',
+                        background: '#0f1f13',
+                        color: '#ffffff',
+                        confirmButtonColor: '#fbbf24'
+                    });
+                    return;
+                }
+
+                let infoHtml = "";
+                let confirmText = "Đồng ý hủy";
+                let cancelColor = '#1a3320';
+                let confirmColor = '#ef4444';
+
+                if (!res.isPaid) {
+                    infoHtml = `
+                        <div class="text-start p-3 rounded" style="background:#1a2b1f; border:1px solid rgba(0,255,135,0.15); font-size:0.9rem;">
+                            <p class="mb-2 text-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Lưu ý:</strong> Đơn hàng chưa thanh toán.</p>
+                            <p class="mb-0 text-white-50">Khi hủy, các ghế bạn đã chọn sẽ được giải phóng ngay lập tức để người khác đặt. Bạn không nhận được tiền hoàn vì chưa thanh toán.</p>
+                        </div>
+                    `;
+                    confirmText = "Hủy giữ ghế";
+                    confirmColor = '#ef4444';
+                } else {
+                    infoHtml = `
+                        <div class="text-start p-3 rounded" style="background:#1e1b4b; border:1px solid rgba(99,102,241,0.25); font-size:0.9rem;">
+                            <p class="mb-2"><i class="bi bi-info-circle-fill me-1" style="color:#818cf8;"></i> <strong>Chính sách:</strong> <span style="color:#a5b4fc;">${res.policy}</span></p>
+                            <div class="d-flex justify-content-between mb-1 pb-1 border-bottom border-secondary border-opacity-20" style="border-color: rgba(255,255,255,0.08) !important;">
+                                <span class="text-white-50">Giá trị vé gốc:</span>
+                                <span class="fw-semibold text-white">${res.totalAmount.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1 pb-1 border-bottom border-secondary border-opacity-20" style="border-color: rgba(255,255,255,0.08) !important;">
+                                <span class="text-white-50">Tỷ lệ hoàn trả:</span>
+                                <span class="fw-bold text-success">${res.refundPercentage}%</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2 mb-2">
+                                <span class="fw-bold text-white">Số tiền hoàn vào ví:</span>
+                                <span class="fw-bold fs-5 text-warning" style="text-shadow: 0 0 10px rgba(251,191,36,0.3);">${res.refundAmount.toLocaleString('vi-VN')}đ</span>
+                            </div>
+                            <div class="text-end pt-1 border-top border-secondary border-opacity-20" style="border-color: rgba(255,255,255,0.08) !important;">
+                                <a href="javascript:void(0)" onclick="showRefundPolicy()" class="text-info text-decoration-underline small" style="font-size: 0.75rem;"><i class="bi bi-info-circle me-1"></i>Xem chi tiết quy định hoàn tiền</a>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                Swal.fire({
+                    title: 'Xác nhận hủy vé?',
+                    html: infoHtml,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: confirmColor,
+                    cancelButtonColor: cancelColor,
+                    confirmButtonText: confirmText,
+                    cancelButtonText: 'Giữ lại vé',
+                    background: '#0f1f13',
+                    color: '#ffffff',
+                    customClass: {
+                        popup: 'swal-dark-cinema',
+                        confirmButton: 'swal-btn-danger',
+                        cancelButton: 'swal-btn-cancel'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Đang xử lý hủy...',
+                            background: '#0f1f13',
+                            color: '#ffffff',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: '/Booking/CancelOrder',
+                            type: 'POST',
+                            data: { orderId: orderId },
+                            success: function (cancelRes) {
+                                if (cancelRes.success) {
+                                    Swal.fire({
+                                        title: 'Đã hủy!',
+                                        text: cancelRes.message,
+                                        icon: 'success',
+                                        background: '#0f1f13',
+                                        color: '#ffffff',
+                                        confirmButtonColor: '#00ff87'
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire({
+                                        title: 'Lỗi!',
+                                        text: cancelRes.message,
+                                        icon: 'error',
+                                        background: '#0f1f13',
+                                        color: '#ffffff',
+                                        confirmButtonColor: '#ef4444'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    title: 'Lỗi kết nối!',
+                                    text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại.',
+                                    icon: 'error',
+                                    background: '#0f1f13',
+                                    color: '#ffffff'
+                                });
+                            }
+                        });
+                    }
+                });
+            },
+            error: function () {
+                Swal.fire({
+                    title: 'Lỗi hệ thống!',
+                    text: 'Không thể lấy thông tin tính toán hoàn tiền.',
+                    icon: 'error',
+                    background: '#0f1f13',
+                    color: '#ffffff'
+                });
+            }
+        });
+    }
+
+    function showRefundPolicy() {
+        Swal.fire({
+            title: 'Quy định Hủy vé & Hoàn tiền',
+            html: `
+                <div class="text-start p-3 rounded" style="background:#0f1f13; font-size:0.9rem; color:#fff;">
+                    <p class="text-warning fw-bold mb-3"><i class="bi bi-shield-fill-exclamation me-1"></i> Chính sách hoàn tiền ví nội bộ:</p>
+                    <table class="table table-dark table-borderless table-sm align-middle m-0" style="font-size:0.85rem; --bs-table-bg: transparent; width:100%;">
+                        <thead>
+                            <tr class="border-bottom border-secondary border-opacity-50 text-muted" style="border-color: rgba(255,255,255,0.1) !important;">
+                                <th class="text-start">Thời điểm hủy vé</th>
+                                <th class="text-end">Tiền hoàn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                <td class="py-2 text-start">Đặt dưới 10 phút - Hoàn 100% (Phim chưa chiếu)</td>
+                                <td class="text-end text-success fw-bold">Hoàn 100%</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                <td class="py-2 text-start">Trước giờ chiếu trên 12 tiếng</td>
+                                <td class="text-end text-success fw-bold">Hoàn 100%</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                <td class="py-2 text-start">Trước giờ chiếu từ 4h đến 12h</td>
+                                <td class="text-end text-info fw-bold">Hoàn 75%</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.03);">
+                                <td class="py-2 text-start">Trước giờ chiếu từ 1h đến 4h</td>
+                                <td class="text-end text-warning fw-bold">Hoàn 50%</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 text-start text-danger">Dưới 1 tiếng trước giờ chiếu</td>
+                                <td class="text-end text-danger fw-bold">Không hỗ trợ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-white-50 small mt-3 mb-2">💡 <strong>Lưu ý quan trọng:</strong></p>
+                    <ul class="text-muted small ps-3 mb-0">
+                        <li class="mb-1">Sau 10 phút kể từ khi đặt vé, phí hủy vé sẽ được tính dựa trên thời gian còn lại đến suất chiếu (theo các mốc từ 12h, 4h, 1h ở trên).</li>
+                        <li>Tiền hoàn lại được cộng trực tiếp vào Ví nội bộ Cinema Hub để mua vé lần sau.</li>
+                    </ul>
+                </div>
+            `,
+            background: '#0f1f13',
+            color: '#ffffff',
+            confirmButtonColor: '#00ff87',
+            confirmButtonText: 'Đã hiểu'
+        });
+    }
+</script>
+
+@code {
+    private List<Order> orders;
+    private string searchQuery = "";
+
+    private IEnumerable<Order> FilteredOrders => string.IsNullOrWhiteSpace(searchQuery)
+        ? orders
+        : orders.Where(o => o.OrderDetails.Any(d =>
+            d.Showtime?.Movie?.Title?.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) == true));
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            orders = await Db.Orders
+                .Include(o => o.OrderDetails).ThenInclude(od => od.Showtime).ThenInclude(s => s.Movie)
+                .Include(o => o.OrderDetails).ThenInclude(od => od.Showtime).ThenInclude(s => s.CinemaHall).ThenInclude(ch => ch.Cinema)
+                .Include(o => o.OrderDetails).ThenInclude(od => od.Seat)
+                .Where(o => o.User.UserName == user.Identity.Name)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+    }
+}

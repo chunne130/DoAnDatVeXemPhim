@@ -1,0 +1,65 @@
+﻿@inject SignInManager<IdentityUser> SignInManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+}
+
+<ul class="nav nav-pills flex-column gap-2 manage-nav">
+    <li class="nav-item">
+        <a class="nav-link rounded-pill px-4 @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">
+            <i class="bi bi-person-circle me-2"></i>Hồ sơ
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link rounded-pill px-4 @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">
+            <i class="bi bi-envelope-at-fill me-2"></i>Email
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link rounded-pill px-4 @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">
+            <i class="bi bi-key-fill me-2"></i>Mật khẩu
+        </a>
+    </li>
+    @if (hasExternalLogins)
+    {
+        <li id="external-logins" class="nav-item">
+            <a id="external-login" class="nav-link rounded-pill px-4 @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Liên kết ngoài
+            </a>
+        </li>
+    }
+    <li class="nav-item">
+        <a class="nav-link rounded-pill px-4 @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">
+            <i class="bi bi-database-fill-gear me-2"></i>Dữ liệu cá nhân
+        </a>
+    </li>
+</ul>
+
+<style>
+    /* Tổng thể menu bên trái */
+    .manage-nav .nav-link {
+        color: #495057;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+
+        /* Khi rê chuột vào menu */
+        .manage-nav .nav-link:hover {
+            background-color: #fff3cd; /* Vàng nhạt */
+            color: #856404;
+            border-color: #ffeeb5;
+        }
+
+        /* Khi menu đang được chọn (Active) - CHUẨN VÀNG ĐEN */
+        .manage-nav .nav-link.active {
+            background-color: #1a1a1a !important; /* Đen */
+            color: #ffc107 !important; /* Vàng */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-weight: 700;
+        }
+
+        /* Icon trong menu */
+        .manage-nav .nav-link i {
+            font-size: 1.1rem;
+        }
+</style>

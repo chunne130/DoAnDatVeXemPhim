@@ -1,0 +1,217 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Movie>
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                <i class="bi bi-film me-2"></i> Quản lý Kho Phim
+            </h4>
+            <p class="text-muted small m-0 mt-1">Danh sách tất cả các phim trong hệ thống Cinema Hub</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="/AdminControllers/Index" class="btn btn-outline-secondary rounded-pill px-4 fw-bold shadow-sm">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+
+            <a asp-action="Create" class="btn-action-pill ajax-link shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Thêm phim mới
+            </a>
+        </div>
+    </div>
+
+    @* THANH TÌM KIẾM PHIM (LIVE SEARCH) *@
+    <form id="searchMovieForm" action="/Movies/Index" method="get" class="mb-4 mt-2">
+        <div class="search-wrap d-flex align-items-center p-2 rounded-pill" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); max-width: 600px;">
+            <div class="search-field flex-grow-1 d-flex align-items-center px-3">
+                <i class="bi bi-search me-2" style="color: #00ff87;"></i>
+                <input type="text" name="searchString" id="searchInput" value="@ViewData["CurrentFilter"]" class="form-control border-0 bg-transparent text-white shadow-none p-0" placeholder="Tìm tên phim, mô tả, thể loại..." style="outline: none !important;" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-save-neon rounded-pill px-4 fw-bold" style="background: #00ff87; color: #000;">TÌM KIẾM</button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()))
+            {
+                <a href="/Movies/Index" class="btn ajax-link text-danger ms-2" title="Xóa bộ lọc"><i class="bi bi-x-circle-fill fs-5"></i></a>
+            }
+        </div>
+    </form>
+
+    <div class="table-responsive custom-scrollbar">
+        <table class="table table-dark table-borderless align-middle table-hover m-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.02);">
+            <thead>
+                <tr class="text-muted small uppercase border-bottom" style="border-color: rgba(255,255,255,0.1) !important; font-size: 0.75rem;">
+                    <th style="padding-bottom: 12px; width: 80px;" class="text-center">Poster</th>
+                    <th style="padding-bottom: 12px;">Thông tin phim</th>
+                    <th style="padding-bottom: 12px; width: 150px;">Thể loại</th>
+                    <th style="padding-bottom: 12px; width: 120px;">Thời lượng</th>
+                    <th style="padding-bottom: 12px; width: 120px;">Khởi chiếu</th>
+                    <th style="padding-bottom: 12px; width: 140px; text-align: center;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="border-bottom transition-all" style="border-color: rgba(255,255,255,0.03) !important;">
+                            <td class="py-3 text-center">
+                                <div style="width: 54px; height: 76px; background: rgba(255,255,255,0.05); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin: 0 auto;">
+                                    @if (!string.IsNullOrEmpty(item.PosterUrl))
+                                    {
+                                        <img src="@item.PosterUrl" alt="Poster" class="w-100 h-100" style="object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="font-size: 0.65rem;">No Pic</div>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-white mb-1" style="font-size: 0.95rem;">@item.Title</div>
+                                <div class="text-muted small text-truncate" style="max-width: 250px;" title="@item.Description">
+                                    @(string.IsNullOrEmpty(item.Description) ? "Chưa có mô tả" : item.Description)
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge" style="background: rgba(255,255,255,0.05); color: #d1d5db; border: 1px solid rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500;">
+                                    @(item.Genre?.Name ?? "Chưa phân loại")
+                                </span>
+                            </td>
+                            <td class="text-light small">
+                                <i class="bi bi-clock me-1 text-muted"></i> @item.Duration phút
+                            </td>
+                            <td class="text-light small">
+                                @(item.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Đang cập nhật")
+                            </td>
+                            <td>
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Xem">
+                                        <i class="bi bi-eye" style="color: #60a5fa;"></i>
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Sửa">
+                                        <i class="bi bi-pencil" style="color: #fbbf24;"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(239, 68, 68, 0.1); width: 32px; height: 32px; border-radius: 6px;" title="Xóa">
+                                        <i class="bi bi-trash" style="color: #ef4444;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-film text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                            <p class="text-muted fw-bold mb-0">Kho phim hiện đang trống.</p>
+                            <p class="text-muted small">Hãy thêm bộ phim đầu tiên vào hệ thống!</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* Hoạt ảnh trượt từ dưới lên mượt mà khi AJAX đổ dữ liệu vào */
+    .slide-in-bottom {
+        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+    @@keyframes slideIn {
+        0%
+
+    {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    }
+
+    .transition-all {
+        transition: all 0.2s ease;
+    }
+
+    /* Scrollbar xịn xò cho bảng */
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0,0,0,0.1);
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+    }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,255,135,0.5);
+        }
+
+</style>
+
+<script>
+    (function () {
+        // ── LIVE SEARCH KHÔNG TẢI TRANG LẠI (AJAX) ──
+        var searchTimer;
+        $(document).off('input', '#searchInput').on('input', '#searchInput', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                $('#searchMovieForm').trigger('submit');
+            }, 600); // Đợi 600ms sau khi người dùng ngừng gõ
+        });
+
+        $(document).off('submit', '#searchMovieForm').on('submit', '#searchMovieForm', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var url = $form.attr('action') + '?' + $form.serialize();
+            var $box  = $('#admin-dynamic-content');
+            var $load = $('#admin-loader');
+            
+            $box.css('opacity', '0.3');
+            $load.fadeIn(200);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (data) {
+                    var $dummy = $('<div>').append($.parseHTML(data, document, true));
+                    var $inner = $dummy.find('#admin-dynamic-content');
+                    
+                    if ($inner.length > 0) {
+                        $box.html($inner.html());
+                    } else {
+                        $box.html(data);
+                    }
+                    
+                    // Lấy lại focus (con trỏ chuột) vào ô tìm kiếm
+                    var currentVal = $('#searchInput').val();
+                    $('#searchInput').focus().val('').val(currentVal);
+
+                    $load.fadeOut(200, function() {
+                        $box.css('opacity', '1');
+                    });
+                    
+                    window.history.pushState({path: url}, '', url);
+                },
+                error: function() {
+                    $load.fadeOut(200);
+                    $box.css('opacity', '1');
+                }
+            });
+        });
+    })();
+</script>

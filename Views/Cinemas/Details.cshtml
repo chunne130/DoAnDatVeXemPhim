@@ -1,0 +1,79 @@
+﻿@model DoAnDatVeXemPhim.Models.Cinema
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+   
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #60a5fa; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(96,165,250,0.2);">
+                <i class="bi bi-info-square-fill me-2"></i>THÔNG TIN CỤM RẠP
+            </h4>
+            <p class="text-muted small m-0 mt-1">Chi tiết chi nhánh rạp hệ thống Cinema Hub</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary text-light ajax-link rounded-pill px-4 fw-bold shadow-sm" style="border-color: rgba(255,255,255,0.2);">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card border-0 rounded-4" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05) !important;">
+                <div class="card-body p-4 p-md-5">
+
+                    <div class="text-center mb-5">
+                        <div class="d-inline-block p-4 rounded-circle mb-3 shadow" style="background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.3);">
+                            <i class="bi bi-building text-info display-4" style="color: #60a5fa !important;"></i>
+                        </div>
+                        <h2 class="fw-bold text-white mb-2" style="letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">@Model.Name</h2>
+                        <span class="badge rounded-pill px-3 py-2" style="background: rgba(0,255,135,0.15); border: 1px solid rgba(0,255,135,0.3); color: #00ff87; letter-spacing: 1px;">
+                            <i class="bi bi-check-circle-fill me-1"></i> HỆ THỐNG CINEMA HUB
+                        </span>
+                    </div>
+
+                    <div class="row g-4 mt-2">
+                        <div class="col-sm-6">
+                            <div class="p-4 rounded-4 h-100" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255,255,255,0.05);">
+                                <small class="d-block text-uppercase fw-bold mb-2" style="color: #6b7280; letter-spacing: 1px;">Thành Phố / Khu Vực</small>
+                                <p class="fs-5 mb-0 fw-bold text-white"><i class="bi bi-map me-2" style="color: #fbbf24;"></i>@Model.City</p>
+                                <p class="mb-0 mt-1" style="color: #9ca3af;"><i class="bi bi-pin-map me-2" style="color: #6b7280;"></i>Quận/Huyện: <strong class="text-light">@Model.District</strong></p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-4 rounded-4 h-100" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255,255,255,0.05);">
+                                <small class="d-block text-uppercase fw-bold mb-2" style="color: #6b7280; letter-spacing: 1px;">Mã Hệ Thống</small>
+                                <p class="fs-3 mb-0 fw-bold" style="color: #00ff87; text-shadow: 0 0 10px rgba(0,255,135,0.3);">#CH-0@Model.Id</p>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-4 rounded-4" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255,255,255,0.05);">
+                                <small class="d-block text-uppercase fw-bold mb-2" style="color: #6b7280; letter-spacing: 1px;">Địa Chỉ Chi Tiết</small>
+                                <p class="fs-5 mb-0 text-white"><i class="bi bi-geo-alt-fill me-2" style="color: #ef4444;"></i>@Model.Address</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-4 rounded-4 h-100" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255,255,255,0.05);">
+                                <small class="d-block text-uppercase fw-bold mb-2" style="color: #6b7280; letter-spacing: 1px;">Hotline</small>
+                                <p class="fs-5 mb-0 fw-bold text-white"><i class="bi bi-telephone-fill me-2" style="color: #00ff87;"></i>@Model.Hotline</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-4 rounded-4 h-100" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255,255,255,0.05);">
+                                <small class="d-block text-uppercase fw-bold mb-2" style="color: #6b7280; letter-spacing: 1px;">Giờ hoạt động</small>
+                                <p class="fs-5 mb-0 fw-bold text-white"><i class="bi bi-clock-fill me-2" style="color: #3b82f6;"></i>@Model.OperatingHours</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-3 mt-5 pt-4 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+                        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn fw-bold rounded-pill px-5 shadow-sm ajax-link text-dark" style="background: #00ff87;">
+                            <i class="bi bi-pencil-square me-2"></i> CHỈNH SỬA
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

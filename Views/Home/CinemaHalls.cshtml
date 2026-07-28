@@ -1,0 +1,299 @@
+@model IEnumerable<DoAnDatVeXemPhim.Models.Cinema>
+
+@{
+    ViewData["Title"] = "Cụm Rạp Của Chúng Tôi - Cinema Hub";
+    // Gom nhóm rạp theo thành phố
+    var cinemasByCity = Model.GroupBy(c => c.City).OrderBy(g => g.Key).ToList();
+}
+
+<div class="container-xl mt-5 mb-5" style="font-family: 'Inter', sans-serif;">
+    @* --- TIÊU ĐỀ --- *@
+    <div class="text-center mb-5">
+        <p class="mb-1 text-uppercase fw-bold" style="color: #00ff87; font-size: 0.8rem; letter-spacing: 2px;">
+            <i class="bi bi-stars me-1"></i> Hệ thống rạp
+        </p>
+        <h2 class="fw-bold text-white" style="letter-spacing: -0.5px;">
+            Cụm Rạp Của Chúng Tôi
+        </h2>
+    </div>
+
+    <div class="cinema-layout-container mx-auto" style="max-width: 900px;">
+        @if (cinemasByCity.Any())
+        {
+            @* --- DANH SÁCH RẠP THEO THÀNH PHỐ --- *@
+            <div class="cinema-list-section mb-4">
+                @foreach (var cityGroup in cinemasByCity)
+                {
+                    <div class="city-group mb-4">
+                        <h6 class="fw-bold text-uppercase mb-2" style="color: #00ff87; letter-spacing: 1px; font-size: 0.85rem;">@cityGroup.Key</h6>
+                        
+                        <div class="city-cinemas-container rounded-3 overflow-hidden" style="border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0,0,0,0.2);">
+                            @foreach (var cinema in cityGroup)
+                            {
+                                <div class="cinema-bar px-4 py-3 d-flex justify-content-between align-items-center"
+                                     data-cinema-id="cinema-@cinema.Id" onclick="showCinemaDetail('cinema-@cinema.Id')">
+                                    <span class="fw-semibold text-white-50 fs-6 cinema-name">@cinema.Name</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            @* --- BẢNG CHI TIẾT (NẰM DƯỚI CÙNG) --- *@
+            <div class="cinema-detail-section">
+                @foreach (var cityGroup in cinemasByCity)
+                {
+                    @foreach (var cinema in cityGroup)
+                    {
+                        <div id="cinema-@cinema.Id" class="cinema-detail-panel rounded-4 p-4 shadow-lg mb-4" style="display: none;">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-md-7">
+                                    <h4 class="fw-bold text-white mb-4">@cinema.Name</h4>
+                                    
+                                    <div class="d-flex flex-column gap-3 mb-2">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi bi-geo-alt mt-1" style="color: #00ff87; font-size: 1.1rem;"></i>
+                                            <div>
+                                                <span class="d-block text-white-50 small text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Địa chỉ</span>
+                                                <span class="text-white fw-medium small">@cinema.Address, @cinema.District, @cinema.City</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-start gap-5 mt-2">
+                                            <div class="d-flex align-items-start gap-2">
+                                                <i class="bi bi-telephone mt-1" style="color: #00ff87; font-size: 1.1rem;"></i>
+                                                <div>
+                                                    <span class="d-block text-white-50 small text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Hotline</span>
+                                                    <span class="text-white fw-bold small">@(cinema.Hotline ?? "Chưa cập nhật")</span>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-start gap-2">
+                                                <i class="bi bi-clock mt-1" style="color: #00ff87; font-size: 1.1rem;"></i>
+                                                <div>
+                                                    <span class="d-block text-white-50 small text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 1px;">Giờ hoạt động</span>
+                                                    <span class="text-white fw-bold small">@(cinema.OperatingHours ?? "Chưa cập nhật")</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-5">
+                                    <div class="map-view-box position-relative rounded-3 overflow-hidden d-flex flex-column align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="bi bi-geo-alt-fill mb-2" style="font-size: 2.5rem; color: #00ff87; text-shadow: 0 0 15px rgba(0,255,135,0.5);"></i>
+                                        <span class="text-white-50 small" style="z-index: 1;">Map View (Bấm vào để xem trên bản đồ)</span>
+                                        
+                                        <a href="https://www.google.com/maps/dir/?api=1&destination=@Uri.EscapeDataString(cinema.Address + ", " + cinema.District + ", " + cinema.City)" target="_blank" class="btn btn-directions position-absolute bottom-0 end-0 m-2">
+                                            <i class="bi bi-cursor-fill me-1"></i> Directions
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @* KHU VỰC LỊCH CHIẾU CỦA RẠP NÀY *@
+                        <div id="showtimes-cinema-@cinema.Id" class="showtimes-panel rounded-4 p-4 shadow-lg mb-4" style="display: none;">
+                            <h5 class="text-white fw-bold mb-4">Lịch chiếu hôm nay</h5>
+                            
+                            @{
+                                var todayShowtimes = cinema.CinemaHalls?
+                                    .SelectMany(h => h.Showtimes ?? new List<Showtime>())
+                                    .Where(s => s.StartTime.Date == DateTime.Today && s.StartTime > DateTime.Now && s.IsActive && s.Movie != null)
+                                    .OrderBy(s => s.StartTime)
+                                    .ToList() ?? new List<Showtime>();
+
+                                var groupedByMovie = todayShowtimes.GroupBy(s => s.Movie).ToList();
+                            }
+
+                            @if (groupedByMovie.Any())
+                            {
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach (var movieGroup in groupedByMovie)
+                                    {
+                                        var movie = movieGroup.Key;
+                                        <div class="movie-showtime-card p-3 rounded-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
+                                            <div class="d-flex gap-3 align-items-center mb-3">
+                                                <img src="@movie.PosterUrl" alt="@movie.Title" class="rounded-2" style="width: 50px; height: 75px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.5);" onerror="this.src='/images/placeholder.jpg'" />
+                                                <div>
+                                                    <h6 class="text-white fw-bold mb-1">@movie.Title</h6>
+                                                    <div class="d-flex gap-2 align-items-center">
+                                                        <span class="badge rounded-1" style="background: rgba(255, 171, 0, 0.2); color: #ffab00; font-size: 0.65rem;">@(movie.AgeRestriction)</span>
+                                                        <span class="text-white-50 small"><i class="bi bi-clock me-1"></i> @movie.Duration phút</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-flex flex-wrap gap-2">
+                                                @foreach (var showtime in movieGroup)
+                                                {
+                                                    <a href="/Booking/SelectSeat?showtimeId=@showtime.Id" class="btn btn-sm btn-showtime rounded-2 d-flex flex-column align-items-center justify-content-center" style="width: 70px; height: 50px;">
+                                                        <span class="fw-bold fs-6" style="color: #00ff87;">@showtime.StartTime.ToString("HH:mm")</span>
+                                                        <span style="font-size: 0.65rem; color: #9ca3af;">@showtime.Format</span>
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4 rounded-3" style="background: rgba(255,255,255,0.02);">
+                                    <i class="bi bi-calendar-x text-white-50 mb-2" style="font-size: 2rem; display: block;"></i>
+                                    <span class="text-white-50 small">Hiện tại rạp này chưa có suất chiếu nào trong hôm nay.</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5 rounded-4" style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1);">
+                <i class="bi bi-geo-alt" style="font-size: 3rem; color: #4b5563;"></i>
+                <h5 class="mt-3" style="color: #9ca3af;">Hiện tại chưa có rạp nào được cấu hình.</h5>
+            </div>
+        }
+    </div>
+</div>
+
+@* --- CSS CUSTOM ĐỒNG BỘ DARK NEON --- *@
+<style>
+    /* Container Rạp */
+    .city-cinemas-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Thanh danh sách rạp */
+    .cinema-bar {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: transparent;
+    }
+
+    .cinema-bar:first-child {
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+    }
+
+    .cinema-bar:last-child {
+        border-bottom: none;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    .cinema-bar:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .cinema-bar:hover .cinema-name {
+        color: #fff !important;
+    }
+
+    /* Trạng thái thanh rạp khi đang mở (Active) */
+    .cinema-bar.active {
+        background: rgba(0, 255, 135, 0.05);
+        box-shadow: inset 0 0 0 1.5px rgba(0, 255, 135, 0.6);
+        z-index: 2;
+        position: relative;
+    }
+    
+    .cinema-bar.active .cinema-name {
+        color: #00ff87 !important;
+    }
+
+    /* Bảng chi tiết (Detail Panel) */
+    .cinema-detail-panel, .showtimes-panel {
+        background: rgba(10, 22, 13, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Khung bản đồ Radar */
+    .map-view-box {
+        background-color: #0b1410;
+        background-image: 
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .map-view-box::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at center, transparent 30%, #0b1410 100%);
+        pointer-events: none;
+    }
+
+    /* Nút Directions */
+    .btn-directions {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        z-index: 2;
+        border: 1px solid transparent;
+    }
+    
+    .btn-directions:hover {
+        background: rgba(0, 255, 135, 0.15);
+        color: #00ff87;
+        border-color: rgba(0, 255, 135, 0.3);
+    }
+    /* Nút suất chiếu */
+    .btn-showtime {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .btn-showtime:hover {
+        background: rgba(0, 255, 135, 0.1);
+        border-color: rgba(0, 255, 135, 0.5);
+        transform: translateY(-2px);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function showCinemaDetail(cinemaId) {
+            // Đóng tất cả các panel chi tiết
+            $('.cinema-detail-panel').hide();
+            $('.showtimes-panel').hide();
+            
+            // Bỏ trạng thái active của tất cả các bar
+            $('.cinema-bar').removeClass('active');
+            
+            // Tìm panel cần mở và hiển thị nó (dùng fade in cho sang trọng)
+            $('#' + cinemaId).fadeIn(300);
+            
+            // Hiển thị phần lịch chiếu của rạp tương ứng
+            $('#showtimes-' + cinemaId).fadeIn(300);
+
+            // Active bar hiện tại
+            var targetBar = document.querySelector('.cinema-bar[data-cinema-id="' + cinemaId + '"]');
+            if (targetBar) {
+                targetBar.classList.add('active');
+            }
+        }
+        
+        // Tự động chọn rạp đầu tiên khi load trang
+        $(document).ready(function() {
+            var firstCinema = $('.cinema-bar').first();
+            if (firstCinema.length > 0) {
+                var firstId = firstCinema.data('cinema-id');
+                showCinemaDetail(firstId);
+            }
+        });
+    </script>
+}

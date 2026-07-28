@@ -1,0 +1,341 @@
+@model IEnumerable<DoAnDatVeXemPhim.Models.Seat>
+
+@{
+    ViewData["Title"] = "Quản lý Sơ đồ ghế";
+    int hallId = ViewBag.HallId ?? 0;
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div id="seatMapContainer" class="container mt-4 mb-5 slide-in-bottom">
+    @* HEADER CYBERPUNK *@
+    <div class="d-flex justify-content-between align-items-center mb-4 border-start border-5 ps-3 py-2 shadow-sm rounded-end style-dark-card" style="border-color: #00ff87 !important;">
+        <div>
+            <h2 class="fw-bold mb-0 text-uppercase text-white" style="text-shadow: 0 0 10px rgba(0,255,135,0.3);">
+                PHÒNG: <span style="color: #00ff87;">@ViewBag.HallName</span>
+            </h2>
+            <p class="text-muted small mb-0 mt-1">Sức chứa cấu hình: <span class="badge bg-cyber-warning px-2 py-1">@ViewBag.TotalSeats ghế</span></p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-cyber-warning fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="collapse" data-bs-target="#autoGenForm">
+                <i class="bi bi-magic me-1"></i> TẠO GHẾ TỰ ĐỘNG
+            </button>
+            <button data-url="/Seats/Create?hallId=@hallId" class="btn btn-outline-light fw-bold rounded-pill px-4 btn-trigger-modal" style="border-color: rgba(255,255,255,0.2);">
+                <i class="bi bi-plus-lg me-1"></i> THÊM LẺ
+            </button>
+        </div>
+    </div>
+
+    @* FORM TẠO HÀNG LOẠT (CHẠY AJAX) *@
+    <div class="collapse mb-4" id="autoGenForm">
+        <div class="card card-body shadow-sm style-dark-card" style="border: 1px dashed #fbbf24;">
+            <h6 class="fw-bold mb-3" style="color: #fbbf24;"><i class="bi bi-gear-fill me-2"></i>Cấu hình rải ghế tự động</h6>
+            <form action="/Seats/AutoGenerate" method="post" id="formAutoGenerate" class="row g-3 align-items-end">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="hallId" value="@hallId" />
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Số hàng (A, B, C...)</label>
+                    <input type="number" name="numRows" class="form-control form-control-neon" placeholder="VD: 10" required min="1" max="26" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-muted">Số cột (1, 2, 3...)</label>
+                    <input type="number" name="numCols" class="form-control form-control-neon" placeholder="VD: 12" required min="1" max="20" />
+                </div>
+                <div class="col-md-4 text-muted small pb-2">
+                    <i class="bi bi-info-circle me-1"></i> Hệ thống tự động phân loại Normal/VIP theo hàng.
+                </div>
+                <div class="col-md-2 text-end">
+                    <button type="submit" class="btn btn-cyber-warning w-100 fw-bold rounded-3">XÁC NHẬN RẢI</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @* CHÚ THÍCH LOẠI GHẾ *@
+    <div class="d-flex justify-content-center gap-4 mb-4 small fw-bold text-uppercase text-muted">
+        <div class="d-flex align-items-center"><span class="seat-demo seat-normal-demo me-2"></span> Thường</div>
+        <div class="d-flex align-items-center"><span class="seat-demo seat-vip-demo me-2"></span> VIP</div>
+        <div class="d-flex align-items-center"><span class="seat-demo seat-couple-demo me-2"></span> Sweetbox</div>
+    </div>
+
+    @* SƠ ĐỒ GHẾ THỰC TẾ *@
+    <div class="card border-0 shadow-lg rounded-4 p-4 p-md-5 style-dark-card text-center" style="min-height: 400px;">
+        @* Màn hình Cyber *@
+        <div class="mx-auto mb-5 rounded-bottom shadow-sm py-2 fw-bold"
+             style="width: 70%; letter-spacing: 15px; background: linear-gradient(180deg, rgba(0,255,135,0.15) 0%, transparent 100%); border-top: 3px solid #00ff87; color: #00ff87; text-shadow: 0 0 10px #00ff87;">
+            MÀN HÌNH CHÍNH
+        </div>
+
+        @* Khu vực rải ghế *@
+        <div class="d-flex flex-wrap justify-content-center gap-2 mx-auto" style="max-width: 1000px;">
+            @foreach (var item in Model)
+            {
+                <div class="seat-container">
+                    <div class="seat-box @(item.SeatType == "VIP" ? "seat-vip" : (item.SeatType == "Sweetbox" ? "seat-couple" : "seat-normal"))"
+                         title="@item.SeatNumber - @item.SeatType">
+                        @item.SeatNumber
+
+                        @* Hover Action (Đã đổi thành nút gọi Modal) *@
+                        <div class="seat-actions">
+                            <button data-url="/Seats/Edit/@item.Id" class="btn btn-sm text-info btn-trigger-modal p-1"><i class="bi bi-pencil-fill"></i></button>
+                            <button data-url="/Seats/Delete/@item.Id" class="btn btn-sm text-danger btn-trigger-modal p-1"><i class="bi bi-trash-fill"></i></button>
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (!Model.Any())
+            {
+                <div class="py-5 text-muted w-100">
+                    <i class="bi bi-grid-3x3-gap fs-1 d-block mb-3" style="opacity: 0.3;"></i>
+                    <p class="mb-0">Chưa có ghế nào trong phòng này.</p>
+                    <p class="small">Hãy dùng chức năng <strong>Tạo ghế tự động</strong> để setup nhanh!</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="/CinemaHalls/Index" class="ajax-link text-decoration-none small" style="color: #9ca3af; transition: 0.3s;">
+            <i class="bi bi-arrow-left-circle me-1"></i> Quay lại Quản lý Phòng Chiếu
+        </a>
+    </div>
+</div>
+
+@* MODAL POPUP CHO MODULE SƠ ĐỒ GHẾ *@
+<div class="modal fade" id="seatActionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content style-modal-cyber border-0" style="background: rgba(17, 24, 39, 0.95); backdrop-filter: blur(16px); border: 1px solid rgba(0,255,135,0.3) !important; border-radius: 16px;">
+            <div id="modalContentBody"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Nền chung Cyberpunk */
+    .style-dark-card {
+        background-color: rgba(17, 24, 39, 0.6) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-cyber-warning {
+        background: #fbbf24 !important;
+        color: #000 !important;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+        .btn-cyber-warning:hover {
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+            transform: translateY(-1px);
+        }
+
+    .bg-cyber-warning {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .form-control-neon {
+        background: rgba(0,0,0,0.3) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: #fff !important;
+    }
+
+        .form-control-neon:focus {
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 0 3px rgba(251,191,36,0.2) !important;
+        }
+
+    /* Animation load */
+    .slide-in-bottom {
+        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+    @@keyframes slideIn {
+        0%
+
+    {
+        transform: translateY(15px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    }
+
+    /* CSS GHẾ CYBERPUNK */
+    .seat-demo {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        display: inline-block;
+        border: 1px solid;
+    }
+
+    .seat-normal-demo {
+        border-color: #0ea5e9;
+        background: rgba(14, 165, 233, 0.1);
+    }
+
+    .seat-vip-demo {
+        border-color: #fbbf24;
+        background: rgba(251, 191, 36, 0.1);
+    }
+
+    .seat-couple-demo {
+        border-color: #f43f5e;
+        background: rgba(244, 63, 94, 0.1);
+        width: 32px;
+    }
+
+    .seat-box {
+        width: 44px;
+        height: 44px;
+        border: 1px solid;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 11px;
+        position: relative;
+        transition: all 0.2s;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(4px);
+    }
+
+    .seat-normal {
+        border-color: #0ea5e9;
+        color: #0ea5e9;
+        box-shadow: inset 0 0 8px rgba(14,165,233,0.15);
+    }
+
+    .seat-vip {
+        border-color: #fbbf24;
+        color: #fbbf24;
+        box-shadow: inset 0 0 8px rgba(251,191,36,0.15);
+    }
+
+    .seat-couple {
+        border-color: #f43f5e;
+        color: #f43f5e;
+        box-shadow: inset 0 0 8px rgba(244,63,94,0.15);
+        width: 96px;
+    }
+
+    .seat-actions {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .seat-box:hover .seat-actions {
+        opacity: 1;
+    }
+
+    .seat-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+</style>
+
+<script>
+    (function () {
+        // 🚀 ĐÓNG MODAL BỌC THÉP
+        function closeSeatModal() {
+            var $el = $('#seatActionModal');
+            if (typeof bootstrap !== 'undefined') {
+                var instance = bootstrap.Modal.getInstance($el[0]);
+                if (instance) instance.hide();
+                else $el.modal('hide');
+            } else {
+                $el.modal('hide');
+            }
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('overflow', '');
+        }
+
+        // 🚀 1. GỌI MODAL (Thêm lẻ, Sửa, Xóa)
+        $(document).off('click', '.btn-trigger-modal').on('click', '.btn-trigger-modal', function (e) {
+            e.preventDefault();
+            var targetUrl = $(this).data('url');
+            var $modalEl = $('#seatActionModal');
+
+            $('#modalContentBody').html('<div class="text-center py-5"><div class="spinner-border text-info"></div></div>');
+
+            if (typeof bootstrap !== 'undefined') { new bootstrap.Modal($modalEl[0]).show(); }
+            else { $modalEl.modal('show'); }
+
+            $.get(targetUrl, function (data) {
+                $('#modalContentBody').html(data);
+            }).fail(function () {
+                $('#modalContentBody').html('<div class="p-4 text-center text-danger"><i class="bi bi-x-circle fs-1"></i><p>Lỗi tải form!</p></div>');
+            });
+        });
+
+        // 🚀 2. SUBMIT FORM TRONG MODAL (Thêm/Sửa/Xóa ghế ngầm)
+        $(document).off('submit', '#modalContentBody form').on('submit', '#modalContentBody form', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            $form.css('opacity', '0.5');
+
+            $.ajax({
+                url: $form.attr('action'), type: $form.attr('method'), data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(res) {
+                    var $newContainer = $(res).find('#seatMapContainer');
+                    if ($newContainer.length > 0) {
+                        $('#seatMapContainer').html($newContainer.html());
+                        closeSeatModal();
+                        Swal.fire({ title: 'Xong!', text: 'Đã cập nhật ghế.', icon: 'success', background: '#111827', color: '#fff', timer: 1500, showConfirmButton: false });
+                    } else {
+                        $('#modalContentBody').html(res);
+                        $form.css('opacity', '1');
+                    }
+                }
+            });
+        });
+
+        // 🚀 3. SUBMIT FORM TẠO GHẾ TỰ ĐỘNG (AutoGenerate)
+        $(document).off('submit', '#formAutoGenerate').on('submit', '#formAutoGenerate', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var $btn = $form.find('button[type="submit"]');
+
+            $btn.html('<span class="spinner-border spinner-border-sm me-2"></span>ĐANG RẢI...').prop('disabled', true);
+
+            $.ajax({
+                url: $form.attr('action'), type: $form.attr('method'), data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(res) {
+                    var $newContainer = $(res).find('#seatMapContainer');
+                    if ($newContainer.length > 0) {
+                        $('#seatMapContainer').html($newContainer.html());
+                        Swal.fire({ title: 'Tuyệt vời!', text: 'Đã tạo sơ đồ ghế tự động thành công!', icon: 'success', background: '#111827', color: '#fff', confirmButtonColor: '#fbbf24' });
+                    } else {
+                        alert("Có lỗi xảy ra, vui lòng thử lại!");
+                        $btn.html('XÁC NHẬN RẢI').prop('disabled', false);
+                    }
+                }
+            });
+        });
+
+        // Dọn rác Modal
+        $(document).off('hidden.bs.modal', '#seatActionModal').on('hidden.bs.modal', '#seatActionModal', function () {
+            $('#modalContentBody').html(''); $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '');
+        });
+    })();
+</script>

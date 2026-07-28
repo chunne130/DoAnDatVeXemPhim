@@ -1,0 +1,265 @@
+@model IEnumerable<DoAnDatVeXemPhim.Models.Promotion>
+@{
+    ViewData["Title"] = "Siêu Ưu Đãi";
+    var vipInfo = ViewBag.VipInfo as DoAnDatVeXemPhim.Controllers.MembershipInfoResult;
+}
+
+<div class="container-xl pt-5 pb-5">
+    
+    @* 1. HERO BANNER NEON *@
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-white text-uppercase mb-2" style="font-size: 3rem; letter-spacing: 2px;">
+            SIÊU <span style="color: #00ff87; text-shadow: 0 0 20px rgba(0,255,135,0.4);">ƯU ĐÃI</span>
+        </h1>
+        <p class="text-muted fs-5">Mã giảm giá và đặc quyền độc quyền chỉ có tại Cinema Hub</p>
+    </div>
+
+    @* 2. THANH TIẾN TRÌNH VIP (GAMIFICATION) *@
+    @if (vipInfo != null)
+    {
+        <div class="card bg-dark border-0 rounded-4 shadow-lg mb-5 p-4" style="background: rgba(255,255,255,0.03) !important; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05) !important;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="text-white mb-1">
+                        Hạng thẻ hiện tại: 
+                        <span class="badge" style="background: linear-gradient(135deg, #00ff87 0%, #0369a1 100%); font-size: 1rem;">
+                            @vipInfo.LevelName
+                        </span>
+                    </h5>
+                    @if (vipInfo.AmountMissing > 0)
+                    {
+                        <p class="text-white-50 mb-0 small">
+                            Chỉ cần chi tiêu thêm <strong class="text-warning">@vipInfo.AmountMissing.ToString("N0")đ</strong> để thăng hạng và mở khóa ưu đãi khủng!
+                        </p>
+                    }
+                    else
+                    {
+                         <p class="text-white-50 mb-0 small">Bạn đã đạt hạng tối đa! Tận hưởng tất cả các ưu đãi bên dưới nhé.</p>
+                    }
+                </div>
+                <div class="text-end">
+                    <span class="text-white-50 small">Tổng chi tiêu:</span><br />
+                    <span class="fw-bold text-white fs-4">@vipInfo.TotalSpent.ToString("N0")đ</span>
+                </div>
+            </div>
+
+            @if (vipInfo.AmountMissing > 0)
+            {
+                <div class="progress" style="height: 12px; background-color: rgba(255,255,255,0.1); border-radius: 6px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: @(vipInfo.ProgressPercentage)%; background-color: #00ff87;" aria-valuenow="@vipInfo.ProgressPercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert text-center rounded-4 mb-5 shadow-sm" style="background: rgba(0,255,135,0.1); border: 1px dashed rgba(0,255,135,0.5);">
+            <p class="mb-2 text-white">Đăng nhập ngay để theo dõi tiến trình Hạng thẻ và mở khóa mã giảm giá ẩn!</p>
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-sm btn-outline-success fw-bold px-4 rounded-pill" style="color: #00ff87; border-color: #00ff87;">Đăng nhập</a>
+        </div>
+    }
+
+    @* 3. DANH SÁCH MÃ KHUYẾN MÃI (GLASSMORPHISM CARDS) *@
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            // Xác định màu sắc theo hạng thẻ
+            string cardBorder = "rgba(255,255,255,0.1)";
+            string badgeBg = "bg-secondary";
+            string reqLevel = item.MembershipLevel?.LevelName ?? "Tất cả mọi người";
+
+            if (reqLevel.Contains("Bạc")) { cardBorder = "rgba(148,163,184,0.6)"; badgeBg = "bg-secondary"; }
+            else if (reqLevel.Contains("Vàng")) { cardBorder = "rgba(251,191,36,0.6)"; badgeBg = "bg-warning text-dark"; }
+            else if (reqLevel.Contains("Bạch Kim")) { cardBorder = "rgba(226,234,252,0.6)"; badgeBg = "bg-light text-dark"; }
+            else if (reqLevel.Contains("Kim Cương")) { cardBorder = "rgba(34,211,238,0.6)"; badgeBg = "bg-info text-dark"; }
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 offer-card" style="border-top: 4px solid @cardBorder; border-left: none; border-right: none; border-bottom: none;">
+                    <div class="card-body p-4 d-flex flex-column position-relative">
+                        
+                        @* Header: Badge & Icon *@
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge @badgeBg px-3 py-2 rounded-pill fw-bold shadow-sm" style="font-size: 0.75rem;">@reqLevel</span>
+                            <i class="bi bi-ticket-perforated-fill" style="font-size: 1.5rem; color: @cardBorder; opacity: 0.6;"></i>
+                        </div>
+                        
+                        @* Discount Amount *@
+                        <h3 class="text-white fw-bold mb-2" style="font-size: 2.2rem; letter-spacing: -1px;">
+                            @if (item.IsPercentage) { <span>-@item.DiscountValue.ToString("0.##")%</span> }
+                            else { <span>-@item.DiscountValue.ToString("N0")đ</span> }
+                        </h3>
+                        
+                        @* Description *@
+                        <p class="text-white-50 small mb-0 flex-grow-1">
+                            @item.Description <br />
+                            <span class="text-warning mt-1 d-block fw-bold"><i class="bi bi-info-circle"></i> Đơn tối thiểu: @item.MinOrderValue.ToString("N0")đ</span>
+                        </p>
+
+                        <hr class="dashed-divider my-4" />
+
+                        @* Progress bar *@
+                        @{
+                            int remaining = item.UsageLimit - item.UsedCount;
+                            double percentUsed = item.UsageLimit > 0 ? ((double)item.UsedCount / item.UsageLimit) * 100 : 0;
+                            if (remaining < 0) remaining = 0;
+                        }
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center small mb-2">
+                                <span class="text-white-50">Đã dùng: @(percentUsed.ToString("0"))%</span>
+                                <span class="fw-bold" style="color: #00ff87;">Còn @remaining lượt</span>
+                            </div>
+                            <div class="progress" style="height: 6px; background-color: rgba(255,255,255,0.1); border-radius: 3px;">
+                                <div class="progress-bar" role="progressbar" style="width: @percentUsed%; background: linear-gradient(90deg, #00ff87, #00c060);" aria-valuenow="@percentUsed" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+
+                        @* Voucher Code Box *@
+                        <div class="voucher-box d-flex justify-content-between align-items-center mb-3" onclick="copyVoucher('@item.VoucherCode')" title="Nhấn để copy mã">
+                            <div class="d-flex flex-column">
+                                <span class="small text-white-50 mb-1" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">Mã giảm giá</span>
+                                <span class="fw-bold fs-5" style="color: #00ff87; letter-spacing: 2px;">@item.VoucherCode</span>
+                            </div>
+                            <div class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.3); color: #00ff87;">
+                                <i class="bi bi-copy"></i>
+                            </div>
+                        </div>
+
+                        @* Countdown / Expiry *@
+                        @{
+                            var timeRemaining = item.EndDate - DateTime.Now;
+                        }
+                        @if (timeRemaining.TotalDays <= 3 && timeRemaining.TotalSeconds > 0)
+                        {
+                            <div class="text-center bg-danger bg-opacity-10 rounded p-2 border border-danger border-opacity-25">
+                                <span class="text-danger fw-bold small"><i class="bi bi-clock-history"></i> Hết hạn sau:</span>
+                                <span class="countdown-timer fw-bold font-monospace text-white ms-1" data-endtime="@item.EndDate.ToString("yyyy-MM-ddTHH:mm:ss")">
+                                    --:--:--
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center text-white-50 small bg-dark bg-opacity-50 rounded p-2">
+                                <i class="bi bi-calendar-event"></i> HSD: @item.EndDate.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>
+
+@* TOAST THÔNG BÁO COPY THÀNH CÔNG *@
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="copyToast" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true" style="background: rgba(0,255,135,0.9); backdrop-filter: blur(10px);">
+        <div class="d-flex">
+            <div class="toast-body fw-bold text-dark fs-6">
+                <i class="bi bi-check-circle-fill me-2"></i> Đã sao chép mã khuyến mãi!
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ── EFFECT GLASSMORPHISM CHO CARD KHUYẾN MÃI ── */
+    .offer-card {
+        background: linear-gradient(145deg, rgba(25, 30, 36, 0.9) 0%, rgba(15, 20, 24, 0.95) 100%) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-radius: 20px !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .offer-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 255, 135, 0.1) !important;
+    }
+
+    .dashed-divider {
+        border-top: 2px dashed rgba(255, 255, 255, 0.1);
+        opacity: 1;
+        margin: 0 -24px; /* Stretch to edges */
+    }
+
+    /* ── KHUNG VOUCHER RĂNG CƯA ── */
+    .voucher-box {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 12px 20px;
+        transition: all 0.2s;
+    }
+
+    .voucher-box:hover {
+        border-color: #00ff87;
+        background: rgba(0, 255, 135, 0.08);
+    }
+    
+    .voucher-box:hover .btn {
+        background: #00ff87 !important;
+        color: #000 !important;
+    }
+
+    .voucher-box:active {
+        transform: scale(0.97);
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // 1. CHỨC NĂNG COPY MÃ
+        function copyVoucher(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                var toastEl = document.getElementById('copyToast');
+                var toast = new bootstrap.Toast(toastEl);
+                toast.show();
+            });
+        }
+
+        // 2. CHỨC NĂNG ĐỒNG HỒ ĐẾM NGƯỢC (FOMO COUNTDOWN)
+        document.addEventListener("DOMContentLoaded", function () {
+            const timers = document.querySelectorAll(".countdown-timer");
+
+            function updateTimers() {
+                const now = new Date().getTime();
+
+                timers.forEach(timer => {
+                    const endTimeStr = timer.getAttribute("data-endtime");
+                    const countDownDate = new Date(endTimeStr).getTime();
+                    const distance = countDownDate - now;
+
+                    if (distance < 0) {
+                        timer.innerHTML = "Đã hết hạn";
+                        return;
+                    }
+
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    // Format with leading zeros
+                    const h = hours.toString().padStart(2, '0');
+                    const m = minutes.toString().padStart(2, '0');
+                    const s = seconds.toString().padStart(2, '0');
+
+                    if (days > 0) {
+                        timer.innerHTML = `${days} ngày ${h}:${m}:${s}`;
+                    } else {
+                        timer.innerHTML = `${h}:${m}:${s}`;
+                    }
+                });
+            }
+
+            // Gọi hàm cập nhật mỗi giây
+            setInterval(updateTimers, 1000);
+            updateTimers(); // Khởi tạo ngay lần đầu
+        });
+    </script>
+}

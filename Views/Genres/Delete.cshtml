@@ -1,0 +1,92 @@
+﻿@model DoAnDatVeXemPhim.Models.Genre
+
+@{
+    ViewData["Title"] = "Xác Nhận Xóa Thể Loại";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            @* --- CARD DELETE WARNING --- *@
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden border-top border-danger border-5">
+                <div class="card-body p-4 p-md-5 text-center">
+
+                    @* Icon cảnh báo rung lắc *@
+                    <div class="text-danger mb-4">
+                        <i class="bi bi-exclamation-triangle-fill display-1 animate-warning"></i>
+                    </div>
+
+                    <h3 class="fw-bold text-dark mb-2 text-uppercase">Xác nhận xóa?</h3>
+                    <p class="text-muted small mb-4">
+                        Bạn đang yêu cầu xóa thể loại này khỏi hệ thống. <br />
+                        <span class="text-danger fw-bold">Lưu ý:</span> Hành động này không thể hoàn tác!
+                    </p>
+
+                    @* Box thông tin chi tiết *@
+                    <div class="bg-light p-4 rounded-3 mb-4 border text-start">
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-3">
+                            <span class="text-muted small fw-bold text-uppercase">Chi tiết danh mục</span>
+                            <span class="badge bg-dark text-warning">ID: #@Model.Id</span>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-4 text-muted small">Tên thể loại:</div>
+                            <div class="col-8 fw-bold fs-5 text-dark">@Model.Name</div>
+                        </div>
+                    </div>
+
+                    @* Form xác nhận *@
+                    <form asp-action="Delete">
+                        @* Cực kỳ quan trọng: Input ẩn Id *@
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg fw-bold rounded-pill shadow-sm py-3 transition-shake">
+                                <i class="bi bi-trash3-fill me-2"></i>XÁC NHẬN XÓA VĨNH VIỄN
+                            </button>
+                            <a asp-action="Index" class="btn btn-link text-muted text-decoration-none mt-2 small">
+                                <i class="bi bi-arrow-left me-1"></i> Không, quay lại danh sách
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    /* Hiệu ứng rung nhẹ cho icon khi vào trang */
+    .animate-warning {
+        display: inline-block;
+        animation: shake 0.5s infinite alternate;
+    }
+
+    @@keyframes shake {
+        0% {
+            transform: rotate(-5deg);
+        }
+
+        100% {
+            transform: rotate(5deg);
+        }
+    }
+
+    .btn-danger {
+        transition: all 0.3s ease;
+    }
+
+        .btn-danger:hover {
+            background-color: #bb2d3b !important;
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(220, 53, 69, 0.3) !important;
+        }
+
+    .bg-dark {
+        background-color: #1a1a1a !important;
+    }
+</style>

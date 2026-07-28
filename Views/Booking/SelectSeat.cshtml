@@ -1,0 +1,673 @@
+@model DoAnDatVeXemPhim.Models.Showtime
+@{
+    ViewData["Title"] = "Chọn ghế - Cinema Hub";
+    var bookedSeats = ViewBag.BookedSeatIds as List<int> ?? new List<int>();
+}
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background-image: radial-gradient(ellipse at 0% 100%, rgba(0,160,70,0.55) 0%, rgba(0,80,30,0.3) 30%, transparent 55%), radial-gradient(ellipse at 100% 0%, rgba(0,160,70,0.45) 0%, rgba(0,80,30,0.25) 28%, transparent 50%);
+        background-color: #010a04;
+        background-attachment: fixed;
+        color: #fff;
+    }
+
+    .footer-custom {
+        padding-bottom: 100px !important;
+    }
+
+    .page-wrap {
+        padding-top: 28px;
+        padding-bottom: 20px;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar-card {
+        background: rgba(10,22,13,0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        padding: 20px;
+        position: sticky;
+        top: 90px;
+    }
+
+    .sidebar-title {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #3d7a52;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.82rem;
+        color: #9ca3af;
+        margin-bottom: 10px;
+    }
+
+    @@media (max-width: 991px) {
+        .sidebar-card {
+            margin-top: 20px;
+        }
+        .legend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .legend-item {
+            margin-bottom: 0;
+            font-size: 0.75rem;
+        }
+    }
+
+    .seat-sample {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+        .seat-sample.standard {
+            background: transparent;
+            border: 1px solid #4b5563;
+        }
+
+        .seat-sample.vip {
+            background: transparent;
+            border: 1px solid #fbbf24;
+        }
+
+        .seat-sample.selected {
+            background: #fbbf24;
+            border: 1px solid #fbbf24;
+        }
+
+        .seat-sample.booked {
+            background: #374151;
+            border: 1px solid #374151;
+        }
+
+        .seat-sample.locked-by-other {
+            background: transparent;
+            border: 1px dashed #ef4444;
+        }
+
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.82rem;
+        color: #9ca3af;
+        margin-bottom: 8px;
+    }
+
+        .price-row span:last-child {
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .price-row .vip-price {
+            color: #fbbf24;
+        }
+
+    /* ── SEAT AREA ── */
+    .seat-area {
+        background: rgba(10,22,13,0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 14px;
+        padding: 20px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Screen */
+    .screen-wrap {
+        width: 100%;
+        max-width: 580px;
+        text-align: center;
+        margin-bottom: 36px;
+    }
+
+    .screen-bar {
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(to right, transparent, rgba(251,191,36,0.8), transparent);
+        border-radius: 50% / 100% 100% 0 0;
+        box-shadow: 0 0 15px rgba(251,191,36,0.4);
+    }
+
+    .screen-glow {
+        width: 100%;
+        height: 20px;
+        background: linear-gradient(to bottom, rgba(251,191,36,0.1), transparent);
+        margin-top: 4px;
+    }
+
+    .screen-label {
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: #fbbf24;
+        margin-top: 2px;
+        opacity: 0.8;
+    }
+
+    /* Seat Grid */
+    .seat-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 6px;
+        max-width: 580px;
+        width: 100%;
+    }
+
+    .seat-item {
+        aspect-ratio: 1/1;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.55rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: transparent;
+        border: 1px solid #4b5563;
+        color: #d1d5db;
+        user-select: none;
+    }
+
+        .seat-item.vip {
+            border: 1px solid #fbbf24;
+            color: #fbbf24;
+        }
+
+        .seat-item:hover:not(.booked) {
+            background: rgba(251,191,36,0.15);
+            border-color: #fbbf24;
+            color: #fbbf24;
+        }
+
+        .seat-item.booked {
+            background: #374151 !important;
+            border-color: #374151 !important;
+            color: #9ca3af !important;
+            cursor: not-allowed;
+        }
+
+        .seat-item.locked-by-other {
+            background: transparent !important;
+            border: 1px dashed #ef4444 !important;
+            color: #ef4444 !important;
+            cursor: not-allowed;
+        }
+
+        .seat-item.selected {
+            background: #fbbf24 !important;
+            border-color: #fbbf24 !important;
+            color: #000 !important;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(251,191,36,0.4);
+        }
+
+    /* ── FOOTER BAR ── */
+    .booking-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 1050;
+        background: rgba(5,15,7,0.95);
+        backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(0,255,135,0.2);
+        padding: 12px 0;
+    }
+
+    .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .footer-movie {
+        display: none;
+    }
+    @@media (min-width: 768px) {
+        .footer-movie
+
+    {
+        display: block;
+    }
+
+    }
+
+    .footer-movie-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 2px;
+    }
+
+    .footer-movie-meta {
+        font-size: 0.72rem;
+        color: #4b6b58;
+    }
+
+    .footer-seats-info {
+        text-align: center;
+    }
+
+    .footer-seat-label {
+        font-size: 0.72rem;
+        color: #4b6b58;
+        margin-bottom: 2px;
+    }
+
+    .footer-seat-names {
+        font-size: 0.82rem;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .footer-total {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #00ff87;
+        line-height: 1;
+    }
+
+    .btn-continue {
+        background: #00ff87;
+        color: #022c22;
+        font-size: 0.88rem;
+        font-weight: 700;
+        padding: 12px 28px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+        .btn-continue:hover {
+            background: #00e676;
+            box-shadow: 0 5px 16px rgba(0,255,135,0.4);
+            transform: translateY(-1px);
+        }
+
+        @@media (max-width: 576px) {
+            .footer-inner {
+                gap: 8px;
+            }
+            .btn-continue {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+            .footer-total {
+                font-size: 1.2rem;
+            }
+        }
+</style>
+
+<div class="container-xl page-wrap">
+    <div class="row g-4">
+
+        @* ── SIDEBAR ── *@
+        <div class="col-lg-3 order-2 order-lg-1">
+            <div class="sidebar-card">
+                <div class="sidebar-title">Chú thích</div>
+                <div class="legend-grid">
+                    <div class="legend-item"><div class="seat-sample standard"></div> Ghế thường</div>
+                    <div class="legend-item"><div class="seat-sample vip"></div> Ghế VIP (+20k)</div>
+                    <div class="legend-item"><div class="seat-sample selected"></div> Đang chọn</div>
+                    <div class="legend-item"><div class="seat-sample booked"></div> Đã bán</div>
+                    <div class="legend-item"><div class="seat-sample locked-by-other"></div> Đang giữ chỗ</div>
+                </div>
+
+                <div class="sidebar-title mt-4">Bảng giá</div>
+                <div class="price-row">
+                    <span>Giá vé gốc</span>
+                    <span>@Model.BasePrice.ToString("N0")đ</span>
+                </div>
+                <div class="price-row">
+                    <span>Phụ thu VIP</span>
+                    <span class="vip-price">+20.000đ</span>
+                </div>
+            </div>
+        </div>
+
+        @* ── SEAT AREA ── *@
+        <div class="col-lg-9 order-1 order-lg-2">
+            @* ── TICKET TYPES SELECTION ── *@
+            @{
+                var ageRestriction = Model.Movie?.AgeRestriction ?? "";
+                bool isChildRestricted = ageRestriction.Contains("16") || ageRestriction.Contains("18") || ageRestriction.Contains("C16") || ageRestriction.Contains("C18") || ageRestriction.Contains("T16") || ageRestriction.Contains("T18");
+            }
+            <div class="ticket-type-area mb-4 p-4 rounded-4" style="background: rgba(25, 30, 36, 0.6); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-white fw-bold mb-0"><span class="badge bg-warning text-dark me-2">1</span> Chọn loại vé</h5>
+                    <span class="text-white-50 small">Vui lòng chọn số lượng trước khi chọn ghế</span>
+                </div>
+
+                <div class="row g-3">
+                    @* Adult *@
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <div class="text-white fw-bold">Người lớn</div>
+                                <div class="small" style="color: #00ff87;">@Model.BasePrice.ToString("N0")đ</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('adult', -1)">-</button>
+                                <span class="text-white fw-bold" id="adultQty" style="width: 20px; text-align: center;">0</span>
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('adult', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Student *@
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <div class="text-white fw-bold">Học sinh - SV</div>
+                                <div class="small" style="color: #00ff87;">@((Model.BasePrice * 0.8m).ToString("N0"))đ</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('student', -1)">-</button>
+                                <span class="text-white fw-bold" id="studentQty" style="width: 20px; text-align: center;">0</span>
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('student', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Child *@
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); @(isChildRestricted ? "opacity: 0.5;" : "")">
+                            <div>
+                                <div class="text-white fw-bold">Trẻ em</div>
+                                <div class="small" style="color: #00ff87;">@((Model.BasePrice * 0.7m).ToString("N0"))đ</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('child', -1)" @(isChildRestricted ? "disabled" : "")>-</button>
+                                <span class="text-white fw-bold" id="childQty" style="width: 20px; text-align: center;">0</span>
+                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('child', 1)" @(isChildRestricted ? "disabled" : "")>+</button>
+                            </div>
+                        </div>
+                        @if (isChildRestricted)
+                        {
+                            <div class="text-danger small mt-2"><i class="bi bi-exclamation-triangle-fill"></i> Phim giới hạn độ tuổi, không áp dụng vé trẻ em.</div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="text-white fw-bold mb-3 mt-2"><span class="badge bg-warning text-dark me-2">2</span> Chọn ghế trên sơ đồ (<span id="seatCountTracker">0/0</span>)</h5>
+            <div class="seat-area" style="opacity: 0.5; pointer-events: none; transition: 0.3s;" id="seatAreaContainer">
+                <div class="screen-wrap">
+                    <div class="screen-bar"></div>
+                    <div class="screen-glow"></div>
+                    <div class="screen-label">Màn hình chính</div>
+                </div>
+
+                <div class="w-100 overflow-x-auto custom-scrollbar pb-3" style="max-width: 580px;">
+                    <div class="seat-grid" id="seatGrid" style="min-width: 100%; padding-right: 12px; padding-bottom: 12px;">
+                        @if (Model.CinemaHall?.Seats != null)
+                        {
+                            @foreach (var seat in Model.CinemaHall.Seats.OrderBy(s => s.SeatNumber))
+                            {
+                                var isBooked = bookedSeats.Contains(seat.Id);
+                                <div class="seat-item @(isBooked ? "booked" : "") @seat.SeatType.ToLower()"
+                                     data-id="@seat.Id"
+                                     data-price="@(Model.BasePrice + (seat.SeatType == "VIP" ? 20000 : 0))"
+                                     data-name="@seat.SeatNumber">
+                                    @seat.SeatNumber
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@* ── FOOTER BAR ── *@
+<div class="booking-footer">
+    <div class="container-xl">
+        <div class="footer-inner">
+            <div class="footer-movie">
+                <div class="footer-movie-title">@Model.Movie?.Title</div>
+                <div class="footer-movie-meta">
+                    @Model.CinemaHall?.Cinema?.Name &nbsp;|&nbsp; @Model.StartTime.ToString("HH:mm dd/MM/yyyy")
+                </div>
+            </div>
+            <div class="footer-seats-info">
+                <div class="footer-seat-label">Ghế đã chọn</div>
+                <div class="footer-seat-names" id="selectedSeatsDisplay">---</div>
+                <div class="footer-total" id="totalPriceDisplay">0đ</div>
+            </div>
+            <button class="btn-continue" id="btnContinue">
+                <i class="bi bi-arrow-right-circle-fill"></i> Tiếp tục
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+    <script>
+        let selectedSeats = [];
+        let total = 0;
+        const showtimeId = '@Model.Id';
+
+        let tickets = {
+            adult: 0,
+            student: 0,
+            child: 0
+        };
+
+        function getTotalTickets() {
+            return tickets.adult + tickets.student + tickets.child;
+        }
+
+        function updateTicket(type, delta) {
+            if (tickets[type] + delta < 0) return;
+            
+            // Không cho phép giảm số vé nếu số ghế đã chọn đang lớn hơn tổng số vé mới
+            if (delta < 0 && selectedSeats.length > getTotalTickets() - 1) {
+                alert("Vui lòng bỏ chọn ghế trên sơ đồ trước khi giảm số lượng vé!");
+                return;
+            }
+
+            tickets[type] += delta;
+            document.getElementById(type + 'Qty').innerText = tickets[type];
+            
+            // Mở khóa sơ đồ ghế nếu có chọn vé
+            const seatArea = document.getElementById('seatAreaContainer');
+            if (getTotalTickets() > 0) {
+                seatArea.style.opacity = '1';
+                seatArea.style.pointerEvents = 'auto';
+            } else {
+                seatArea.style.opacity = '0.5';
+                seatArea.style.pointerEvents = 'none';
+            }
+
+            updateSummary();
+        }
+
+        // 1. Khởi tạo SignalR Connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/seatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        connection.start().then(function () {
+            console.log("Connected to SeatHub");
+            // Khi kết nối thành công, xin join vào group của suất chiếu này
+            connection.invoke("JoinShowtimeGroup", showtimeId).catch(err => console.error(err));
+        }).catch(function (err) {
+            console.error("SignalR Connection Error: ", err.toString());
+        });
+
+        // 2. Nhận danh sách ghế đang bị khóa khi vừa vào trang
+        connection.on("ReceiveInitialLockedSeats", function (lockedSeatIds) {
+            lockedSeatIds.forEach(seatId => {
+                const seatElement = document.querySelector(`.seat-item[data-id='${seatId}']`);
+                if (seatElement && !seatElement.classList.contains('booked')) {
+                    seatElement.classList.add('locked-by-other');
+                }
+            });
+        });
+
+        // 3. Nhận event khi có người khác khóa ghế
+        connection.on("ReceiveSeatLock", function (seatId) {
+            const seatElement = document.querySelector(`.seat-item[data-id='${seatId}']`);
+            if (seatElement && !seatElement.classList.contains('booked')) {
+                seatElement.classList.add('locked-by-other');
+                // Nếu mình đang chọn ghế này (do mạng lag click cùng lúc), báo lỗi và bỏ chọn
+                if (seatElement.classList.contains('selected')) {
+                    seatElement.classList.remove('selected');
+                    selectedSeats = selectedSeats.filter(s => s.id !== seatId);
+                    const price = parseFloat(seatElement.dataset.price);
+                    total -= price;
+                    updateSummary();
+                    alert("Rất tiếc, ghế " + seatElement.dataset.name + " vừa được người khác chọn!");
+                }
+            }
+        });
+
+        // 4. Nhận event khi có người khác nhả ghế
+        connection.on("ReceiveSeatUnlock", function (seatId) {
+            const seatElement = document.querySelector(`.seat-item[data-id='${seatId}']`);
+            if (seatElement) {
+                seatElement.classList.remove('locked-by-other');
+            }
+        });
+
+        function updateSummary() {
+            document.getElementById('selectedSeatsDisplay').innerText =
+                selectedSeats.length > 0 ? selectedSeats.map(s => s.name).join(', ') : '---';
+            
+            document.getElementById('seatCountTracker').innerText = `${selectedSeats.length}/${getTotalTickets()}`;
+
+            // TÍNH TOÁN LẠI TỔNG TIỀN THEO SỐ VÉ VÀ PHỤ THU
+            // 1. Phân bổ giá vé từ đắt nhất (Người lớn) đến rẻ nhất (Trẻ em) cho số lượng ghế đã chọn
+            let baseTotal = 0;
+            let tempAdult = tickets.adult;
+            let tempStudent = tickets.student;
+            let tempChild = tickets.child;
+
+            // Tính tổng phụ thu ghế VIP
+            let surchargeTotal = 0;
+            selectedSeats.forEach(s => {
+                const isVip = s.price > @Model.BasePrice;
+                if(isVip) surchargeTotal += 20000;
+            });
+
+            // Tính tiền vé cơ bản (map số lượng vé đã chọn với số ghế đang click)
+            for(let i = 0; i < selectedSeats.length; i++) {
+                if (tempAdult > 0) {
+                    baseTotal += @Model.BasePrice;
+                    tempAdult--;
+                } else if (tempStudent > 0) {
+                    baseTotal += @Model.BasePrice * 0.8;
+                    tempStudent--;
+                } else if (tempChild > 0) {
+                    baseTotal += @Model.BasePrice * 0.7;
+                    tempChild--;
+                }
+            }
+
+            total = baseTotal + surchargeTotal;
+            document.getElementById('totalPriceDisplay').innerText = total.toLocaleString('vi-VN') + 'đ';
+        }
+
+        document.querySelectorAll('.seat-item:not(.booked)').forEach(seat => {
+            seat.addEventListener('click', function () {
+                // Nếu ghế đang bị người khác giữ thì chặn click
+                if (this.classList.contains('locked-by-other')) {
+                    return;
+                }
+
+                const id = this.dataset.id;
+                const name = this.dataset.name;
+                const price = parseFloat(this.dataset.price);
+
+                if (this.classList.contains('selected')) {
+                    this.classList.remove('selected');
+                    selectedSeats = selectedSeats.filter(s => s.id !== id);
+                    // Báo lên hub nhả ghế
+                    connection.invoke("UnlockSeat", showtimeId, id).catch(err => console.error(err));
+                } else {
+                    // KIỂM TRA SỐ LƯỢNG VÉ ĐÃ CHỌN
+                    if (selectedSeats.length >= getTotalTickets()) {
+                        alert(`Bạn chỉ được chọn tối đa ${getTotalTickets()} ghế tương ứng với số vé đã chọn!`);
+                        return;
+                    }
+
+                    this.classList.add('selected');
+                    selectedSeats.push({ id, name, price });
+                    // Báo lên hub khóa ghế
+                    connection.invoke("LockSeat", showtimeId, id).catch(err => console.error(err));
+                }
+
+                updateSummary();
+            });
+        });
+
+        document.getElementById('btnContinue').addEventListener('click', function () {
+            if (getTotalTickets() === 0) {
+                alert('Vui lòng chọn loại vé và số lượng!');
+                return;
+            }
+            if (selectedSeats.length < getTotalTickets()) {
+                alert(`Bạn mới chọn ${selectedSeats.length}/${getTotalTickets()} ghế. Vui lòng chọn đủ ghế!`);
+                return;
+            }
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/Booking/ConfirmSeats';
+
+            const i1 = document.createElement('input');
+            i1.type = 'hidden'; i1.name = 'showtimeId'; i1.value = '@Model.Id';
+
+            const i2 = document.createElement('input');
+            i2.type = 'hidden'; i2.name = 'selectedSeatsJson';
+            i2.value = JSON.stringify(selectedSeats);
+
+            const i3 = document.createElement('input');
+            i3.type = 'hidden'; i3.name = 'adultQty'; i3.value = tickets.adult;
+
+            const i4 = document.createElement('input');
+            i4.type = 'hidden'; i4.name = 'studentQty'; i4.value = tickets.student;
+
+            const i5 = document.createElement('input');
+            i5.type = 'hidden'; i5.name = 'childQty'; i5.value = tickets.child;
+
+            form.appendChild(i1); form.appendChild(i2);
+            form.appendChild(i3); form.appendChild(i4); form.appendChild(i5);
+            
+            document.body.appendChild(form);
+            form.submit();
+        });
+    </script>
+}

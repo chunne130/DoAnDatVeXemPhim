@@ -1,0 +1,13 @@
+@{
+    ViewData["Title"] = "Vé của tôi";
+}
+
+@* Nhúng component Blazor vào đây *@
+<div style="min-height: calc(100vh - 350px);">
+    <component type="typeof(DoAnDatVeXemPhim.Components.MyTicketsList)" render-mode="ServerPrerendered" />
+</div>
+
+@* Bắt buộc phải có gòng này *@
+@section Scripts {
+    <script src="~/_framework/blazor.server.js"></script>
+}

@@ -1,0 +1,386 @@
+@using System.Security.Claims
+@inject DoAnDatVeXemPhim.Data.ApplicationDbContext _context
+
+@{
+    // Giữ nguyên logic Layout gốc
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
+    {
+        Layout = parentLayout.ToString();
+    }
+    else
+    {
+        Layout = "/Views/Shared/_Layout.cshtml";
+    }
+
+    // XỬ LÝ LẤY DATA THẺ VIP REAL-TIME DỰA TRÊN ID KHÁCH HÀNG ĐANG ĐĂNG NHẬP
+    var curUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var vipInfo = await DoAnDatVeXemPhim.Controllers.CustomerProfilesController.UpdateAndGetMembershipAsync(_context, curUserId);
+
+    // XỬ LÝ LẤY DATA VÍ NỘI BỘ REAL-TIME
+    var userWallet = _context.Wallets.FirstOrDefault(w => w.UserId == curUserId);
+    decimal walletBalance = userWallet != null ? userWallet.Balance : 0;
+
+    // ─── THUẬT TOÁN ĐỔI PHỐI MÀU NỀN & GÁN MÔ TẢ ĐẶC QUYỀN SẴN CHO TỪNG HẠNG ───
+    string cardBg = "linear-gradient(135deg, #ba8b4b 0%, #6a461a 100%)"; // Mặc định: Hạng Đồng
+    string textColor = "#ffffff";
+    string membershipDescription = "Hạng thành viên cơ bản, tích lũy thêm để nhận ưu đãi.";
+
+    if (vipInfo.LevelName.ToUpper().Contains("ĐỒNG"))
+    {
+        cardBg = "linear-gradient(135deg, #ba8b4b 0%, #6a461a 100%)"; // Thẻ Đồng cổ điển
+        textColor = "#ffffff";
+        membershipDescription = "Giảm giá 0% giá vé & bắp nước. Hạng khởi đầu tích lũy.";
+    }
+    else if (vipInfo.LevelName.ToUpper().Contains("BẠC") || vipInfo.LevelName.Contains("Mới"))
+    {
+        cardBg = "linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%)"; // Thẻ Bạc
+        textColor = "#1e293b";
+        membershipDescription = "Ưu đãi giảm giá 5% tổng hóa đơn khi đặt vé và combo bắp nước.";
+    }
+    else if (vipInfo.LevelName.ToUpper().Contains("VÀNG"))
+    {
+        cardBg = "linear-gradient(135deg, #fbbf24 0%, #b45309 100%)"; // Thẻ Vàng
+        textColor = "#ffffff";
+        membershipDescription = "Ưu đãi giảm giá 10% tổng hóa đơn khi đặt vé và combo bắp nước.";
+    }
+    else if (vipInfo.LevelName.ToUpper().Contains("BẠCH KIM"))
+    {
+        cardBg = "linear-gradient(135deg, #e2eafc 0%, #6d7993 100%)"; // Thẻ Bạch Kim
+        textColor = "#ffffff";
+        membershipDescription = "Ưu đãi đặc quyền giảm giá 15% tổng hóa đơn vé & bắp nước.";
+    }
+    else if (vipInfo.LevelName.ToUpper().Contains("KIM CƯƠNG"))
+    {
+        cardBg = "linear-gradient(135deg, #22d3ee 0%, #0369a1 100%)"; // Thẻ Kim Cương
+        textColor = "#ffffff";
+        membershipDescription = "Đặc quyền tối cao: Giảm 20% tổng hóa đơn & nhận quà sinh nhật VIP.";
+    }
+}
+
+<div class="container-xl mt-5 pt-4 pb-5" style="font-family: 'Inter', sans-serif;">
+    @* --- HEADER --- *@
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white text-uppercase mb-1" style="letter-spacing: 4px;">
+            CÀI ĐẶT <span style="color: #00ff87; text-shadow: 0 0 15px rgba(0,255,135,0.3);">TÀI KHOẢN</span>
+        </h2>
+        <div class="d-flex justify-content-center align-items-center mt-3">
+            <div style="width: 40px; height: 3px; background: rgba(0,255,135,0.5); border-radius: 2px;"></div>
+            <p class="small fw-bold mb-0 mx-3 text-uppercase" style="letter-spacing: 1px; color: #9ca3af;">
+                Quản lý bảo mật & Thông tin cá nhân
+            </p>
+            <div style="width: 40px; height: 3px; background: rgba(0,255,135,0.5); border-radius: 2px;"></div>
+        </div>
+    </div>
+
+    @* --- NỘI DUNG CHÍNH --- *@
+    <div class="row g-4 justify-content-center">
+        @* Sidebar Menu bên trái *@
+        <div class="col-lg-3 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 h-100 sidebar-glassmorphism" style="border-radius: 16px !important;">
+                <div class="card-body p-0">
+                    <p class="small fw-bold mb-3 px-3 text-uppercase" style="color: #6b7280; letter-spacing: 1px;">Danh mục</p>
+                    <partial name="_ManageNav" />
+
+                    @* CHÈN THÊM NÚT LINK QUA TRANG LỊCH SỬ GIAO DỊCH VÍ *@
+                    <a href="/Identity/Account/Manage/WalletHistory" class="nav-link text-decoration-none mt-2 d-flex align-items-center" style="color: #9ca3af; font-weight: 600; padding: 10px 16px; border-radius: 8px; transition: all 0.25s ease;">
+                        <i class="bi bi-clock-history me-3" style="font-size: 1.15rem;"></i> Lịch sử Ví
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* Content bên phải (Profile, Password...) *@
+        <div class="col-lg-8 col-md-8">
+
+            @* ── KHỐI HIỂN THỊ THẺ VIP ── *@
+            <div class="card border-0 rounded-4 overflow-hidden mb-4 shadow-lg vip-card-hover" style="background: @cardBg; color: @textColor; border-radius: 16px !important;">
+                <div class="card-body p-4 position-relative">
+                    <div class="d-flex justify-content-between align-items-start position-relative z-1">
+                        <div>
+                            <span class="text-uppercase fw-bold opacity-75" style="font-size: 0.65rem; letter-spacing: 0.12em;">HỆ THỐNG THÀNH VIÊN CINEMA HUB</span>
+                            <h3 class="fw-black my-1 text-uppercase" style="font-size: 1.45rem; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+                                @vipInfo.LevelName
+                            </h3>
+                        </div>
+                        <i class="bi bi-gem fs-2 opacity-25"></i>
+                    </div>
+
+                    <div class="row mt-4 align-items-end position-relative z-1">
+                        <div class="col-sm-7 mb-3 mb-sm-0">
+                            <div class="small opacity-75 mb-1" style="font-size:0.78rem; font-weight: 600;">Đặc quyền ưu đãi của bạn:</div>
+                            <div class="fw-bold bg-black bg-opacity-25 px-3 py-2 rounded-3 border border-white border-opacity-10 d-inline-block w-100" style="font-size: 0.84rem; color: #fbbf24;">
+                                <i class="bi bi-gift-fill me-1"></i> @membershipDescription
+                            </div>
+                        </div>
+                        <div class="col-sm-5 text-sm-end">
+                            <div class="small opacity-75" style="font-size:0.78rem; font-weight: 600;">Tổng tích lũy hiện tại:</div>
+                            <div class="fs-4 fw-bold">
+                                @string.Format("{0:N0}", vipInfo.TotalSpent) <span class="small" style="font-size: 0.72rem;">VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* THANH PROGRESS TIẾN TRÌNH *@
+                    <div class="mt-4 pt-2 position-relative z-1 border-top border-white border-opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-2 mt-2" style="font-size: 0.78rem; font-weight: 700; letter-spacing: 0.2px;">
+                            @if (vipInfo.NextLevelTarget > 0)
+                            {
+                                <span class="opacity-90"><i class="bi bi-rocket-takeoff-fill me-1" style="color: #00ff87;"></i> TIẾN TRÌNH LÊN HẠNG:</span>
+                                <span class="opacity-90">CÒN THIẾU: <span class="fw-bold" style="color: #00ff87; text-shadow: 0 0 5px rgba(0,255,135,0.5);">@string.Format("{0:N0}", vipInfo.AmountMissing)đ</span></span>
+                            }
+                            else
+                            {
+                                <span class="fw-bold" style="color: #00ff87;"><i class="bi bi-crown-fill me-1"></i> XUẤT SẮC! BẠN ĐẠT CẤP ĐỘ ĐẶC QUYỀN TỐI CAO</span>
+                                <span class="badge text-dark font-monospace" style="background: #00ff87;">MAX LEVEL</span>
+                            }
+                        </div>
+
+                        <div class="progress rounded-pill shadow-sm bg-black bg-opacity-25" style="height: 16px; padding: 2px; border: 1px solid rgba(255,255,255,0.18);">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated rounded-pill"
+                                 role="progressbar"
+                                 style="width: @vipInfo.ProgressPercentage%; background: #00ff87; color: #022c22; transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center;"
+                                 aria-valuenow="@vipInfo.ProgressPercentage" aria-valuemin="0" aria-valuemax="100">
+                                @if (vipInfo.ProgressPercentage > 6)
+                                {
+                                    <span class="font-monospace fw-bold" style="font-size: 0.7rem; line-height: 1;">@vipInfo.ProgressPercentage%</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* KHỐI VÍ NỘI BỘ (WALLET)  *@
+            <div class="card border-0 rounded-4 overflow-hidden mb-4 shadow-lg wallet-card-hover" style="background: rgba(13, 202, 240, 0.05); border: 1px dashed rgba(13, 202, 240, 0.4) !important; border-radius: 16px !important;">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="icon-wallet-glow bg-info bg-opacity-10 text-info rounded-circle d-flex justify-content-center align-items-center shadow-sm" style="width: 56px; height: 56px; border: 1px solid rgba(13, 202, 240, 0.3);">
+                            <i class="bi bi-wallet2 fs-3"></i>
+                        </div>
+                        <div>
+                            <span class="text-uppercase fw-bold text-info opacity-75" style="font-size: 0.7rem; letter-spacing: 0.1em;">VÍ CINEMA PAY</span>
+                            <div class="d-flex align-items-baseline gap-1">
+                                <h3 class="fw-black mb-0" style="color: #0dcaf0; font-size: 1.6rem; text-shadow: 0 0 10px rgba(13, 202, 240, 0.4);">
+                                    @string.Format("{0:N0}", walletBalance)
+                                </h3>
+                                <span class="fw-bold" style="color: #0dcaf0; font-size: 0.9rem;">VNĐ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="/Identity/Account/Manage/WalletHistory" class="btn btn-outline-info rounded-pill fw-bold btn-sm px-4 py-2 border-2 shadow-sm text-uppercase d-inline-flex align-items-center justify-content-center gap-2" style="letter-spacing: 0.5px; white-space: nowrap !important; min-width: max-content;">
+                            <i class="bi bi-clock-history"></i> Sao kê ví
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @* ── KHỐI CHỨA CÁC FORM THAY ĐỔI THÔNG TIN ── *@
+            <div class="identity-content-wrapper p-4 rounded-4 shadow-sm" style="background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05);">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}
+
+<style>
+    .identity-content-wrapper {
+        min-height: 400px;
+        color: #ffffff;
+    }
+
+    /* CSS ĐỘC QUYỀN SIDEBAR KÍNH MỜ */
+    .sidebar-glassmorphism {
+        background: rgba(17, 24, 39, 0.6) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .vip-card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .vip-card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.4) !important;
+        }
+
+    /* Hiệu ứng đặc biệt cho thẻ Ví Điện Tử */
+    .wallet-card-hover {
+        transition: all 0.3s ease;
+    }
+
+        .wallet-card-hover:hover {
+            background: rgba(13, 202, 240, 0.08) !important;
+            border-color: rgba(13, 202, 240, 0.6) !important;
+            box-shadow: 0 10px 25px rgba(13, 202, 240, 0.15) !important;
+        }
+
+    .icon-wallet-glow {
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .wallet-card-hover:hover .icon-wallet-glow {
+        transform: rotate(-10deg) scale(1.1);
+        box-shadow: 0 0 15px rgba(13, 202, 240, 0.4) !important;
+    }
+
+    hr {
+        border-top: 1px solid rgba(255,255,255,0.1);
+        opacity: 1;
+    }
+
+    /* 🟢 STYLE MENU NAVBAR DOC (TAY TRÁI) ĐỒNG BỘ NEON */
+    .nav-pills {
+        background-color: transparent;
+        padding: 0;
+    }
+
+        .nav-pills .nav-link,
+        .sidebar-glassmorphism .nav-link {
+            color: #9ca3af !important;
+            font-weight: 600;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            padding: 10px 16px;
+        }
+
+            .nav-pills .nav-link.active {
+                background: rgba(0, 255, 135, 0.1) !important;
+                color: #00ff87 !important;
+                box-shadow: 0 4px 15px rgba(0, 255, 135, 0.05);
+                border: 1px solid rgba(0, 255, 135, 0.3);
+            }
+
+            .nav-pills .nav-link:hover:not(.active),
+            .sidebar-glassmorphism .nav-link:hover:not(.active) {
+                background-color: rgba(255, 255, 255, 0.05) !important;
+                color: #ffffff !important;
+                transform: translateX(6px);
+            }
+
+            .nav-pills .nav-link i,
+            .sidebar-glassmorphism .nav-link i {
+                margin-right: 12px;
+                font-size: 1.15rem;
+                transition: color 0.25s ease;
+            }
+
+            .nav-pills .nav-link.active i {
+                color: #00ff87 !important;
+            }
+
+    /* ════════════════════════════════════════════════════════
+                🟢 CHỈ FIX ĐÚNG CÁI KHUNG THÔNG TIN BÊN PHẢI
+            ════════════════════════════════════════════════════════ */
+
+    /* Toàn bộ CSS Fix form bên trong tui giữ nguyên y xì đúc cho ní */
+    .identity-content-wrapper div:not(.input-group):not(.form-check):not(.progress):not(.progress-bar),
+    .identity-content-wrapper form, .identity-content-wrapper .card,
+    .identity-content-wrapper .card-body, .identity-content-wrapper .bg-white,
+    .identity-content-wrapper .bg-light {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .identity-content-wrapper h4, .identity-content-wrapper h3,
+    .identity-content-wrapper .text-dark, .identity-content-wrapper b,
+    .identity-content-wrapper strong {
+        color: #00ff87 !important;
+        font-weight: 800 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        padding-bottom: 12px;
+        margin-bottom: 24px;
+        text-shadow: 0 0 10px rgba(0,255,135,0.2);
+    }
+
+    .identity-content-wrapper label {
+        color: #9ca3af !important;
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-bottom: 8px !important;
+        display: block !important;
+    }
+
+    .identity-content-wrapper .form-check-label {
+        color: #e5e7eb !important;
+        font-weight: 500 !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        cursor: pointer;
+        margin-right: 20px !important;
+        display: inline-block !important;
+    }
+
+    .identity-content-wrapper .form-check-input {
+        background-color: transparent !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
+    }
+
+        .identity-content-wrapper .form-check-input:checked {
+            background-color: #00ff87 !important;
+            border-color: #00ff87 !important;
+        }
+
+    .identity-content-wrapper .form-control,
+    .identity-content-wrapper .form-select {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+        padding: 12px 16px !important;
+        font-size: 0.95rem !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .identity-content-wrapper .form-control:focus,
+        .identity-content-wrapper .form-select:focus {
+            border-color: #00ff87 !important;
+            box-shadow: 0 0 0 3px rgba(0, 255, 135, 0.2) !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            outline: none !important;
+        }
+
+        .identity-content-wrapper .form-select option {
+            background-color: #111827 !important;
+            color: #ffffff !important;
+        }
+
+    .identity-content-wrapper button[type="submit"],
+    .identity-content-wrapper .btn-danger,
+    .identity-content-wrapper .btn-primary {
+        background-color: #00ff87 !important;
+        color: #022c22 !important;
+        border: none !important;
+        font-weight: 800 !important;
+        border-radius: 8px !important;
+        padding: 12px 40px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 1px !important;
+        transition: all 0.25s ease !important;
+        box-shadow: 0 4px 15px rgba(0, 255, 135, 0.2) !important;
+        margin-top: 15px !important;
+    }
+
+        .identity-content-wrapper button[type="submit"]:hover,
+        .identity-content-wrapper .btn-danger:hover,
+        .identity-content-wrapper .btn-primary:hover {
+            background-color: #00e676 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 25px rgba(0, 255, 135, 0.4) !important;
+        }
+</style>

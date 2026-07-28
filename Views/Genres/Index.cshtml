@@ -1,0 +1,103 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Genre>
+
+@{
+    ViewData["Title"] = "Quản lý Thể Loại";
+}
+
+<div class="container mt-4 mb-5">
+    @* --- HEADER CINEMA HUB --- *@
+    <div class="d-flex justify-content-between align-items-center mb-4 border-start border-warning border-5 ps-3 py-2 bg-light shadow-sm rounded-end">
+        <div>
+            <h2 class="fw-bold mb-0 text-uppercase text-dark">DANH MỤC THỂ LOẠI</h2>
+            <p class="text-muted small mb-0">Phân loại phim để khách hàng dễ dàng tìm kiếm</p>
+        </div>
+        <a asp-action="Create" class="btn btn-warning fw-bold rounded-pill px-4 shadow-sm">
+            <i class="bi bi-plus-circle-fill me-2"></i>THÊM MỚI
+        </a>
+    </div>
+
+    @* --- DANH SÁCH DẠNG CARD LƯỚI --- *@
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 col-lg-3">
+                <div class="card h-100 border-0 shadow-sm rounded-4 text-center genre-card position-relative overflow-hidden">
+                    @* Trang trí vệt màu vàng ở góc *@
+                    <div class="position-absolute top-0 end-0 bg-warning" style="width: 40px; height: 5px;"></div>
+
+                    <div class="card-body p-4">
+                        @* Icon Thể loại *@
+                        <div class="bg-dark text-warning d-inline-block p-3 rounded-circle mb-3 shadow-sm">
+                            <i class="bi bi-tags-fill fs-4"></i>
+                        </div>
+
+                        <h5 class="fw-bold text-dark mb-1">@item.Name</h5>
+                        <p class="text-muted small mb-4">Hệ thống Cinema Hub</p>
+
+                        @* Nhóm nút thao tác *@
+                        <div class="d-flex justify-content-center gap-2 pt-2 border-top">
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary border-0 rounded-pill px-3" title="Chỉnh sửa">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 rounded-pill px-3" title="Xóa">
+                                <i class="bi bi-trash3-fill"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <div class="text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+                    <p>Chưa có thể loại nào được tạo. Nhấn "Thêm mới" ngay!</p>
+                </div>
+            </div>
+        }
+    </div>
+
+    @* --- LINK QUAY LẠI --- *@
+    <div class="mt-5">
+        <a href="/AdminControllers/Index" class="text-decoration-none small text-muted hover-warning">
+            <i class="bi bi-arrow-left-circle me-1"></i> Quay lại Dashboard quản trị
+        </a>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .genre-card {
+        transition: all 0.3s ease;
+        background: #fff;
+    }
+
+        .genre-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
+            border: 1px solid #ffc107 !important;
+        }
+
+    .bg-dark {
+        background-color: #1a1a1a !important;
+    }
+
+    .hover-warning:hover {
+        color: #ffc107 !important;
+        transition: 0.2s;
+    }
+
+    /* Bo tròn cho các nút trong nhóm */
+    .btn-sm {
+        transition: 0.2s;
+    }
+
+        .btn-sm:hover {
+            background-color: #f8f9fa;
+        }
+</style>

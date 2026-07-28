@@ -1,0 +1,163 @@
+﻿@model DoAnDatVeXemPhim.Models.Showtime
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #fbbf24; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(251,191,36,0.2);">
+                <i class="bi bi-pencil-square me-2"></i>CẬP NHẬT SUẤT CHIẾU
+            </h4>
+            <p class="text-muted small m-0 mt-1">ID: #@Model.Id | Hệ thống sẽ tự cập nhật giờ kết thúc dựa theo phim</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary text-light ajax-link rounded-pill px-4 fw-bold shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại lịch chiếu
+        </a>
+    </div>
+
+    <form id="editShowtimeForm" asp-action="Edit" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="EndTime" />
+
+        <div class="row g-4">
+            @* Cột 1: Phim & Địa điểm *@
+            <div class="col-md-6">
+                <h6 class="fw-bold text-uppercase mb-4" style="color: #fbbf24;"><i class="bi bi-1-circle me-1"></i> NỘI DUNG THAY ĐỔI</h6>
+
+                <div class="mb-4">
+                    <label asp-for="MovieId" class="form-label fw-bold small text-muted">PHIM TRÌNH CHIẾU</label>
+                    <select asp-for="MovieId" class="form-select form-control-neon" asp-items="ViewBag.MovieId"></select>
+                    <span asp-validation-for="MovieId" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="CinemaHallId" class="form-label fw-bold small text-muted">PHÒNG CHIẾU & RẠP</label>
+                    <select asp-for="CinemaHallId" class="form-select form-control-neon" asp-items="ViewBag.CinemaHallId"></select>
+                    <span asp-validation-for="CinemaHallId" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="Format" class="form-label fw-bold small text-muted">ĐỊNH DẠNG</label>
+                    <div class="d-flex gap-2">
+                        @foreach (var format in new[] { "2D", "3D", "IMAX" })
+                        {
+                            <div class="flex-fill">
+                                <input type="radio" class="btn-check" name="Format" id="edit-format-@format" value="@format" @(Model.Format == format ? "checked" : "")>
+                                <label class="btn btn-outline-neon w-100 fw-bold py-2" for="edit-format-@format">@format</label>
+                            </div>
+                        }
+                    </div>
+                    <span asp-validation-for="Format" class="text-danger small"></span>
+                </div>
+            </div>
+
+            @* Cột 2: Lịch trình & Giá *@
+            <div class="col-md-6 border-start" style="border-color: rgba(255,255,255,0.05) !important; padding-left: 24px;">
+                <h6 class="fw-bold text-uppercase mb-4" style="color: #60a5fa;"><i class="bi bi-2-circle me-1"></i> LỊCH TRÌNH & GIÁ MỚI</h6>
+
+                <div class="mb-4">
+                    <label asp-for="StartTime" class="form-label fw-bold small text-muted">GIỜ BẮT ĐẦU MỚI</label>
+                    <input asp-for="StartTime" class="form-control form-control-neon" type="datetime-local" />
+                    <span asp-validation-for="StartTime" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="BasePrice" class="form-label fw-bold small text-muted">GIÁ VÉ (VNĐ)</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0 fw-bold" style="background: rgba(251,191,36,0.1); color: #fbbf24;">₫</span>
+                        <input asp-for="BasePrice" class="form-control form-control-neon" />
+                    </div>
+                    <span asp-validation-for="BasePrice" class="text-danger small"></span>
+                </div>
+
+                <div class="p-3 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
+                    <div class="form-check form-switch p-0 d-flex align-items-center justify-content-between">
+                        <label class="form-check-label fw-bold text-light mb-0" asp-for="IsActive" style="color: #e5e7eb !important;">Đang mở bán vé</label>
+                        <input class="form-check-input ms-0 mt-0 neon-switch-yellow" style="width: 2.5em; height: 1.25em;" type="checkbox" asp-for="IsActive">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-top text-end" style="border-color: rgba(255,255,255,0.05) !important;">
+            <button type="submit" class="btn px-5 py-2 fw-bold rounded-pill text-uppercase shadow-sm text-dark" style="background: #fbbf24; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="bi bi-check-circle-fill me-2"></i> LƯU THAY ĐỔI
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control-neon {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+    }
+
+        .form-control-neon:focus {
+            border-color: #fbbf24 !important;
+            box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2) !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+
+    select.form-control-neon option {
+        background-color: #111827;
+        color: #ffffff;
+    }
+
+    .btn-outline-neon {
+        color: #9ca3af;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255,255,255,0.05);
+        transition: all 0.2s ease;
+    }
+
+    .btn-check:checked + .btn-outline-neon {
+        background: rgba(251, 191, 36, 0.15) !important;
+        color: #fbbf24 !important;
+        border-color: #fbbf24 !important;
+        box-shadow: 0 0 10px rgba(251,191,36,0.2);
+    }
+
+    /* Switch Neon Vàng */
+    .neon-switch-yellow:checked {
+        background-color: #fbbf24 !important;
+        border-color: #fbbf24 !important;
+    }
+</style>
+
+<script>
+    // 🚀 AJAX CHO FORM EDIT SHOWTIMES
+    $('#editShowtimeForm').on('submit', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $contentBox = $('#admin-dynamic-content');
+        var $loader = $('#admin-loader');
+
+        $contentBox.css('opacity', '0.3');
+        $loader.fadeIn(200);
+
+        $.ajax({
+            url: $form.attr('action'),
+            type: $form.attr('method'),
+            data: $form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (res) {
+                $contentBox.html(res);
+                $loader.fadeOut(200, function() {
+                    $contentBox.css('opacity', '1');
+                });
+            },
+            error: function () {
+                alert('Có lỗi xảy ra khi cập nhật lịch chiếu!');
+                $loader.fadeOut(200);
+                $contentBox.css('opacity', '1');
+            }
+        });
+    });
+</script>

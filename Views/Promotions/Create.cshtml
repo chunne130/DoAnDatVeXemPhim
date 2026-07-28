@@ -1,0 +1,167 @@
+﻿@model DoAnDatVeXemPhim.Models.Promotion
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+    bool isEdit = Model != null && Model.Id > 0;
+    string actionName = isEdit ? "Edit" : "Create";
+    string themeColor = isEdit ? "#fbbf24" : "#00ff87";
+    string title = isEdit ? "CẬP NHẬT MÃ KHUYẾN MÃI" : "TẠO MÃ KHUYẾN MÃI MỚI";
+    string icon = isEdit ? "bi-pencil-square" : "bi-plus-circle-fill";
+}
+
+<div class="p-4 p-md-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <h4 class="fw-bold m-0 text-uppercase" style="color: @themeColor; text-shadow: 0 0 10px @(themeColor)40;">
+            <i class="bi @icon me-2"></i>@title
+        </h4>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+
+    <form asp-action="@actionName" method="post" autocomplete="off">
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+        @if (isEdit)
+        {
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="UsedCount" />
+        }
+
+        <div class="row g-4">
+            @* Mã Code *@
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-qr-code me-1"></i> Mã Code Voucher *</label>
+                <div class="input-group">
+                    <span class="input-group-text border-0" style="background: rgba(255,255,255,0.05); color: @themeColor;"><i class="bi bi-hash"></i></span>
+                    <input asp-for="VoucherCode" class="form-control form-control-neon" placeholder="VD: CHUB2026" style="font-family: monospace; font-weight: 700; color: @themeColor; text-transform: uppercase;" required />
+                </div>
+                <span asp-validation-for="VoucherCode" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            @* Hình thức giảm *@
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-percent me-1"></i> Hình thức chiết khấu</label>
+                <div class="input-group">
+                    <span class="input-group-text border-0" style="background: rgba(255,255,255,0.05); color: #9ca3af;"><i class="bi bi-currency-exchange"></i></span>
+                    <select asp-for="IsPercentage" class="form-select form-control-neon">
+                        <option value="true">Giảm theo phần trăm (%)</option>
+                        <option value="false">Giảm tiền cố định (VNĐ)</option>
+                    </select>
+                </div>
+            </div>
+
+            @* Đối tượng áp dụng *@
+            <div class="col-md-12">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-person-badge-fill me-1"></i> Đối tượng áp dụng</label>
+                <div class="input-group">
+                    <span class="input-group-text border-0" style="background: rgba(255,255,255,0.05); color: #9ca3af;"><i class="bi bi-people"></i></span>
+                    <select asp-for="MembershipLevelId" asp-items="ViewBag.MembershipLevelId" class="form-select form-control-neon">
+                        <option value="">-- Áp dụng đại trà cho tất cả khách hàng --</option>
+                    </select>
+                </div>
+            </div>
+
+            @* Mức giảm + Đơn tối thiểu *@
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-tag me-1"></i> Mức giảm giá trị *</label>
+                <input asp-for="DiscountValue" type="number" min="1" class="form-control form-control-neon" placeholder="Nhập mức giảm..." required />
+                <span asp-validation-for="DiscountValue" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-wallet2 me-1"></i> Đơn tối thiểu (VNĐ) *</label>
+                <input asp-for="MinOrderValue" type="number" min="0" class="form-control form-control-neon" required />
+                <span asp-validation-for="MinOrderValue" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            @* Số lượng phát hành *@
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-stack me-1"></i> Tổng giới hạn phát hành *</label>
+                <input asp-for="UsageLimit" type="number" min="1" class="form-control form-control-neon" required />
+                <span asp-validation-for="UsageLimit" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            @if (isEdit)
+            {
+                <div class="col-md-6">
+                    <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-activity me-1"></i> Tình trạng hiện tại</label>
+                    <div class="form-control form-control-neon d-flex align-items-center justify-content-between" style="background: rgba(0,0,0,0.2) !important;" readonly>
+                        <span>Đã dùng: <strong style="color: @themeColor;">@Model.UsedCount</strong> lượt</span>
+                        @if (Model.EndDate < DateTime.Now)
+                        {
+                            <span class="badge bg-danger">Hết hạn</span>
+                        }
+                        else if (Model.UsedCount >= Model.UsageLimit)
+                        {
+                            <span class="badge bg-warning text-dark">Hết lượt</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success text-dark">Khả dụng</span>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-star-fill text-warning me-1"></i> Điểm yêu cầu (0 = Miễn phí) *</label>
+                <input asp-for="PointsRequired" type="number" min="0" value="0" class="form-control form-control-neon" required />
+                <span asp-validation-for="PointsRequired" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            <div class="col-12"><hr style="border-color: rgba(255,255,255,0.1);" /></div>
+
+            @* Thời gian *@
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-calendar-event me-1"></i> Ngày bắt đầu *</label>
+                @* Định dạng Date để input type="date" của trình duyệt nhận diện chính xác dữ liệu từ DB *@
+                <input asp-for="StartDate" type="date" value="@Model?.StartDate.ToString("yyyy-MM-dd")" class="form-control form-control-neon" required />
+                <span asp-validation-for="StartDate" class="text-danger small mt-1 d-block"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-calendar-x me-1"></i> Ngày hết hạn *</label>
+                <input asp-for="EndDate" type="date" value="@Model?.EndDate.ToString("yyyy-MM-dd")" class="form-control form-control-neon" required />
+                <span asp-validation-for="EndDate" class="text-danger small mt-1 d-block"></span>
+            </div>
+
+            @* Mô tả *@
+            <div class="col-12">
+                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-card-text me-1"></i> Mô tả hiển thị *</label>
+                <textarea asp-for="Description" class="form-control form-control-neon" rows="3" placeholder="Nhập nội dung ưu đãi..." required></textarea>
+                <span asp-validation-for="Description" class="text-danger small mt-1 d-block"></span>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-5 pt-4 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+            <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal" style="border-color: rgba(255,255,255,0.1);">HỦY BỎ</button>
+            <button type="submit" class="btn fw-bold rounded-pill px-5 shadow-sm" style="background: @themeColor; color: #000;">
+                <i class="bi bi-floppy-fill me-2"></i> LƯU DỮ LIỆU
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control-neon {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        padding: 10px 15px;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+        .form-control-neon:focus {
+            border-color: @themeColor !important;
+            box-shadow: 0 0 0 3px @(themeColor) 30 !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+
+    select.form-control-neon option {
+        background-color: #111827;
+        color: #ffffff;
+    }
+
+    input[type="date"].form-control-neon {
+        color-scheme: dark;
+    }
+</style>

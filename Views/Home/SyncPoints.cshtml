@@ -1,0 +1,15 @@
+@using DoAnDatVeXemPhim.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext _context
+
+@{
+    Layout = null;
+    var profile = _context.CustomerProfiles.FirstOrDefault(p => p.RewardPoints == 551);
+    if (profile != null)
+    {
+        profile.RewardPoints = 451;
+        _context.CustomerProfiles.Update(profile);
+        _context.SaveChanges();
+    }
+}
+OK

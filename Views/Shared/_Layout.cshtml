@@ -1,0 +1,675 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Cinema Hub</title>
+    <base href="~/" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/DoAnDatVeXemPhim.styles.css" asp-append-version="true" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-image: radial-gradient(ellipse at 0% 100%, rgba(0, 160, 70, 0.55) 0%, rgba(0, 80, 30, 0.3) 30%, transparent 55%), radial-gradient(ellipse at 100% 0%, rgba(0, 160, 70, 0.45) 0%, rgba(0, 80, 30, 0.25) 28%, transparent 50%) !important;
+            background-color: #010a04 !important;
+            background-attachment: fixed;
+            background-size: cover;
+            min-height: 100vh;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 0 !important;
+        }
+
+        header {
+            position: relative;
+            z-index: 99999 !important;
+        }
+
+        .navbar {
+            background: transparent !important;
+            transition: all 0.4s ease;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid transparent !important;
+        }
+
+            .navbar.scrolled {
+                background: rgba(1, 10, 4, 0.75) !important;
+                backdrop-filter: blur(16px) !important;
+                -webkit-backdrop-filter: blur(16px) !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+
+        .navbar-brand-text {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #ffffff !important;
+            letter-spacing: 0.3px;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: #9ca3af !important;
+            transition: color 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            padding: 6px 12px !important;
+            position: relative;
+        }
+
+            .nav-link::after {
+                content: '';
+                position: absolute;
+                bottom: -2px;
+                left: 15%;
+                width: 70%;
+                height: 2px;
+                background-color: #00ff87;
+                border-radius: 2px;
+                transform: scaleX(0);
+                transform-origin: center;
+                transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            }
+
+            .nav-link:hover::after, .nav-link.active::after {
+                transform: scaleX(1);
+            }
+
+            .nav-link:hover, .nav-link.active {
+                color: #00ff87 !important;
+            }
+
+        .dropdown-menu-custom {
+            background: rgba(2, 28, 14, 0.65) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(0, 255, 135, 0.2) !important;
+            border-radius: 16px !important;
+            padding: 8px 0 !important;
+            z-index: 100000 !important;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 25px rgba(0,255,135,0.1) !important;
+        }
+
+        .dropdown-item-custom {
+            color: #9ca3af !important;
+            font-size: 0.85rem;
+            padding: 9px 18px;
+            transition: all 0.2s ease;
+        }
+
+            .dropdown-item-custom:hover {
+                background: rgba(0, 255, 135, 0.1) !important;
+                color: #00ff87 !important;
+                transform: translateX(5px);
+            }
+
+        /* Navbar Search Bar - Desktop (Image 2 Redesign) */
+        .desktop-search-container {
+            width: 280px;
+            position: relative;
+            z-index: 1000;
+        }
+
+        .desktop-search-input {
+            width: 100%;
+            background: rgba(15, 15, 15, 0.6);
+            border: 1.5px solid rgba(0, 255, 135, 0.25);
+            color: #fff;
+            border-radius: 50px;
+            padding: 9px 35px 9px 40px;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+            .desktop-search-input:focus {
+                background: rgba(20, 20, 20, 0.9);
+                border-color: #00ff87; /* Green glow */
+                box-shadow: 0 0 0 3px rgba(0, 255, 135, 0.15);
+                outline: none;
+            }
+
+        .desktop-search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .desktop-search-clear {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: none;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+
+            .desktop-search-clear:hover {
+                color: #fff;
+            }
+
+        /* Lời chào user */
+        .navbar-greeting {
+            font-size: 0.85rem;
+            color: #00ff87;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+            .navbar-greeting i {
+                font-size: 1rem;
+            }
+
+        /* NÃƒÂºt My Ticket / YÃƒÂªu thÃƒÂ­ch */
+        .btn-my-ticket {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1px solid rgba(0, 255, 135, 0.3);
+            color: #00ff87 !important;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 7px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+            .btn-my-ticket:hover {
+                background: rgba(0, 255, 135, 0.1);
+                border-color: #00ff87;
+                color: #00ff87 !important;
+            }
+
+        .btn-favorites {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444 !important;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 7px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+            .btn-favorites:hover {
+                background: rgba(239, 68, 68, 0.1);
+                border-color: #ef4444;
+                color: #ef4444 !important;
+            }
+
+        .btn-login-figma {
+            background-color: #00ff87 !important;
+            color: #022c22 !important;
+            font-weight: 700 !important;
+            font-size: 0.85rem !important;
+            padding: 7px 20px !important;
+            border-radius: 8px !important;
+            border: none !important;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease !important;
+        }
+
+            .btn-login-figma:hover {
+                background-color: #00e676 !important;
+                color: #022c22 !important;
+                box-shadow: 0 4px 14px rgba(0, 255, 135, 0.4) !important;
+                transform: translateY(-1px);
+            }
+
+        .btn-register-figma {
+            background-color: transparent !important;
+            color: #ffffff !important;
+            font-weight: 500 !important;
+            font-size: 0.85rem !important;
+            padding: 6px 18px !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            border-radius: 8px !important;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease !important;
+        }
+
+            .btn-register-figma:hover {
+                border-color: #00ff87 !important;
+                color: #00ff87 !important;
+                background-color: rgba(0, 255, 135, 0.05) !important;
+            }
+
+        .badge-admin {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #f59e0b !important;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 6px;
+            padding: 5px 10px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+            .badge-admin:hover {
+                background: rgba(245, 158, 11, 0.1);
+                color: #f59e0b !important;
+            }
+
+        #btn-toggle-chat {
+            background-color: #00ff87 !important;
+            color: #022c22 !important;
+            border: none !important;
+            animation: chatbotPulse 2s infinite !important;
+            transition: all 0.2s ease !important;
+        }
+
+            #btn-toggle-chat i {
+                color: #022c22 !important;
+            }
+
+            #btn-toggle-chat:hover {
+                transform: scale(1.08);
+                background-color: #00e676 !important;
+            }
+
+        @@keyframes chatbotPulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.6);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 14px rgba(0, 255, 135, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(0, 255, 135, 0);
+            }
+        }
+
+        .footer-custom {
+            background-color: #030806;
+            border-top: 1px solid rgba(0, 255, 135, 0.15);
+            margin-top: auto;
+            box-shadow: 0 -10px 40px rgba(0, 255, 135, 0.03);
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #8fa098;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+            .footer-links a:hover {
+                color: #00ff87;
+                transform: translateX(6px);
+            }
+
+        .social-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            color: #e0e6e4;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+            .social-icon:hover {
+                background: #00ff87;
+                color: #000;
+                transform: translateY(-4px);
+                box-shadow: 0 8px 20px rgba(0, 255, 135, 0.3);
+                border-color: #00ff87;
+            }
+
+        .logo-text {
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+
+        @@media (max-width: 991.98px) {
+            .logo-text {
+                font-size: 1.05rem;
+                letter-spacing: 0.5px;
+            }
+
+            .navbar-collapse {
+                background: rgba(1, 10, 4, 0.95);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(0, 255, 135, 0.15);
+                border-radius: 12px;
+                padding: 15px;
+                margin-top: 10px;
+            }
+
+            .navbar-nav .nav-link {
+                padding: 10px 15px !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+                .navbar-nav .nav-link::after {
+                    display: none;
+                }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+            <div class="container-xl d-flex align-items-center justify-content-between flex-wrap flex-lg-nowrap">
+
+                <div class="d-flex align-items-center gap-2 gap-md-3 me-auto me-lg-0 order-0">
+                    <button class="navbar-toggler border-0 p-1 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileOffcanvas">
+                        <i class="bi bi-list" style="font-size: 1.8rem; color: #fff;"></i>
+                    </button>
+                    <a class="navbar-brand fw-bold d-flex align-items-center m-0" asp-controller="Home" asp-action="Index">
+                        <span class="fw-black text-white logo-text">CINEMA <span style="color: #00ff87;">HUB</span></span>
+                    </a>
+                </div>
+
+                <div class="d-none d-lg-flex justify-content-start order-1 w-100 mt-3 mt-lg-0" style="flex-grow: 1;">
+                    <ul class="navbar-nav ms-lg-4 align-items-center flex-grow-1">
+                        @{
+                            var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+                            var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "Index" && currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">Trang Chủ</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle @((currentAction == "Movies" || currentAction == "Upcoming") && currentController == "Home" ? "active" : "")" href="#" id="movieDropdown" role="button" data-bs-toggle="dropdown">Phim</a>
+                            <ul class="dropdown-menu dropdown-menu-custom shadow">
+                                <li><a class="dropdown-item dropdown-item-custom" asp-controller="Home" asp-action="Movies">Phim Đang Chiếu</a></li>
+                                <li><a class="dropdown-item dropdown-item-custom" asp-controller="Home" asp-action="Upcoming">Phim Sắp Chiếu</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "CinemaHalls" && currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="CinemaHalls">Rạp Chiếu</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @(currentAction == "Offers" && currentController == "Home" ? "active" : "")" asp-controller="Home" asp-action="Offers">Ưu Đãi</a>
+                        </li>
+                    </ul>
+
+                </div>
+
+                <div class="d-flex align-items-center gap-3 order-2 ms-auto ms-lg-0">
+                    <button class="btn border-0 text-white p-1 d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#globalSearchOffcanvas" title="Tìm kiếm">
+                        <i class="bi bi-search" style="font-size:1.2rem; opacity: 0.8;"></i>
+                    </button>
+                    <partial name="_LoginPartial" />
+                </div>
+
+            </div>
+        </nav>
+    </header>
+
+    <div class="offcanvas offcanvas-top" tabindex="-1" id="globalSearchOffcanvas" style="height: 100vh; background: rgba(5, 15, 8, 0.98) !important; z-index: 1000000; overflow-y: auto;">
+        <div class="offcanvas-header p-3 border-bottom" style="border-color: rgba(255,255,255,0.05) !important; background: transparent;">
+            <div class="d-flex w-100 align-items-center gap-2">
+                <button type="button" class="btn rounded-circle d-flex align-items-center justify-content-center p-0 flex-shrink-0" data-bs-dismiss="offcanvas" aria-label="Close" style="width: 42px; height: 42px; background: rgba(255,255,255,0.1); color: #fff; transition: background 0.2s;">
+                    <i class="bi bi-x-lg" style="font-size: 1.1rem;"></i>
+                </button>
+                <div class="d-flex align-items-center flex-grow-1 rounded-pill px-3" style="height: 42px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);">
+                    <i class="bi bi-search me-2" style="color: #00ff87; font-size: 1.1rem;"></i>
+                    <input type="text" id="globalSearchInput" class="form-control bg-transparent border-0 text-white shadow-none px-0 py-0 h-100" style="font-size: 0.95rem; outline: none; box-shadow: none !important;" placeholder="Tìm phim..." autocomplete="off">
+                </div>
+            </div>
+        </div>
+        <div class="offcanvas-body p-3 custom-scrollbar">
+            <div class="h-100 d-flex flex-column" id="globalSearchContainer">
+                <div class="m-auto text-center opacity-50" id="globalSearchInitial">
+                    <p class="text-white-50 mt-5">Nhập tên phim để tìm kiếm</p>
+                </div>
+                <div class="m-auto text-center d-none" id="globalSearchLoading">
+                    <div class="spinner-border text-success mt-5" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+                <div class="row g-3 d-none pb-5" id="globalSearchData">
+                    <!-- Results injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="offcanvas offcanvas-start bg-dark d-lg-none" tabindex="-1" id="mobileOffcanvas" style="background: rgba(1, 10, 4, 0.98) !important; border-right: 1px solid rgba(0,255,135,0.15); z-index: 100005 !important;">
+        <div class="offcanvas-header border-bottom border-secondary" style="border-color: rgba(255,255,255,0.1) !important; z-index: 100006;">
+            <h5 class="offcanvas-title fw-black text-white" style="font-size: 1.2rem; letter-spacing: 1px;">CINEMA <span style="color: #00ff87;">HUB</span></h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="navbar-nav flex-column gap-3 mt-3">
+                <li class="nav-item">
+                    <a class="nav-link text-white fw-bold @(currentAction == "Index" && currentController == "Home" ? "active" : "")" style="font-size: 1.1rem;" asp-controller="Home" asp-action="Index">Trang Chủ</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white fw-bold @(currentAction == "Movies" && currentController == "Home" ? "active" : "")" style="font-size: 1.1rem;" asp-controller="Home" asp-action="Movies">Phim Đang Chiếu</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white fw-bold @(currentAction == "Upcoming" && currentController == "Home" ? "active" : "")" style="font-size: 1.1rem;" asp-controller="Home" asp-action="Upcoming">Phim Sắp Chiếu</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white fw-bold @(currentAction == "CinemaHalls" && currentController == "Home" ? "active" : "")" style="font-size: 1.1rem;" asp-controller="Home" asp-action="CinemaHalls">Rạp Chiếu</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white fw-bold @(currentAction == "Offers" && currentController == "Home" ? "active" : "")" style="font-size: 1.1rem;" asp-controller="Home" asp-action="Offers">Ưu Đãi</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container-fluid p-0 flex-grow-1 d-flex flex-column">
+        <main role="main" class="flex-grow-1">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="footer-custom pt-5 pb-4 mt-5">
+        <div class="container-xl">
+            <div class="row gy-4 border-bottom pb-4 mb-4" style="border-color: rgba(255,255,255,0.05) !important;">
+                <div class="col-lg-4 col-md-6 pe-lg-4">
+                    <a class="text-decoration-none d-flex align-items-center gap-2 mb-3" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-film" style="color:#00ff87;font-size:1.8rem;"></i>
+                        <span class="fw-black text-white" style="font-size: 1.6rem; letter-spacing: 1px;">Cinema <span style="color: #00ff87;">Hub</span></span>
+                    </a>
+                    <p style="color: #8fa098; font-size: 0.9rem; line-height: 1.7;">
+                        Hệ thống đặt vé xem phim trực tuyến hàng đầu, mang đến trải nghiệm điện ảnh tuyệt vời nhất với chất lượng dịch vụ đẳng cấp và tiện lợi.
+                    </p>
+                    <div class="d-flex gap-3 mt-4">
+                        <a href="#" class="social-icon"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-youtube"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="bi bi-tiktok"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="text-white fw-bold mb-4 text-uppercase" style="font-size: 1rem; letter-spacing: 1px;">Khám Phá</h5>
+                    <ul class="list-unstyled footer-links">
+                        <li><a asp-controller="Home" asp-action="Movies">Phim Đang Chiếu</a></li>
+                        <li><a asp-controller="Home" asp-action="Upcoming">Phim Sắp Chiếu</a></li>
+                        <li><a asp-controller="Home" asp-action="CinemaHalls">Hệ Thống Rạp</a></li>
+                        <li><a asp-controller="Home" asp-action="Offers">Khuyến Mãi</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="text-white fw-bold mb-4 text-uppercase" style="font-size: 1rem; letter-spacing: 1px;">Quy Định</h5>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="#">Điều khoản chung</a></li>
+                        <li><a href="#">Chính sách thanh toán</a></li>
+                        <li><a href="#">Chính sách bảo mật</a></li>
+                        <li><a href="#">Câu hỏi thường gặp (FAQ)</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="text-white fw-bold mb-4 text-uppercase" style="font-size: 1rem; letter-spacing: 1px;">Liên Hệ</h5>
+                    <ul class="list-unstyled" style="color: #8fa098; font-size: 0.95rem;">
+                        <li class="mb-3 d-flex align-items-start gap-3">
+                            <i class="bi bi-geo-alt-fill" style="color: #00ff87; font-size: 1.1rem; margin-top: 2px;"></i>
+                            <span>828 Sư Vạn Hạnh, Quận 10, TP.HCM</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center gap-3">
+                            <i class="bi bi-telephone-fill" style="color: #00ff87; font-size: 1.1rem;"></i>
+                            <span>1900 1234</span>
+                        </li>
+                        <li class="mb-3 d-flex align-items-center gap-3">
+                            <i class="bi bi-envelope-fill" style="color: #00ff87; font-size: 1.1rem;"></i>
+                            <span>support@cinemahub.vn</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center" style="color: #6a7b74; font-size: 0.85rem; letter-spacing: 0.5px;">
+                &copy; 2026 <span style="color:#00ff87;font-weight:700;">Cinema Hub</span>. Thiết kế & Phát triển bởi Đồ án IT HUFLIT.
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        window.addEventListener('scroll', function () {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        var globalSearchDebounce;
+        $('#globalSearchInput').on('input', function () {
+            var keyword = $(this).val().trim();
+            clearTimeout(globalSearchDebounce);
+
+            if (keyword === '') {
+                $('#globalSearchInitial').removeClass('d-none');
+                $('#globalSearchLoading').addClass('d-none');
+                $('#globalSearchData').addClass('d-none').html('');
+                return;
+            }
+
+            $('#globalSearchInitial').addClass('d-none');
+            $('#globalSearchData').addClass('d-none');
+            $('#globalSearchLoading').removeClass('d-none');
+
+            globalSearchDebounce = setTimeout(function () {
+                $.ajax({
+                    url: '@Url.Action("Index", "Home")',
+                    type: 'GET',
+                    data: { searchString: keyword },
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function (html) {
+                        $('#globalSearchLoading').addClass('d-none');
+                        $('#globalSearchData').html(html).removeClass('d-none');
+                    },
+                    error: function () {
+                        $('#globalSearchLoading').addClass('d-none');
+                        $('#globalSearchData').html('<p class="text-danger text-center">Có lỗi xảy ra khi tìm kiếm.</p>').removeClass('d-none');
+                    }
+                });
+            }, 300);
+        });
+
+        var searchOffcanvas = document.getElementById('globalSearchOffcanvas');
+        if (searchOffcanvas) {
+            searchOffcanvas.addEventListener('shown.bs.offcanvas', function () {
+                document.getElementById('globalSearchInput').focus();
+            });
+        }
+    </script>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi',
+                    text: '@TempData["ErrorMessage"]',
+                    confirmButtonColor: '#ef4444',
+                    background: '#0d1f10',
+                    color: '#fff',
+                    customClass: {
+                        popup: 'border border-danger'
+                    }
+                });
+            });
+        </script>
+    }
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Thành công',
+                    text: '@TempData["SuccessMessage"]',
+                    confirmButtonColor: '#00ff87',
+                    background: '#0d1f10',
+                    color: '#fff',
+                    customClass: {
+                        popup: 'border border-success'
+                    }
+                });
+            });
+        </script>
+    }
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

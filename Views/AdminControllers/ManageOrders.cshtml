@@ -1,0 +1,457 @@
+@model IEnumerable<DoAnDatVeXemPhim.Models.Order>
+@inject DoAnDatVeXemPhim.Data.ApplicationDbContext _db
+@using Microsoft.EntityFrameworkCore
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                <i class="bi bi-receipt-cutoff me-2"></i> QUẢN LÝ ĐƠN HÀNG
+            </h4>
+            <p class="text-muted small m-0 mt-1">Danh sách các giao dịch đặt vé trên hệ thống Cinema Hub</p>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge rounded-pill px-3 py-2" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #d1d5db; font-size: 0.85rem;">
+                Tổng cộng: <strong style="color: #00ff87;">@Model.Count()</strong> đơn
+            </span>
+            <a href="/AdminControllers/Index" class="btn btn-outline-secondary rounded-pill px-4 fw-bold ajax-link shadow-sm text-light" style="border-color: rgba(255,255,255,0.2);">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    @* THANH TÌM KIẾM ĐƠN HÀNG (LIVE SEARCH) *@
+    <form id="searchOrderForm" action="/AdminControllers/ManageOrders" method="get" class="mb-4 mt-2">
+        <div class="search-wrap d-flex align-items-center p-2 rounded-pill" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); max-width: 600px;">
+            <div class="search-field flex-grow-1 d-flex align-items-center px-3">
+                <i class="bi bi-search me-2" style="color: #00ff87;"></i>
+                <input type="text" name="searchString" id="searchInput" value="@ViewData["CurrentFilter"]" class="form-control border-0 bg-transparent text-white shadow-none p-0" placeholder="Nhập Mã đơn, SĐT, Email..." style="outline: none !important;" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-save-neon rounded-pill px-4 fw-bold" style="background: #00ff87; color: #000;">TÌM KIẾM</button>
+            @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()))
+            {
+                <a href="/AdminControllers/ManageOrders" class="btn ajax-link text-danger ms-2" title="Xóa bộ lọc"><i class="bi bi-x-circle-fill fs-5"></i></a>
+            }
+        </div>
+    </form>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-dismissible fade show shadow-sm rounded-4 alert-custom" style="background: rgba(0,255,135,0.1); border: 1px solid rgba(0,255,135,0.3); color: #00ff87;" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close btn-close-white btn-close-alert"></button>
+        </div>
+    }
+
+    <div class="table-responsive custom-scrollbar mt-2">
+        <table class="table table-dark table-borderless align-middle table-hover m-0"
+               style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.02);">
+            <thead>
+                <tr class="text-muted small uppercase border-bottom"
+                    style="border-color: rgba(255,255,255,0.1) !important; font-size: 0.75rem;">
+                    <th class="text-center" style="width:80px;padding-bottom:12px;">Mã Đơn</th>
+                    <th style="padding-bottom:12px;">Khách hàng & Liên hệ</th>
+                    <th class="text-center" style="padding-bottom:12px;">Mã GD (Bank)</th>
+                    <th class="text-center" style="padding-bottom:12px;">Thời gian đặt</th>
+                    <th class="text-end" style="padding-bottom:12px;">Tổng tiền</th>
+                    <th class="text-center" style="padding-bottom:12px;">Thanh toán</th>
+                    <th class="text-center" style="padding-bottom:12px;">Tình trạng vé</th>
+                    <th class="text-center" style="width:200px;padding-bottom:12px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="border-bottom" style="border-color: rgba(255,255,255,0.03) !important;">
+                            <td class="text-center py-3">
+                                <span class="fw-bold" style="color:#60a5fa;font-size:0.9rem;">#@item.Id</span>
+                            </td>
+                            <td>
+                                @if (item.User != null)
+                                {
+                                    var profile = _db.CustomerProfiles.FirstOrDefault(p => p.UserId == item.UserId);
+                                    if (profile != null && !string.IsNullOrEmpty(profile.FullName))
+                                    {
+                                        <div class="fw-bold text-white mb-1" style="font-size:0.95rem;">@profile.FullName</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="fw-bold text-white mb-1" style="font-size:0.95rem;">@item.User.UserName</div>
+                                    }
+                                    <div style="font-size:0.75rem;color:#9ca3af;"><i class="bi bi-envelope me-1"></i>@item.User.Email</div>
+                                    <div style="font-size:0.75rem;color:#9ca3af;"><i class="bi bi-telephone me-1"></i>@(item.User.PhoneNumber ?? "Chưa có SĐT")</div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Khách ẩn danh</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <code class="fw-bold px-2 py-1 rounded"
+                                      style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px dashed rgba(96,165,250,0.3);">
+                                    CHUB@(item.Id)@item.OrderDate.ToString("HHmm")
+                                </code>
+                            </td>
+                            <td class="text-center">
+                                <div class="fw-bold text-light" style="font-size:0.85rem;">@item.OrderDate.ToString("dd/MM/yyyy")</div>
+                                <div class="text-muted" style="font-size:0.75rem;">@item.OrderDate.ToString("HH:mm")</div>
+                            </td>
+                            <td class="text-end">
+                                <span class="fw-bold fs-6" style="color:#00ff87;text-shadow:0 0 8px rgba(0,255,135,0.3);">
+                                    @item.TotalAmount.ToString("N0")<span style="font-size:0.7rem;color:#9ca3af;margin-left:2px;">đ</span>
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                @switch (item.Status)
+                                {
+                                    case "PAID":
+                                        <span class="badge rounded-pill px-3 py-1" style="background:rgba(0,255,135,0.15);color:#00ff87;border:1px solid rgba(0,255,135,0.3);">
+                                            <i class="bi bi-check2-circle me-1"></i> Đã thanh toán
+                                        </span>
+                                        break;
+                                    case "CHECKED_IN":
+                                        <span class="badge rounded-pill px-3 py-1" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);">
+                                            <i class="bi bi-qr-code-scan me-1"></i> Đã soát vé
+                                        </span>
+                                        break;
+                                    case "CANCELLED":
+                                        <span class="badge rounded-pill px-3 py-1" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">
+                                            <i class="bi bi-x-circle me-1"></i> Đã hủy
+                                        </span>
+                                        break;
+                                    default:
+                                        <span class="badge rounded-pill px-3 py-1 animate-pulse" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">
+                                            <i class="bi bi-hourglass-split me-1"></i> Chờ xác nhận
+                                        </span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                @{
+                                    var detail = item.OrderDetails?.FirstOrDefault();
+                                    bool isPast = detail != null && detail.Showtime.StartTime < DateTime.Now;
+                                }
+                                @if (item.Status == "CHECKED_IN")
+                                {
+                                    <span class="badge bg-secondary"><i class="bi bi-check-all"></i> Đã sử dụng</span>
+                                }
+                                else if (item.Status == "CANCELLED")
+                                {
+                                    <span class="badge bg-danger"><i class="bi bi-x"></i> Vé hủy</span>
+                                }
+                                else if (isPast)
+                                {
+                                    <span class="badge bg-dark text-muted"><i class="bi bi-clock-history"></i> Hết hạn</span>
+                                }
+                                else if (item.IsPaid)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-ticket-perforated"></i> Hợp lệ</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Chưa thanh toán</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button"
+                                            class="btn btn-sm border-0 d-flex align-items-center justify-content-center btn-trigger-modal"
+                                            style="background:rgba(96,165,250,0.1);color:#60a5fa;width:32px;height:32px;border-radius:6px;"
+                                            data-order-id="@item.Id" title="Chi tiết">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+
+                                    @if (!item.IsPaid && item.Status != "CANCELLED")
+                                    {
+                                        <form asp-action="ConfirmPayment" method="post" class="ajax-order-form">
+                                            <input type="hidden" name="orderId" value="@item.Id" />
+                                            <button type="submit" class="btn btn-sm border-0 d-flex align-items-center justify-content-center fw-bold"
+                                                    style="background:#00ff87;color:#022c22;height:32px;border-radius:6px;padding:0 12px;" title="Duyệt đơn">
+                                                Duyệt
+                                            </button>
+                                        </form>
+                                    }
+
+                                    <form asp-action="DeleteOrder" method="post" class="ajax-order-form delete-order-neon-form">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-sm border-0 d-flex align-items-center justify-content-center"
+                                                style="background:rgba(239,68,68,0.1);color:#ef4444;width:32px;height:32px;border-radius:6px;" title="Xóa đơn">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+
+                                @* ── MODAL CHI TIẾT ── *@
+                                <div class="modal fade order-detail-modal" id="orderDetail-@item.Id" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                                        <div class="modal-content border-0 shadow-lg"
+                                             style="background:rgba(17,24,39,0.98);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1) !important;border-radius:16px;">
+                                            <div class="modal-header border-bottom" style="border-color:rgba(255,255,255,0.05) !important;">
+                                                <h5 class="modal-title fw-bold text-uppercase" style="color:#60a5fa;">
+                                                    <i class="bi bi-info-circle me-2"></i>Chi tiết đơn hàng #@item.Id
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <div class="row">
+                                                    <div class="col-md-7 border-end" style="border-color:rgba(255,255,255,0.05) !important;">
+                                                        <h6 class="fw-bold mb-3 text-uppercase" style="color:#00ff87;">
+                                                            <i class="bi bi-ticket-detailed me-2"></i>Thông tin vé
+                                                        </h6>
+                                                        @{
+                                                            var details = _db.OrderDetails
+                                                            .Where(d => d.OrderId == item.Id)
+                                                            .Include(d => d.Showtime).ThenInclude(s => s.Movie)
+                                                            .Include(d => d.Seat).ToList();
+                                                        }
+                                                        @foreach (var d in details)
+                                                        {
+                                                            <div class="d-flex justify-content-between align-items-center mb-2 p-3 rounded-3"
+                                                                 style="background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.05);">
+                                                                <div>
+                                                                    <div class="fw-bold text-white mb-1">@d.Showtime.Movie.Title</div>
+                                                                    <small class="text-muted">
+                                                                        Ghế: <span class="badge" style="background:rgba(239,68,68,0.2);color:#ef4444;">@d.Seat.SeatNumber</span>
+                                                                        | Suất: @d.Showtime.StartTime.ToString("HH:mm")
+                                                                        | Loại: <span class="badge bg-secondary">@(string.IsNullOrEmpty(d.TicketType) ? "Người lớn" : d.TicketType)</span>
+                                                                    </small>
+                                                                </div>
+                                                                <div class="fw-bold" style="color:#d1d5db;">@d.PriceAtBooking.ToString("N0")đ</div>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    <div class="col-md-5 ps-md-4">
+                                                        <h6 class="fw-bold mb-3 text-uppercase" style="color:#fbbf24;">
+                                                            <i class="bi bi-cup-straw me-2"></i>Combo đi kèm
+                                                        </h6>
+                                                        @{
+                                                            var orderCombos = _db.OrderCombos
+                                                            .Where(oc => oc.OrderId == item.Id)
+                                                            .Include(oc => oc.Combo).ToList();
+                                                        }
+                                                        @if (orderCombos.Any())
+                                                        {
+                                                            @foreach (var oc in orderCombos)
+                                                            {
+                                                                <div class="d-flex justify-content-between small mb-2 text-light">
+                                                                    <span>@oc.Quantity x @oc.Combo.Name</span>
+                                                                    <span class="fw-bold">@((oc.Price * oc.Quantity).ToString("N0"))đ</span>
+                                                                </div>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="text-muted small fst-italic">Không có combo</div>
+                                                        }
+                                                        <div class="mt-4 pt-3 border-top" style="border-color:rgba(255,255,255,0.05) !important;">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <span class="text-muted small text-uppercase">Tổng cộng</span>
+                                                                <span class="fw-bold fs-5" style="color:#00ff87;">@item.TotalAmount.ToString("N0")đ</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-2 d-block mb-2" style="opacity:0.3;"></i>
+                            Chưa có đơn hàng nào
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .slide-in-bottom {
+        animation: slideIn 0.4s cubic-bezier(0.25,0.46,0.45,0.94) both;
+    }
+
+    @@keyframes slideIn {
+        0% {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        100% {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .transition-all {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .animate-pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: .5;
+        }
+    }
+
+    .border-neon-danger-swal {
+        border: 1px solid rgba(239,68,68,0.4) !important;
+        box-shadow: 0 0 20px rgba(239,68,68,0.2) !important;
+        border-radius: 16px !important;
+    }
+</style>
+
+<script>
+    (function () {
+        // ── 1. NÚT MẮT ──
+        $(document).off('click', '.btn-trigger-modal').on('click', '.btn-trigger-modal', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var orderId  = $(this).data('order-id');
+            var $original = $('#orderDetail-' + orderId);
+            if ($original.length === 0) { console.warn('Modal not found: orderDetail-' + orderId); return; }
+
+            // Move ra body để thoát z-index của table
+            $original.appendTo('body');
+
+            var existing = window.bootstrap.Modal.getInstance($original[0]);
+            if (existing) { existing.dispose(); }
+
+            var myModal = new window.bootstrap.Modal($original[0], { backdrop: true, keyboard: true });
+            myModal.show();
+        });
+
+        // ── 2. NÚT X ĐÓNG ALERT ──
+        $(document).off('click', '.btn-close-alert').on('click', '.btn-close-alert', function () {
+            $(this).closest('.alert-custom').fadeOut(200, function () { $(this).remove(); });
+        });
+
+        // ── 3. DUYỆT ĐƠN ──
+        $(document).off('submit', '.ajax-order-form:not(.delete-order-neon-form)')
+                   .on('submit',  '.ajax-order-form:not(.delete-order-neon-form)', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var $box  = $('#admin-dynamic-content');
+            var $load = $('#admin-loader');
+            $box.css('opacity', '0.3'); $load.fadeIn(200);
+            $.ajax({
+                url: $form.attr('action'), type: $form.attr('method'),
+                data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (res) { $box.html(res); $load.fadeOut(200, function () { $box.css('opacity','1'); }); },
+                error:   function ()    { alert('Lỗi khi duyệt đơn!'); $load.fadeOut(200); $box.css('opacity','1'); }
+            });
+        });
+
+        // ── 4. XÓA ĐƠN ──
+        $(document).off('submit', '.delete-order-neon-form').on('submit', '.delete-order-neon-form', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var $box  = $('#admin-dynamic-content');
+            var $load = $('#admin-loader');
+            Swal.fire({
+                title: 'CẢNH BÁO!',
+                text:  'Bạn có chắc chắn muốn XÓA vĩnh viễn đơn hàng này không?',
+                icon: 'warning', showCancelButton: true,
+                confirmButtonColor: '#ef4444', cancelButtonColor: '#4b5563',
+                confirmButtonText: 'XÓA NGAY', cancelButtonText: 'HỦY',
+                background: '#111827', color: '#ffffff',
+                customClass: { popup: 'border-neon-danger-swal' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $box.css('opacity','0.3'); $load.fadeIn(200);
+                    $.ajax({
+                        url: $form.attr('action'), type: $form.attr('method'),
+                        data: $form.serialize(),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        success: function (res) {
+                            $box.html(res);
+                            $load.fadeOut(200, function () {
+                                $box.css('opacity','1');
+                                Swal.fire({ title: 'ĐÃ XÓA!', icon: 'success', background: '#111827', color: '#ffffff' });
+                            });
+                        },
+                        error: function () { alert('Lỗi khi xóa!'); $load.fadeOut(200); $box.css('opacity','1'); }
+                    });
+                }
+            });
+        });
+
+        // ── 5. LIVE SEARCH ĐƠN HÀNG ──
+        var searchTimer;
+        $(document).off('input', '#searchInput').on('input', '#searchInput', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () {
+                $('#searchOrderForm').trigger('submit');
+            }, 600); // Live search delay 600ms
+        });
+
+        $(document).off('submit', '#searchOrderForm').on('submit', '#searchOrderForm', function (e) {
+            e.preventDefault();
+            var $form = $(this);
+            var url = $form.attr('action') + '?' + $form.serialize();
+            var $box  = $('#admin-dynamic-content');
+            var $load = $('#admin-loader');
+            
+            $box.css('opacity', '0.3');
+            $load.fadeIn(200);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (data) {
+                    var $dummy = $('<div>').append($.parseHTML(data, document, true));
+                    var $inner = $dummy.find('#admin-dynamic-content');
+                    
+                    if ($inner.length > 0) {
+                        $box.html($inner.html());
+                    } else {
+                        $box.html(data);
+                    }
+                    
+                    // Giữ lại focus vào ô search
+                    var currentVal = $('#searchInput').val();
+                    $('#searchInput').focus().val('').val(currentVal);
+
+                    $load.fadeOut(200, function() {
+                        $box.css('opacity', '1');
+                    });
+                    
+                    window.history.pushState({path: url}, '', url);
+                },
+                error: function() {
+                    $load.fadeOut(200);
+                    $box.css('opacity', '1');
+                }
+            });
+        });
+    })();
+</script>
+
+

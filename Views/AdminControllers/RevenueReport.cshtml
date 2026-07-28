@@ -1,0 +1,603 @@
+﻿@{
+    // 🚀 1. CẮT LAYOUT ĐỂ TRỊ BỆNH "LỒNG TRANG ĐỆ QUY" TRONG SPA
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+
+    var labels = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Labels);
+    var data = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Data);
+    var revenueData = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.MovieRevenueData); // Nạp cục tiền từ Backend
+
+    var type = string.IsNullOrEmpty(Context.Request.Query["type"].ToString()) ? "total" : Context.Request.Query["type"].ToString();
+    var filter = string.IsNullOrEmpty(Context.Request.Query["filter"].ToString()) ? "7" : Context.Request.Query["filter"].ToString();
+}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+    /* ── Reset & base ── */
+    *, *::before, *::after {
+        b    .stats-wrap {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: transparent;
+        padding: 0;
+        min-height: auto;
+    }
+
+    /* ── Page header ── */
+    .page-eyebrow {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #9ca3af;
+        margin-bottom: 4px;
+    }
+
+    .page-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .page-subtitle {
+        font-size: 0.82rem;
+        color: #00ff87;
+        font-weight: 500;
+        margin-left: 6px;
+    }
+
+    /* ── Tab nav ── */
+    .tab-nav {
+        display: flex;
+        background: rgba(17, 24, 39, 0.6);
+        border-radius: 12px;
+        padding: 5px;
+        gap: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 16px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #9ca3af;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+        .tab-link:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #00ff87;
+        }
+
+        .tab-link.active {
+            background: #00ff87;
+            color: #022c22;
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.4);
+        }
+
+    /* ── Stat cards ── */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+    @@media (max-width: 768px) {
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+        .header-row {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 12px;
+        }
+    }
+
+    .stat-card {
+        background: rgba(17, 24, 39, 0.6);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 20px 22px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.25s ease;
+        cursor: default;
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0, 255, 135, 0.08);
+            border-color: rgba(0, 255, 135, 0.3) !important;
+        }
+
+        .stat-card.indigo::before {
+            background: linear-gradient(90deg, #00ff87, #00e676);
+        }
+
+        .stat-card.emerald::before {
+            background: linear-gradient(90deg, #00ff87, #00e676);
+        }
+
+        .stat-card.amber::before {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-bottom: 14px;
+        flex-shrink: 0;
+    }
+
+    .stat-card.indigo .stat-icon {
+        background: rgba(0, 255, 135, 0.1);
+        color: #00ff87;
+    }
+
+    .stat-card.emerald .stat-icon {
+        background: rgba(0, 255, 135, 0.1);
+        color: #00ff87;
+    }
+
+    .stat-card.amber .stat-icon {
+        background: rgba(251, 191, 36, 0.1);
+        color: #fbbf24;
+    }
+
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9ca3af;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        font-size: 1.55rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1;
+        letter-spacing: -0.5px;
+        animation: countUp 0.5s ease both;
+    }
+
+    .stat-badge {
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-top: 8px;
+        display: inline-block;
+    }
+
+    .stat-card.indigo .stat-badge {
+        background: rgba(0, 255, 135, 0.1);
+        color: #00ff87;
+        border: 1px solid rgba(0, 255, 135, 0.2);
+    }
+
+    .stat-card.emerald .stat-badge {
+        background: rgba(0, 255, 135, 0.1);
+        color: #00ff87;
+        border: 1px solid rgba(0, 255, 135, 0.2);
+    }
+
+    .stat-card.amber .stat-badge {
+        background: rgba(251, 191, 36, 0.1);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    /* ── Chart container ── */
+    .chart-wrap {
+        background: rgba(17, 24, 39, 0.6);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 24px 24px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        position: relative;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .chart-title {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .chart-meta {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        font-weight: 500;
+    }
+
+    .chart-canvas-wrap {
+        position: relative;
+        height: 300px;
+    }
+
+    /* ── Filter pills ── */
+    .filter-bar {
+        display: flex;
+        justify-content: center;
+    }
+
+    .filter-group {
+        background: rgba(17, 24, 39, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        padding: 4px;
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    .filter-btn {
+        padding: 6px 20px;
+        border-radius: 7px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: #9ca3af;
+        transition: all 0.2s;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+    }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #00ff87;
+        }
+
+        .filter-btn.active {
+            background: #00ff87;
+            color: #022c22;
+            box-shadow: 0 0 10px rgba(0, 255, 135, 0.4);
+        }
+
+    @@keyframes countUp {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }{
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    }
+</style>
+
+<div class="stats-wrap">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center header-row mb-4 gap-3">
+        <div>
+            <p class="page-eyebrow mb-1">Thống kê rạp</p>
+            <h1 class="page-title">
+                @ViewBag.Title
+                <span class="page-subtitle">(@filter ngày gần nhất)</span>
+            </h1>
+        </div>
+
+        @* 🚀 ĐÃ GẮN CLASS 'report-ajax-link' ĐỂ BẤM LÀ CHẠY NGẦM, KHÔNG CHỚP TRANG *@
+        <nav class="tab-nav">
+            <a href="/AdminControllers/RevenueReport?type=total&filter=@filter" class="tab-link report-ajax-link @(type == "total" ? "active" : "")">Tổng quan</a>
+            <a href="/AdminControllers/RevenueReport?type=movie&filter=@filter" class="tab-link report-ajax-link @(type == "movie" ? "active" : "")">Vé Phim</a>
+            <a href="/AdminControllers/RevenueReport?type=combo&filter=@filter" class="tab-link report-ajax-link @(type == "combo" ? "active" : "")">Bắp Nước</a>
+            <a href="/AdminControllers/RevenueReport?type=topmovie&filter=@filter" class="tab-link report-ajax-link @(type == "topmovie" ? "active" : "")">Top Phim</a>
+            <a href="/AdminControllers/RevenueReport?type=showtime&filter=@filter" class="tab-link report-ajax-link @(type == "showtime" ? "active" : "")">Suất Chiếu</a>
+            <!-- --- ĐÃ THÊM: Tính năng Behavior Tracking --- -->
+            <a href="/AdminControllers/RevenueReport?type=topviews&filter=@filter" class="tab-link report-ajax-link @(type == "topviews" ? "active" : "")">Lượt Xem (Tương tác)</a>
+        </nav>
+    </div>
+
+    <div class="stat-grid mb-4">
+        <div class="stat-card indigo">
+            <div class="d-flex align-items-start gap-3">
+                <div class="stat-icon"><i class="bi bi-wallet2"></i></div>
+                <div>
+                    <div class="stat-label">Tổng Doanh Thu</div>
+                    <div class="stat-value">@ViewBag.TotalRevenue.ToString("N0")đ</div>
+                    <span class="stat-badge">Tất cả nguồn</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card emerald">
+            <div class="d-flex align-items-start gap-3">
+                <div class="stat-icon"><i class="bi bi-film"></i></div>
+                <div>
+                    <div class="stat-label">Doanh Thu Vé Phim</div>
+                    <div class="stat-value">@ViewBag.MovieRevenue.ToString("N0")đ</div>
+                    <span class="stat-badge">Vé chiếu</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card amber">
+            <div class="d-flex align-items-start gap-3">
+                <div class="stat-icon"><i class="bi bi-cup-straw"></i></div>
+                <div>
+                    <div class="stat-label">Doanh Thu Combo</div>
+                    <div class="stat-value">@ViewBag.ComboRevenue.ToString("N0")đ</div>
+                    <span class="stat-badge">Bắp + Nước</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-wrap mb-4">
+        <div class="chart-header">
+            <span class="chart-title" id="dynamicChartTitle">Biểu đồ thống kê rạp</span>
+            <span class="chart-meta" id="dynamicChartMeta">Đơn vị: VNĐ &nbsp;·&nbsp; @filter ngày gần nhất</span>
+        </div>
+        <div class="chart-canvas-wrap">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <a href="/AdminControllers/RevenueReport?type=@type&filter=7" class="filter-btn report-ajax-link @(filter == "7" ? "active" : "")">7 Ngày</a>
+            <a href="/AdminControllers/RevenueReport?type=@type&filter=14" class="filter-btn report-ajax-link @(filter == "14" ? "active" : "")">14 Ngày</a>
+            <a href="/AdminControllers/RevenueReport?type=@type&filter=30" class="filter-btn report-ajax-link @(filter == "30" ? "active" : "")">30 Ngày</a>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+<script>
+    (function () {
+        // 🚀 CƠ CHẾ CHUYỂN TAB MƯỢT MÀ BẰNG AJAX
+        $('.report-ajax-link').off('click').on('click', function (e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            var $contentBox = $('#admin-dynamic-content'); // Vùng chứa nội dung chính của Admin
+            var $loader = $('#admin-loader'); // (Tùy chọn) vòng xoay nếu có
+
+            if($loader.length) $loader.fadeIn(200);
+            $contentBox.css('opacity', '0.4');
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (res) {
+                    $contentBox.html(res);
+                    if($loader.length) $loader.fadeOut(200);
+                    $contentBox.css('opacity', '1');
+                    window.history.pushState({path: url}, '', url); // Cập nhật URL trình duyệt
+                },
+                error: function () {
+                    alert("Lỗi khi tải dữ liệu báo cáo!");
+                    $contentBox.css('opacity', '1');
+                }
+            });
+        });
+
+        // 🚀 KHỞI TẠO BIỂU ĐỒ BỌC THÉP
+        function initCinemaChart() {
+            const palette = {
+                total:    { line: '#00ff87', fill0: 'rgba(0,255,135,0.12)',  fill1: 'rgba(0,255,135,0)' },
+                movie:    { line: '#00ff87', fill0: 'rgba(0,255,135,0.12)',  fill1: 'rgba(0,255,135,0)' },
+                combo:    { line: '#fbbf24', fill0: 'rgba(251,191,36,0.12)', fill1: 'rgba(251,191,36,0)' },
+                topmovie: { line: '#a855f7', fill0: 'rgba(168,85,247,0.18)', fill1: 'rgba(168,85,247,0)' },
+                showtime: { line: '#38bdf8', fill0: 'rgba(56,189,248,0.18)', fill1: 'rgba(56,189,248,0)' },
+                topviews: { line: '#f43f5e', fill0: 'rgba(244,63,94,0.18)',  fill1: 'rgba(244,63,94,0)' },
+                revenueRevenue: { line: '#fbbf24', fill0: 'rgba(251,191,36,0.22)' }
+            };
+
+            const currentType = '@type';
+            const colors = palette[currentType] || palette.total;
+            const isRankType = (currentType === 'topmovie' || currentType === 'showtime' || currentType === 'topviews');
+
+            const titleEl = document.getElementById('dynamicChartTitle');
+            const metaEl = document.getElementById('dynamicChartMeta');
+            if(titleEl) titleEl.innerText = isRankType ? " Biểu đồ xếp hạng hiệu suất phim" : " Biểu đồ doanh thu theo ngày";
+            
+            if(metaEl) {
+                if (currentType === 'topviews') metaEl.innerHTML = "Đơn vị: Lượt xem (Tổng quát từ trước đến nay)";
+                else metaEl.innerHTML = isRankType ? "Đơn vị: Vé & VNĐ &nbsp;·&nbsp; @filter ngày gần nhất" : "Đơn vị: VNĐ &nbsp;·&nbsp; @filter ngày gần nhất";
+            }
+
+            const canvas = document.getElementById('revenueChart');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+
+            // Xóa Chart cũ trước khi vẽ Chart mới để chống dính nét
+            if (window.myCinemaChart instanceof Chart) {
+                window.myCinemaChart.destroy();
+            }
+
+            function makeGradient() {
+                const grad = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 300);
+                grad.addColorStop(0, colors.fill0);
+                grad.addColorStop(1, colors.fill1);
+                return grad;
+            }
+
+            const chartLabels = @Html.Raw(labels);
+            const chartData   = @Html.Raw(data);
+            const chartRevenueData = @Html.Raw(revenueData ?? "[]");
+
+            let datasetsArray = [];
+
+            if (isRankType) {
+                const calculatedBarPct = chartLabels.length === 1 ? 0.25 : (chartLabels.length <= 3 ? 0.45 : 0.65);
+                const calculatedCatPct = chartLabels.length === 1 ? 0.25 : (chartLabels.length <= 3 ? 0.55 : 0.8);
+
+                datasetsArray.push({
+                    label: currentType === 'topviews' ? 'Lượt Xem' : 'Số lượng bán (Vé)',
+                    data: chartData,
+                    backgroundColor: colors.fill0.replace('0.22', '0.6'),
+                    borderColor: colors.line,
+                    borderWidth: 2,
+                    borderRadius: 5,
+                    borderSkipped: false,
+                    barPercentage: calculatedBarPct,
+                    categoryPercentage: calculatedCatPct,
+                    xAxisID: 'x'
+                });
+
+                if (currentType === 'topmovie' && chartRevenueData.length > 0) {
+                    datasetsArray.push({
+                        label: 'Doanh thu phim (VNĐ)',
+                        data: chartRevenueData,
+                        backgroundColor: palette.revenueRevenue.fill0.replace('0.25', '0.6'),
+                        borderColor: palette.revenueRevenue.line,
+                        borderWidth: 2,
+                        borderRadius: 5,
+                        borderSkipped: false,
+                        barPercentage: calculatedBarPct,
+                        categoryPercentage: calculatedCatPct,
+                        xAxisID: 'xRevenue'
+                    });
+                }
+            } else {
+                datasetsArray.push({
+                    label: 'Doanh thu',
+                    data: chartData,
+                    borderColor: colors.line,
+                    borderWidth: 2.5,
+                    backgroundColor: makeGradient(),
+                    fill: true,
+                    tension: 0.42,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: colors.line,
+                    pointBorderWidth: 2.5,
+                    pointHoverRadius: 8,
+                    pointHoverBackgroundColor: colors.line,
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2
+                });
+            }
+
+            window.myCinemaChart = new Chart(ctx, {
+                type: isRankType ? 'bar' : 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: datasetsArray
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: isRankType ? 'y' : 'x',
+                    animation: { duration: 700, easing: 'easeInOutQuart' },
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: isRankType,
+                            position: 'top',
+                            labels: { font: { family: 'Inter', size: 12, weight: '600' }, color: '#9ca3af', boxWidth: 12, boxHeight: 12, borderRadius: 4 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#111827', titleColor: '#00ff87', bodyColor: '#ffffff',
+                            borderColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1,
+                            titleFont: { size: 11, weight: '600', family: 'Inter' },
+                            bodyFont: { size: 13, weight: '700', family: 'Inter' },
+                            padding: 12, cornerRadius: 10,
+                            callbacks: {
+                                label: function(ctx) {
+                                    const datasetLabel = ctx.dataset.label || '';
+                                    const value = isRankType ? ctx.parsed.x : ctx.parsed.y;
+                                    if (datasetLabel.includes('Lượt Xem')) return ' ' + datasetLabel + ': ' + value.toLocaleString('vi-VN') + ' lượt';
+                                    if (datasetLabel.includes('Vé')) return ' ' + datasetLabel + ': ' + value.toLocaleString('vi-VN') + ' vé';
+                                    return ' ' + datasetLabel + ': ' + value.toLocaleString('vi-VN') + ' đ';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: { display: false }, border: { display: false },
+                            ticks: {
+                                font: { size: 11, weight: '600', family: 'Inter' }, color: '#9ca3af', autoSkip: false,
+                                callback: function(value) {
+                                    const label = this.getLabelForValue(value);
+                                    return (isRankType && label.length > 25) ? label.substring(0, 22) + '...' : label;
+                                }
+                            }
+                        },
+                        x: {
+                            beginAtZero: true, display: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.06)', lineWidth: 1 }, border: { dash: [4, 4], display: false },
+                            ticks: {
+                                font: { size: 11, family: 'Inter' }, color: '#9ca3af', padding: 4,
+                                callback: function(v) {
+                                    if (isRankType) {
+                                        if (currentType === 'topviews') return v.toLocaleString('vi-VN') + ' lượt xem';
+                                        return v.toLocaleString('vi-VN') + ' vé';
+                                    }
+                                    if (v >= 1_000_000) return (v / 1_000_000).toLocaleString('vi-VN') + ' tr';
+                                    return v.toLocaleString('vi-VN') + ' đ';
+                                }
+                            }
+                        },
+                        xRevenue: {
+                            beginAtZero: true, display: (isRankType && currentType === 'topmovie'), position: 'top',
+                            grid: { drawOnChartArea: false }, border: { display: false },
+                            ticks: {
+                                font: { size: 11, family: 'Inter' }, color: '#fbbf24', padding: 4,
+                                callback: function(v) {
+                                    if (v >= 1_000_000) return (v / 1_000_000).toLocaleString('vi-VN') + ' tr';
+                                    if (v >= 1_000)     return (v / 1_000).toLocaleString('vi-VN') + ' k';
+                                    return v.toLocaleString('vi-VN') + ' đ';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Đợi tí cho thư viện kịp load (Trường hợp mạng chậm CDN chưa về)
+        if (typeof Chart !== 'undefined') {
+            initCinemaChart();
+        } else {
+            let checkExist = setInterval(function() {
+                if (typeof Chart !== 'undefined') {
+                    clearInterval(checkExist);
+                    initCinemaChart();
+                }
+            }, 100); // Check liên tục mỗi 100ms
+        }
+    })();
+</script>

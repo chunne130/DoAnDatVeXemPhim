@@ -1,0 +1,6 @@
+﻿@* Edit.cshtml *@
+@model DoAnDatVeXemPhim.Models.Combo
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+@await Html.PartialAsync("_ComboForm", Model)

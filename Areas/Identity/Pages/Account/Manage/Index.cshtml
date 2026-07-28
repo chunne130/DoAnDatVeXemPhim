@@ -1,0 +1,144 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "CHI TIẾT TÀI KHOẢN";
+}
+
+<div class="card border-0 shadow-sm rounded-0">
+    <div class="card-header bg-dark text-white py-2 rounded-0">
+        <h6 class="mb-0 fw-bold text-uppercase">THAY ĐỔI THÔNG TIN</h6>
+    </div>
+    <div class="card-body p-4">
+        <partial name="_StatusMessage" for="StatusMessage" />
+        <form id="profile-form" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+            <div class="row g-4">
+                @* Cột 1: Thông tin cơ bản *@
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label asp-for="Input.FullName" class="form-label small fw-bold text-muted">HỌ VÀ TÊN *</label>
+                        <input asp-for="Input.FullName" class="form-control rounded-0 border-secondary" placeholder="Nhập họ và tên..." />
+                        <span asp-validation-for="Input.FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">TÊN ĐĂNG NHẬP (EMAIL)</label>
+                        <input asp-for="Username" class="form-control rounded-0 bg-light" disabled />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.PhoneNumber" class="form-label small fw-bold text-muted">ĐIỆN THOẠI *</label>
+                        <input asp-for="Input.PhoneNumber" class="form-control rounded-0 border-secondary" placeholder="09xxxxxxxx" />
+                        <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Input.Birthday" class="form-label small fw-bold text-muted">NGÀY SINH</label>
+                        <input asp-for="Input.Birthday" type="date" class="form-control rounded-0 border-secondary" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">GIỚI TÍNH</label>
+                        <div class="d-flex gap-3 pt-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="Input.Gender" value="Nam" id="g1">
+                                <label class="form-check-label small" for="g1">Nam</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" asp-for="Input.Gender" value="Nữ" id="g2">
+                                <label class="form-check-label small" for="g2">Nữ</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Cột 2: Địa chỉ *@
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">THÀNH PHỐ / TỈNH *</label>
+                        <select asp-for="Input.City" id="city-select" class="form-select rounded-0 border-secondary small">
+                            <option value="">-- Chọn Tỉnh/Thành --</option>
+                            <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                            <option value="Hà Nội">Hà Nội</option>
+                            <option value="Đà Nẵng">Đà Nẵng</option>
+                            <option value="Cần Thơ">Cần Thơ</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">QUẬN / HUYỆN *</label>
+                        <select asp-for="Input.District" id="district-select" class="form-select rounded-0 border-secondary small">
+                            <option value="">-- Chọn Quận/Huyện --</option>
+                        </select>
+                        <span asp-validation-for="Input.District" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">ĐỊA CHỈ</label>
+                        <textarea asp-for="Input.Address" class="form-control rounded-0 border-secondary" rows="2" placeholder="Số nhà, tên đường..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="text-center mt-4">
+                <button id="update-profile-button" type="submit" class="btn btn-danger rounded-0 px-5 fw-bold shadow-sm">LƯU LẠI</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const locations = {
+            "Hồ Chí Minh": ["Quận 1", "Quận 3", "Quận 10", "Quận Tân Bình", "Quận Bình Thạnh", "TP. Thủ Đức", "Huyện Hóc Môn"],
+            "Hà Nội": ["Quận Hoàn Kiếm", "Quận Ba Đình", "Quận Hai Bà Trưng", "Quận Cầu Giấy", "Quận Đống Đa"],
+            "Đà Nẵng": ["Quận Hải Châu", "Quận Thanh Khê", "Quận Sơn Trà", "Quận Ngũ Hành Sơn"],
+            "Cần Thơ": ["Quận Ninh Kiều", "Quận Bình Thủy", "Quận Cái Răng", "Quận Ô Môn"]
+        };
+
+        const citySelect = document.getElementById('city-select');
+        const districtSelect = document.getElementById('district-select');
+        const savedDistrict = "@Html.Raw(Model.Input.District ?? "")";
+
+        function populateDistricts(cityName) {
+            districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
+            if (cityName && locations[cityName]) {
+                locations[cityName].forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.text = district;
+                    if (district === savedDistrict) option.selected = true;
+                    districtSelect.appendChild(option);
+                });
+            }
+        }
+
+        citySelect.addEventListener('change', function() { populateDistricts(this.value); });
+        document.addEventListener('DOMContentLoaded', function() {
+            if (citySelect.value) populateDistricts(citySelect.value);
+        });
+    </script>
+}
+
+<style>
+    .form-control, .form-select {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #ed1c24 !important;
+            box-shadow: none !important;
+        }
+
+    .btn-danger {
+        background-color: #ed1c24;
+        border: none;
+    }
+
+        .btn-danger:hover {
+            background-color: #b31217;
+        }
+</style>

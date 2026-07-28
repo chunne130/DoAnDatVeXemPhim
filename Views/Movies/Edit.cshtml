@@ -1,0 +1,237 @@
+﻿@model DoAnDatVeXemPhim.Models.Movie
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                <i class="bi bi-pencil-square me-2"></i>CẬP NHẬT THÔNG TIN
+            </h4>
+            <p class="text-muted small m-0 mt-1">Chỉnh sửa nội dung phim: <span style="color: #00ff87;">@Model.Title</span></p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary text-light ajax-link rounded-pill px-4 fw-bold shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại kho
+        </a>
+    </div>
+
+    <form id="editMovieForm" asp-action="Edit" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-4">
+            @* ─── CỘT 1: THÔNG TIN CƠ BẢN ─── *@
+            <div class="col-md-7">
+                <h5 class="fw-bold mb-3" style="color: #00ff87; font-size: 1rem;"><i class="bi bi-1-circle me-1"></i> THÔNG TIN CHUNG</h5>
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label fw-bold text-muted small text-uppercase">Tên Phim</label>
+                    <input asp-for="Title" class="form-control form-control-neon" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="GenreId" class="form-label fw-bold text-muted small text-uppercase">Thể Loại</label>
+                        <select asp-for="GenreId" class="form-select form-control-neon text-white" asp-items="ViewBag.GenreId" style="background-color: rgba(0, 0, 0, 0.4);"></select>
+                        <span asp-validation-for="GenreId" class="text-danger small"></span>
+                    </div>
+
+                    @* Thêm thuộc tính asp-for vào thẻ select để gán dữ liệu động *@
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="AgeRestriction" class="form-label fw-bold text-muted small text-uppercase">Giới hạn độ tuổi</label>
+                        <select asp-for="AgeRestriction" class="form-select form-control-neon text-white" style="background-color: rgba(0, 0, 0, 0.4);">
+                            <option value="" class="bg-dark">-- Chọn nhãn độ tuổi --</option>
+                            <option value="P" class="bg-dark text-success fw-bold">P - Mọi độ tuổi</option>
+                            <option value="K" class="bg-dark text-info fw-bold">K - Cần phụ huynh (Dưới 13)</option>
+                            <option value="T13" class="bg-dark text-warning fw-bold">T13 - Khán giả từ 13+</option>
+                            <option value="T16" class="bg-dark style-orange-text fw-bold">T16 - Khán giả từ 16+</option>
+                            <option value="T18" class="bg-dark text-danger fw-bold">T18 - Khán giả từ 18+</option>
+                        </select>
+                        <span asp-validation-for="AgeRestriction" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Duration" class="form-label fw-bold text-muted small text-uppercase">Thời Lượng (phút)</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-0" style="background: rgba(0,255,135,0.1); color: #00ff87;"><i class="bi bi-clock"></i></span>
+                            <input asp-for="Duration" class="form-control form-control-neon" type="number" />
+                        </div>
+                        <span asp-validation-for="Duration" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="ReleaseDate" class="form-label fw-bold text-muted small text-uppercase">Ngày Khởi Chiếu</label>
+                        <input asp-for="ReleaseDate" class="form-control form-control-neon" type="date" />
+                        <span asp-validation-for="ReleaseDate" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label fw-bold text-muted small text-uppercase">Mô Tả Nội Dung</label>
+                    <textarea asp-for="Description" class="form-control form-control-neon custom-scrollbar" rows="5"></textarea>
+                    <span asp-validation-for="Description" class="text-danger small"></span>
+                </div>
+            </div>
+
+            @* ─── CỘT 2: MEDIA PREVIEW ─── *@
+            <div class="col-md-5 border-start" style="border-color: rgba(255,255,255,0.05) !important;">
+                <h5 class="fw-bold mb-3 ms-md-3" style="color: #60a5fa; font-size: 1rem;"><i class="bi bi-2-circle me-1"></i> MEDIA PREVIEW</h5>
+
+                <div class="mb-4 ms-md-3">
+                    <label asp-for="PosterUrl" class="form-label fw-bold text-muted small text-uppercase">Link Poster (URL)</label>
+                    <input asp-for="PosterUrl" class="form-control form-control-neon mb-3" id="posterInput" />
+
+                    <div class="text-center rounded-3 p-3" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
+                        <small class="d-block mb-2 text-uppercase fw-bold" style="color: #60a5fa; font-size: 0.7rem;">Xem trước Poster</small>
+                        <img id="posterPreview" src="@Model.PosterUrl" class="img-fluid rounded shadow-sm" style="max-height: 220px; object-fit: cover;" alt="Poster Preview" />
+                    </div>
+                </div>
+
+                <div class="mb-3 ms-md-3">
+                    <label asp-for="TrailerUrl" class="form-label fw-bold text-muted small text-uppercase">Link Trailer (YouTube)</label>
+                    <input asp-for="TrailerUrl" class="form-control form-control-neon mb-3" id="trailerInput" />
+
+                    <div class="text-center rounded-3 p-3" style="background: rgba(0,0,0,0.3); border: 1px dashed rgba(255,255,255,0.1);">
+                        <small class="d-block mb-2 text-uppercase fw-bold" style="color: #ef4444; font-size: 0.7rem;">Xem trước Trailer</small>
+                        <div class="ratio ratio-16x9 rounded overflow-hidden shadow-sm" id="trailerPreviewContainer">
+                            <iframe id="trailerPreviewFrame" src="" title="YouTube video" allowfullscreen></iframe>
+                        </div>
+                        <div id="noTrailerPlaceholder" class="text-muted mt-3 py-2" style="display: none;">
+                            <i class="bi bi-x-circle-fill text-danger fs-4 d-block mb-1"></i>
+                            <span class="small">Link YouTube không hợp lệ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-top text-end" style="border-color: rgba(255,255,255,0.05) !important;">
+            <button type="submit" class="btn btn-save-neon px-5 py-2 fw-bold rounded-pill text-uppercase">
+                <i class="bi bi-save2-fill me-2"></i> LƯU THAY ĐỔI
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* CSS cho form kính mờ */
+    .form-control-neon {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+    }
+
+        .form-control-neon:focus {
+            border-color: #00ff87 !important;
+            box-shadow: 0 0 0 3px rgba(0, 255, 135, 0.2) !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+
+    .style-orange-text {
+        color: #f97316 !important;
+    }
+
+    select.form-control-neon option {
+        background-color: #111827;
+        color: #ffffff;
+    }
+
+    /* Nút Save Neon */
+    .btn-save-neon {
+        background-color: #00ff87;
+        color: #022c22;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-save-neon:hover {
+            background-color: #00e676;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 255, 135, 0.4);
+        }
+</style>
+
+<script>
+    // Bọc trong function để tránh xung đột biến toàn cục
+    (function() {
+        var posterInput = document.getElementById('posterInput');
+        var posterPreview = document.getElementById('posterPreview');
+        var trailerInput = document.getElementById('trailerInput');
+
+        posterInput.addEventListener('input', function() {
+            posterPreview.src = this.value ? this.value : "https://via.placeholder.com/180x250?text=No+Image";
+        });
+
+        function getYouTubeId(url) {
+            var videoId = "";
+            if (url.includes('=')) { videoId = url.split('=')[1]; }
+            else if (url.includes('be/')) { videoId = url.split('be/')[1]; }
+            if (videoId.includes('&')) { videoId = videoId.split('&')[0]; }
+            return videoId;
+        }
+
+        function updateTrailerPreview(url) {
+            var frame = document.getElementById('trailerPreviewFrame');
+            var container = document.getElementById('trailerPreviewContainer');
+            var placeholder = document.getElementById('noTrailerPlaceholder');
+
+            if (url) {
+                var videoId = getYouTubeId(url);
+                if (videoId) {
+                    frame.src = "https://www.youtube.com/embed/" + videoId;
+                    container.style.display = 'block';
+                    placeholder.style.display = 'none';
+                } else {
+                    container.style.display = 'none';
+                    placeholder.style.display = 'block';
+                }
+            } else {
+                frame.src = "";
+                container.style.display = 'none';
+                placeholder.style.display = 'none';
+            }
+        }
+
+        trailerInput.addEventListener('input', function() {
+            updateTrailerPreview(this.value);
+        });
+
+        // Tự động load preview ngay khi AJAX đổ form vào
+        updateTrailerPreview(trailerInput.value);
+
+        // 🚀 XỬ LÝ SUBMIT FORM BẰNG AJAX ĐỂ KHÔNG CHỚP TRANG
+        $('#editMovieForm').on('submit', function(e) {
+            e.preventDefault(); // Chặn hành động load trang mặc định
+            var $form = $(this);
+            var $contentBox = $('#admin-dynamic-content');
+            var $loader = $('#admin-loader');
+
+            $contentBox.css('opacity', '0.3');
+            $loader.fadeIn(200);
+
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: $form.serialize(),
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (res) {
+                    // Nếu lưu thành công, Controller sẽ trả về trang Index
+                    $contentBox.html(res);
+                    $loader.fadeOut(200, function() {
+                        $contentBox.css('opacity', '1');
+                    });
+                },
+                error: function () {
+                    alert('Đã xảy ra lỗi khi lưu!');
+                    $loader.fadeOut(200);
+                    $contentBox.css('opacity', '1');
+                }
+            });
+        });
+    })();
+</script>

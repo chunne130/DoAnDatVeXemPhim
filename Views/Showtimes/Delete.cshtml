@@ -1,0 +1,87 @@
+﻿@model DoAnDatVeXemPhim.Models.Showtime
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg slide-in-bottom" style="background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px;">
+
+                <div class="card-body p-5 text-center">
+                    <div class="text-danger mb-4" style="text-shadow: 0 0 20px rgba(239,68,68,0.4);">
+                        <i class="bi bi-trash3-fill display-1"></i>
+                    </div>
+
+                    <h3 class="fw-bold text-white mb-3 text-uppercase">HỦY SUẤT CHIẾU NÀY?</h3>
+                    <p style="color: #9ca3af; font-size: 0.95rem;" class="mb-4 px-3">
+                        Hành động này không thể hoàn tác. Các dữ liệu liên quan đến doanh thu của suất chiếu phim
+                        <strong style="color: #ef4444;">@Model.Movie?.Title</strong> có thể bị ảnh hưởng.
+                    </p>
+
+                    <div class="text-start p-4 rounded-4 mb-4 shadow-sm" style="background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.1);">
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+                            <span class="small fw-bold" style="color: #60a5fa; letter-spacing: 1px;">THÔNG TIN XÁC THỰC</span>
+                            <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">ID: #@Model.Id</span>
+                        </div>
+                        <p class="mb-2 text-white"><i class="bi bi-film me-2" style="color: #00ff87;"></i> Phim: <span class="fw-bold">@Model.Movie?.Title</span></p>
+                        <p class="mb-2 text-white"><i class="bi bi-clock me-2" style="color: #fbbf24;"></i> Thời gian: @Model.StartTime.ToString("HH:mm dd/MM")</p>
+                        <p class="mb-0 text-white"><i class="bi bi-geo-alt me-2" style="color: #a855f7;"></i> Phòng: @Model.CinemaHall?.Name (@Model.CinemaHall?.Cinema?.Name)</p>
+                    </div>
+
+                    <form id="deleteShowtimeForm" asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mt-4">
+                            <a asp-action="Index" class="btn btn-outline-light btn-lg px-5 rounded-pill fw-bold shadow-sm ajax-link" style="border-color: rgba(255,255,255,0.2);">
+                                HỦY BỎ
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg px-5 rounded-pill fw-bold shadow" style="background: #ef4444; border: none;">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>XÁC NHẬN XÓA
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🚀 AJAX CHO FORM DELETE SHOWTIME
+    $('#deleteShowtimeForm').on('submit', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $contentBox = $('#admin-dynamic-content');
+        var $loader = $('#admin-loader');
+
+        $contentBox.css('opacity', '0.3');
+        $loader.fadeIn(200);
+
+        $.ajax({
+            url: $form.attr('action'),
+            type: $form.attr('method'),
+            data: $form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (res) {
+                // Xóa xong múc lại trang Index
+                $.ajax({
+                    url: '/Showtimes/Index',
+                    type: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function (html) {
+                        $contentBox.html(html);
+                        $loader.fadeOut(200, function() {
+                            $contentBox.css('opacity', '1');
+                        });
+                    }
+                });
+            },
+            error: function () {
+                alert('Lỗi: Không thể xóa suất chiếu này!');
+                $loader.fadeOut(200);
+                $contentBox.css('opacity', '1');
+            }
+        });
+    });
+</script>

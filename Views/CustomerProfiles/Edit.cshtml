@@ -1,0 +1,161 @@
+﻿@model DoAnDatVeXemPhim.Models.CustomerProfile
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                <i class="bi bi-person-gear me-2"></i> CẬP NHẬT TÀI KHOẢN
+            </h4>
+            <p class="text-muted small m-0 mt-1">Chỉnh sửa hồ sơ và thiết lập lại bảo mật đăng nhập</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary text-light ajax-link rounded-pill px-4 fw-bold shadow-sm" style="border-color: rgba(255,255,255,0.2);">
+            <i class="bi bi-arrow-left me-1"></i> Quay lại
+        </a>
+    </div>
+
+    <form id="editUserForm" asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="UserId" />
+
+        <div class="row g-5">
+            @* CỘT TRÁI: THÔNG TIN CÁ NHÂN *@
+            <div class="col-lg-7 border-end" style="border-color: rgba(255,255,255,0.05) !important;">
+                <h6 class="fw-bold text-uppercase mb-4" style="color: #60a5fa;"><i class="bi bi-person-lines-fill me-2"></i>THÔNG TIN CÁ NHÂN</h6>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-muted text-uppercase">Họ và Tên</label>
+                    <input asp-for="FullName" class="form-control form-control-neon" placeholder="Nhập họ tên đầy đủ..." />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Giới tính</label>
+                        <select asp-for="Gender" class="form-select form-control-neon">
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Ngày sinh</label>
+                        <input asp-for="Birthday" type="date" class="form-control form-control-neon" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Thành phố</label>
+                        <input asp-for="City" class="form-control form-control-neon" />
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Quận/Huyện</label>
+                        <input asp-for="District" class="form-control form-control-neon" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted text-uppercase">Địa chỉ chi tiết</label>
+                    <textarea asp-for="Address" class="form-control form-control-neon" rows="2" placeholder="Số nhà, tên đường..."></textarea>
+                </div>
+            </div>
+
+            @* CỘT PHẢI: BẢO MẬT TÀI KHOẢN *@
+            <div class="col-lg-5">
+                <h6 class="fw-bold text-uppercase mb-4" style="color: #fbbf24;"><i class="bi bi-shield-lock me-2"></i>BẢO MẬT ĐĂNG NHẬP</h6>
+
+                <div class="p-3 mb-4 rounded-3" style="background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.2);">
+                    <small class="fw-bold" style="color: #fbbf24;"><i class="bi bi-info-circle-fill me-1"></i> Quyền Admin:</small>
+                    <small class="d-block mt-1" style="color: #d1d5db;">Bạn có thể đổi mật khẩu trực tiếp cho người dùng mà không cần mật khẩu cũ.</small>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-muted text-uppercase">EMAIL HIỆN TẠI</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0" style="background: rgba(255,255,255,0.05); color: #9ca3af;"><i class="bi bi-envelope-at"></i></span>
+                        <input type="text" class="form-control text-muted" readonly value="@(Model.User?.Email ?? "N/A")" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);" />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-muted text-uppercase">ĐỔI EMAIL MỚI (TÙY CHỌN)</label>
+                    <input name="NewEmail" type="email" class="form-control form-control-neon" placeholder="Nhập email mới nếu cần đổi..." />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-muted text-uppercase">THIẾT LẬP MẬT KHẨU MỚI</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;"><i class="bi bi-key-fill"></i></span>
+                        <input name="NewPassword" type="text" class="form-control form-control-neon" style="border-left: none !important;" placeholder="Nhập pass mới tại đây..." />
+                    </div>
+                    <small class="text-muted d-block mt-2 fst-italic"><i class="bi bi-dot"></i> Để trống nếu không muốn đổi mật khẩu.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-top text-end" style="border-color: rgba(255,255,255,0.05) !important;">
+            <button type="submit" class="btn btn-save-neon px-5 py-2 fw-bold rounded-pill text-uppercase shadow-sm">
+                <i class="bi bi-check-circle-fill me-2"></i> LƯU THAY ĐỔI
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-control-neon {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+        padding: 12px 15px;
+        border-radius: 8px;
+    }
+
+        .form-control-neon:focus {
+            border-color: #00ff87 !important;
+            box-shadow: 0 0 0 3px rgba(0, 255, 135, 0.2) !important;
+            background-color: rgba(0, 0, 0, 0.6) !important;
+        }
+
+    select.form-control-neon option {
+        background-color: #111827;
+        color: #ffffff;
+    }
+
+    .btn-save-neon {
+        background-color: #00ff87;
+        color: #022c22;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+        .btn-save-neon:hover {
+            background-color: #00e676;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 255, 135, 0.4);
+        }
+</style>
+
+<script>
+    $('#editUserForm').on('submit', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $contentBox = $('#admin-dynamic-content');
+        var $loader = $('#admin-loader');
+        $contentBox.css('opacity', '0.3'); $loader.fadeIn(200);
+        $.ajax({
+            url: $form.attr('action'), type: $form.attr('method'), data: $form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (res) {
+                var $dummy = $('<div>').append($.parseHTML(res));
+                var $inner = $dummy.find('#admin-dynamic-content');
+                if ($inner.length > 0) { $contentBox.html($inner.html()); } else { $contentBox.html(res); }
+                $loader.fadeOut(200, function() { $contentBox.css('opacity', '1'); });
+            },
+            error: function () { alert('Lỗi cập nhật!'); $loader.fadeOut(); $contentBox.css('opacity', '1'); }
+        });
+    });
+</script>

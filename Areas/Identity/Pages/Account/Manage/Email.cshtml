@@ -1,0 +1,103 @@
+﻿@page
+@model EmailModel
+@{
+    ViewData["Title"] = "QUẢN LÝ EMAIL";
+}
+
+<div class="card border-0 shadow-sm rounded-0 bg-white">
+    @* Header màu Đen chữ Vàng *@
+    <div class="card-header bg-dark py-3 rounded-0 border-bottom border-warning">
+        <h6 class="mb-0 fw-bold text-uppercase" style="color: #ffc107; letter-spacing: 1px;">
+            <i class="bi bi-envelope-paper-fill me-2"></i> THAY ĐỔI ĐỊA CHỈ EMAIL
+        </h6>
+    </div>
+
+    <div class="card-body p-4 p-md-5">
+        <partial name="_StatusMessage" for="StatusMessage" />
+
+        <form id="email-form" method="post">
+            <div asp-validation-summary="All" class="text-danger small mb-3" role="alert"></div>
+
+            <div class="row justify-content-center">
+                <div class="col-md-9">
+
+                    @* Email hiện tại *@
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-muted text-uppercase">Email đang sử dụng</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-secondary rounded-0"><i class="bi bi-envelope"></i></span>
+                            <input asp-for="Email" class="form-control rounded-0 bg-light border-secondary" disabled />
+                            @if (Model.IsEmailConfirmed)
+                            {
+                                <span class="input-group-text bg-light border-secondary text-success fw-bold" title="Đã xác thực">
+                                    <i class="bi bi-patch-check-fill"></i>
+                                </span>
+                            }
+                        </div>
+                        @if (!Model.IsEmailConfirmed)
+                        {
+                            <button id="email-verification" type="submit" asp-page-handler="SendVerificationEmail" class="btn btn-link p-0 small text-warning text-decoration-none mt-1">
+                                <i class="bi bi-exclamation-circle"></i> Gửi lại email xác thực
+                            </button>
+                        }
+                    </div>
+
+                    @* Email mới *@
+                    <div class="mb-4">
+                        <label asp-for="Input.NewEmail" class="form-label small fw-bold text-dark text-uppercase">Địa chỉ Email mới *</label>
+                        <input asp-for="Input.NewEmail" class="form-control rounded-0 border-dark" autocomplete="email" aria-required="true" placeholder="Nhập email mới tại đây..." />
+                        <span asp-validation-for="Input.NewEmail" class="text-danger small"></span>
+                    </div>
+
+                    <div class="text-center mt-5">
+                        @* Nút Vàng chữ Đen chuẩn Hub *@
+                        <button id="change-email-button" type="submit" asp-page-handler="ChangeEmail" class="btn btn-hub-gold rounded-0 px-5 fw-bold shadow text-uppercase py-2 shadow-sm">
+                            Xác nhận thay đổi
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    /* Style đặc trưng cho Cinema Hub */
+    .btn-hub-gold {
+        background-color: #ffc107; /* Màu Vàng Gold */
+        color: #000;
+        border: 2px solid #ffc107;
+        transition: all 0.3s ease;
+        letter-spacing: 1px;
+    }
+
+        .btn-hub-gold:hover {
+            background-color: #000;
+            color: #ffc107;
+            border-color: #000;
+            transform: translateY(-2px);
+        }
+
+    .form-control {
+        font-size: 0.95rem;
+        padding: 0.7rem;
+    }
+
+        .form-control:focus {
+            border-color: #ffc107 !important;
+            box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.15) !important;
+        }
+
+    .card {
+        border-top: 4px solid #ffc107 !important; /* Điểm nhấn đường kẻ vàng */
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+</style>

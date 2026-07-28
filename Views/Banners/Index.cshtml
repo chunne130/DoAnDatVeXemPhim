@@ -1,0 +1,123 @@
+﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Banner>
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div class="page-header-left d-flex align-items-center gap-3">
+            <div class="accent-bar" style="width: 4px; height: 36px; background: #00ff87; border-radius: 2px;"></div>
+            <div>
+                <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                    QUẢN LÝ BANNER
+                </h4>
+                <p class="text-muted small m-0 mt-1">Cấu hình tự động hiển thị quảng cáo</p>
+            </div>
+        </div>
+
+        <div class="page-header-right">
+            <a href="/Banners/Create" class="btn btn-action-pill ajax-link">
+                <i class="bi bi-plus-lg me-1"></i> THÊM BANNER MỚI
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle custom-admin-table" style="background: transparent;">
+            <thead>
+                <tr style="border-bottom: 2px solid rgba(255,255,255,0.1);">
+                    <th>Hình ảnh</th>
+                    <th>Tiêu đề</th>
+                    <th>Lịch chạy</th>
+                    <th>Hiển thị</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model) {
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="width: 150px;">
+                            <img src="@item.ImageUrl" style="width: 120px; border-radius: 8px; object-fit: cover;" />
+                        </td>
+                        <td>
+                            <div class="fw-bold text-white">@item.Title</div>
+                            @if(!string.IsNullOrEmpty(item.TargetUrl)) {
+                                <div class="small text-muted text-truncate" style="max-width: 200px;">
+                                    🔗 @item.TargetUrl
+                                </div>
+                            }
+                        </td>
+                        <td>
+                            <div class="small">Từ: <span class="text-info">@item.StartDate.ToString("dd/MM/yyyy HH:mm")</span></div>
+                            <div class="small">Đến: <span class="text-warning">@item.EndDate.ToString("dd/MM/yyyy HH:mm")</span></div>
+                            
+                            @{
+                                bool isRunning = item.IsActive && item.StartDate <= DateTime.Now && item.EndDate >= DateTime.Now;
+                            }
+                            @if(isRunning) {
+                                <span class="badge bg-success mt-1" style="font-size: 0.65rem;">ĐANG CHẠY</span>
+                            } else if (item.EndDate < DateTime.Now) {
+                                <span class="badge bg-secondary mt-1" style="font-size: 0.65rem;">ĐÃ KẾT THÚC</span>
+                            } else if (item.StartDate > DateTime.Now) {
+                                <span class="badge bg-info text-dark mt-1" style="font-size: 0.65rem;">SẮP CHẠY</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsActive) {
+                                <span class="badge rounded-pill" style="background: rgba(0,255,135,0.15); color: #00ff87; border: 1px solid rgba(0,255,135,0.3);">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Bật
+                                </span>
+                            } else {
+                                <span class="badge rounded-pill" style="background: rgba(225,29,72,0.15); color: #fb7185; border: 1px solid rgba(225,29,72,0.3);">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Tắt
+                                </span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a href="/Banners/Edit/@item.Id" class="btn btn-sm btn-outline-info ajax-link rounded-circle p-2 me-1" title="Sửa" style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <button onclick="deleteBanner(@item.Id)" class="btn btn-sm btn-outline-danger rounded-circle p-2" title="Xóa" style="width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+                
+                @if(!Model.Any()) {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-images display-4 d-block mb-3" style="opacity: 0.2;"></i>
+                            Chưa có banner nào. Hãy bấm THÊM BANNER MỚI để tạo chiến dịch quảng cáo.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function deleteBanner(id) {
+        if (confirm('Bạn có chắc chắn muốn xóa banner này không?')) {
+            $.ajax({
+                url: '/Banners/Delete/' + id,
+                type: 'POST',
+                success: function (result) {
+                    if (result.success) {
+                        alert('Xóa thành công!');
+                        $('.sidebar-link.active').click(); // Reload lại trang hiện tại
+                    } else {
+                        alert(result.message || 'Lỗi khi xóa!');
+                    }
+                },
+                error: function () {
+                    alert('Lỗi kết nối đến server!');
+                }
+            });
+        }
+    }
+</script>
+

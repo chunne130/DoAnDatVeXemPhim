@@ -1,0 +1,85 @@
+﻿@model DoAnDatVeXemPhim.Models.Cinema
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+    var colorHex = "#00ff87";
+    var colorRgba = "rgba(0,255,135,0.2)";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg slide-in-bottom" style="background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(16px); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px;">
+
+                <div class="card-body p-5 text-center">
+                    <div class="text-danger mb-4" style="text-shadow: 0 0 20px rgba(239,68,68,0.4);">
+                        <i class="bi bi-exclamation-triangle-fill display-1"></i>
+                    </div>
+
+                    <h3 class="fw-bold text-white mb-3 text-uppercase">XÁC NHẬN XÓA RẠP?</h3>
+                    <p style="color: #9ca3af; font-size: 0.95rem;" class="mb-4 px-3">
+                        Hành động này không thể hoàn tác. Việc xóa chi nhánh này có thể ảnh hưởng đến các phòng chiếu và suất chiếu trực thuộc. Bạn có chắc chắn muốn xóa rạp <br />
+                        <strong class="fs-4 d-block mt-2" style="color: #ef4444; letter-spacing: 1px;">"@Model.Name"</strong>
+                    </p>
+
+                    <div class="text-start p-4 rounded-4 mb-4 shadow-sm" style="background: rgba(0,0,0,0.4); border: 1px dashed rgba(239, 68, 68, 0.3);">
+                        <p class="mb-2 small fw-bold text-uppercase" style="color: #ef4444; letter-spacing: 1px;">CHI TIẾT RẠP SẼ XÓA:</p>
+                        <p class="mb-1 text-white"><strong style="color: #9ca3af;">Tên rạp:</strong> @Model.Name</p>
+                        <p class="mb-0 text-white"><strong style="color: #9ca3af;">Địa chỉ:</strong> @Model.Address, @Model.District, @Model.City</p>
+                    </div>
+
+                    <form id="deleteCinemaForm" asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center mt-4">
+                            <a asp-action="Index" class="btn btn-outline-light btn-lg px-5 rounded-pill fw-bold shadow-sm ajax-link" style="border-color: rgba(255,255,255,0.2);">
+                                ĐỔI Ý, QUAY LẠI
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg px-5 rounded-pill fw-bold shadow" style="background: #ef4444; border: none;">
+                                <i class="bi bi-trash3-fill me-2"></i> XÓA VĨNH VIỄN
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🚀 AJAX CHO FORM DELETE CINEMA
+    $('#deleteCinemaForm').on('submit', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var $contentBox = $('#admin-dynamic-content');
+        var $loader = $('#admin-loader');
+
+        $contentBox.css('opacity', '0.3');
+        $loader.fadeIn(200);
+
+        $.ajax({
+            url: $form.attr('action'),
+            type: $form.attr('method'),
+            data: $form.serialize(),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function (res) {
+                // Xóa xong múc lại trang Index
+                $.ajax({
+                    url: '/Cinemas/Index',
+                    type: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function (html) {
+                        $contentBox.html(html);
+                        $loader.fadeOut(200, function() {
+                            $contentBox.css('opacity', '1');
+                        });
+                    }
+                });
+            },
+            error: function () {
+                alert('Lỗi: Không thể xóa cụm rạp này! Hãy kiểm tra xem rạp có phòng chiếu nào đang hoạt động không.');
+                $loader.fadeOut(200);
+                $contentBox.css('opacity', '1');
+            }
+        });
+    });
+</script>

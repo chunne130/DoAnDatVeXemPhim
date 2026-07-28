@@ -1,0 +1,158 @@
+﻿@model DoAnDatVeXemPhim.Models.Order
+@{
+    ViewData["Title"] = "Thanh toán thành công - Cinema Hub";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<div class="container d-flex justify-content-center align-items-center mb-5 pb-5 slide-in-bottom" style="min-height: 80vh;">
+    <div class="card style-dark-card border-0 rounded-4 overflow-hidden position-relative" style="max-width: 450px; width: 100%;">
+        @* Hiệu ứng viền sáng chạy ngang góc trên *@
+        <div class="position-absolute top-0 start-0 w-100" style="height: 4px; background: linear-gradient(90deg, transparent, #00ff87, transparent);"></div>
+
+        @* Header Dấu Tích Xanh Neon *@
+        <div class="p-4 pt-5 text-center">
+            <div class="success-icon-wrapper d-inline-block mb-3">
+                <i class="bi bi-check-circle-fill animate-check" style="font-size: 5.5rem; color: #00ff87; filter: drop-shadow(0 0 20px rgba(0,255,135,0.5));"></i>
+            </div>
+            <h2 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 1px; text-shadow: 0 0 10px rgba(0,255,135,0.3);">Thành Công!</h2>
+        </div>
+
+        <div class="card-body p-4 pt-0 text-center">
+            <p class="text-light opacity-75 mb-4 small" style="line-height: 1.6;">Hệ thống đã ghi nhận thanh toán của bạn. <br> Chuẩn bị lên đồ đi xem phim thôi!</p>
+
+            @* Cuống vé điện tử (Receipt Box) *@
+            <div class="receipt-box rounded-3 p-3 mb-4 text-start mx-auto" style="max-width: 95%;">
+                <div class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2" style="border-color: rgba(255,255,255,0.1) !important;">
+                    <span class="text-muted small text-uppercase fw-bold">Mã đơn hàng:</span>
+                    <span class="fw-bold fs-5" style="color: #fbbf24; letter-spacing: 1px; text-shadow: 0 0 10px rgba(251,191,36,0.3);">#@Model?.Id</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-2 pt-1">
+                    <span class="text-muted small text-uppercase fw-bold">Trạng thái:</span>
+                    <span class="badge bg-cyber-success px-3 py-1 rounded-pill"><i class="bi bi-shield-check me-1"></i>Đã xác nhận</span>
+                </div>
+                
+                @* 🚀 ĐÃ SỬA: Hiển thị tên Phương Thức Thanh Toán ĐỘNG 🚀 *@
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top" style="border-color: rgba(255,255,255,0.05) !important;">
+                    <span class="text-muted small text-uppercase fw-bold">Phương thức:</span>
+                    <span class="text-white fw-bold small">
+                        @if (Model?.PaymentMethod == "Wallet")
+                        {
+                            <i class="bi bi-wallet2-fill me-1" style="color: #00ff87;"></i> @:Ví Cinema Hub
+                        }
+                        else if (Model?.PaymentMethod == "PayOS")
+                        {
+                            <i class="bi bi-qr-code-scan me-1" style="color: #00ff87;"></i> @:Thanh toán PayOS
+                        }
+                        else
+                        {
+                            <i class="bi bi-bank me-1" style="color: #00ff87;"></i> @:Chuyển khoản VietQR
+                        }
+                    </span>
+                </div>
+            </div>
+
+            @* Thông báo điều hướng *@
+            <div class="alert alert-cyber-info py-2 px-3 small d-inline-block mb-4 text-start">
+                <i class="bi bi-envelope-paper-heart-fill me-1"></i> Vé điện tử đã được gửi vào mục <strong class="text-white">"Vé của tôi"</strong>.
+            </div>
+
+            @* Nút Action *@
+            <div class="d-grid gap-3 mt-1 px-3">
+                <a asp-action="MyTickets" class="btn btn-cyber-success btn-lg rounded-pill shadow-sm fw-bold text-uppercase fs-6 py-3">
+                    <i class="bi bi-ticket-perforated-fill me-2"></i>Xem vé của tôi
+                </a>
+                <a href="/" class="text-decoration-none small back-home-link">
+                    <i class="bi bi-house-door-fill me-1"></i> Quay về trang chủ
+                </a>
+            </div>
+        </div>
+
+        <div class="card-footer bg-transparent border-0 pb-4 text-center">
+            <small class="text-muted">Cảm ơn bạn đã chọn <strong style="color: #00ff87;">Cinema Hub</strong> ❤️</small>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #010a04;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* Giao diện Dark Card / Glassmorphism */
+    .style-dark-card {
+        background-color: rgba(17, 24, 39, 0.8) !important;
+        border: 1px solid rgba(0, 255, 135, 0.15) !important;
+        backdrop-filter: blur(12px);
+    }
+
+    /* Cuống vé ảo (Receipt Box) */
+    .receipt-box {
+        background: rgba(0,0,0,0.4);
+        border: 1px dashed rgba(255,255,255,0.15);
+    }
+
+    /* Badge & Alert Cyberpunk */
+    .bg-cyber-success {
+        background-color: rgba(0, 255, 135, 0.15) !important;
+        color: #00ff87 !important;
+        border: 1px solid rgba(0, 255, 135, 0.3);
+    }
+
+    .alert-cyber-info {
+        background: rgba(13, 202, 240, 0.1);
+        border: 1px solid rgba(13, 202, 240, 0.2);
+        color: #60a5fa;
+        border-radius: 8px;
+    }
+
+    /* Nút Xem Vé dạ quang */
+    .btn-cyber-success {
+        background: #00ff87 !important;
+        color: #022c22 !important;
+        border: none;
+        transition: all 0.3s ease;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-cyber-success:hover {
+            background: #00e676 !important;
+            box-shadow: 0 5px 25px rgba(0, 255, 135, 0.5);
+            transform: translateY(-2px);
+        }
+
+    /* Link text */
+    .back-home-link {
+        color: #9ca3af;
+        transition: color 0.2s;
+    }
+
+        .back-home-link:hover {
+            color: #fbbf24;
+        }
+
+    /* --- Animations --- */
+    .slide-in-bottom {
+        animation: slideIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+    @@keyframes slideIn {
+        0% { transform: translateY(40px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .animate-check {
+        display: inline-block;
+        animation: scaleInCheck 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation-delay: 0.2s; 
+        opacity: 0;
+        transform: scale(0);
+    }
+    @@keyframes scaleInCheck {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.15); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+</style>
