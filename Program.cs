@@ -88,6 +88,13 @@ builder.Services.ConfigureApplicationCookie(options => {
 var app = builder.Build();
 // --------------------------------
 
+// ÉP BUỘC DÙNG HTTPS KHI CHẠY TRÊN RENDER (Sửa lỗi Google Login redirect_uri_mismatch)
+app.Use((context, next) =>
+{
+    context.Request.Scheme = "https";
+    return next(context);
+});
+
 // 7. CẤU HÌNH HTTP REQUEST PIPELINE
 if (app.Environment.IsDevelopment())
 {
