@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
@@ -165,6 +165,12 @@ namespace DoAnDatVeXemPhim.Areas.Identity.Pages.Account
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
+                        
+                        // TỰ ĐỘNG XÁC NHẬN EMAIL VÌ ĐĂNG NHẬP GOOGLE LÀ ĐÃ CHUẨN RỒI
+                        user.EmailConfirmed = true;
+                        await _userManager.UpdateAsync(user);
+
+                        /* TẠM THỜI TẮT GỬI MAIL (RENDER BLOCK PORT 587 GÂY TREO WEB)
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
                         var callbackUrl = Url.Page(
@@ -181,6 +187,7 @@ namespace DoAnDatVeXemPhim.Areas.Identity.Pages.Account
                         {
                             return RedirectToPage("./RegisterConfirmation", new { Email = Input.Email });
                         }
+                        */
 
                         await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
                         return LocalRedirect(returnUrl);
