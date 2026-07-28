@@ -8,6 +8,16 @@ using System.Text.Json.Serialization;
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 var builder = WebApplication.CreateBuilder(args);
 
+// VÔ HIỆU HÓA TÍNH NĂNG THEO DÕI SỰ THAY ĐỔI FILE (RELOAD ON CHANGE)
+// Giúp tránh lỗi tràn giới hạn inotify (System.IO.IOException) trên server Linux/Render Free
+builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+{
+    foreach (var source in config.Sources.OfType<Microsoft.Extensions.Configuration.Json.JsonConfigurationSource>())
+    {
+        source.ReloadOnChange = false;
+    }
+});
+
 // 1. CẤU HÌNH DATABASE
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
