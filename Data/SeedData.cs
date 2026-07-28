@@ -35,7 +35,8 @@ namespace DoAnDatVeXemPhim.Data
                         Duration = 155,
                         ReleaseDate = DateTime.Now,
                         PosterUrl = "https://image.tmdb.org/t/p/w500/d5NXSklZfs7Z1oAWa7OqyHNCpUe.jpg",
-                        TrailerUrl = "https://www.youtube.com/embed/n9xhJrPXop4"
+                        TrailerUrl = "https://www.youtube.com/embed/n9xhJrPXop4",
+                        AgeRestriction = "13+"
                     },
                     new Movie
                     {
@@ -44,7 +45,8 @@ namespace DoAnDatVeXemPhim.Data
                         Duration = 94,
                         ReleaseDate = DateTime.Now,
                         PosterUrl = "https://image.tmdb.org/t/p/w500/kDp1vUBiRSToMvsnqbebyqDbn8U.jpg",
-                        TrailerUrl = "https://www.youtube.com/embed/RfH6N_H5G4U"
+                        TrailerUrl = "https://www.youtube.com/embed/RfH6N_H5G4U",
+                        AgeRestriction = "P"
                     }
                 );
                 context.SaveChanges();
