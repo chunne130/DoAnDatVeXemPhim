@@ -1,4 +1,4 @@
-﻿@model DoAnDatVeXemPhim.Models.Movie
+@model DoAnDatVeXemPhim.Models.Movie
 
 @{
     Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
@@ -41,7 +41,7 @@
                             </div>
                             <div class="col-6">
                                 <small class="d-block text-uppercase" style="font-size: 0.65rem; color: #6b7280;">Thể loại</small>
-                                <span class="fw-bold text-white">@Model.Genre?.Name</span>
+                                <span class="fw-bold text-white">@(Model.Genres != null ? string.Join(", ", Model.Genres.Select(g => g.Name)) : "")</span>
                             </div>
                         </div>
                     </div>

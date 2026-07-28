@@ -303,9 +303,9 @@
         <div>
             <div class="movie-info-title">@movie.Title</div>
             <div class="movie-meta">
-                @if (movie.Genre != null)
+                @if (movie.Genres != null && movie.Genres.Any())
                 {
-                    <span class="meta-badge">@movie.Genre.Name</span>
+                    <span class="meta-badge">@string.Join(", ", movie.Genres.Select(g => g.Name))</span>
                 }
                 <div class="meta-divider"></div>
                 <span class="meta-text"><i class="bi bi-clock"></i> @movie.Duration phút</span>

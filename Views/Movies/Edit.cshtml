@@ -1,4 +1,4 @@
-﻿@model DoAnDatVeXemPhim.Models.Movie
+@model DoAnDatVeXemPhim.Models.Movie
 
 @{
     Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
@@ -34,9 +34,9 @@
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="GenreId" class="form-label fw-bold text-muted small text-uppercase">Thể Loại</label>
-                        <select asp-for="GenreId" class="form-select form-control-neon text-white" asp-items="ViewBag.GenreId" style="background-color: rgba(0, 0, 0, 0.4);"></select>
-                        <span asp-validation-for="GenreId" class="text-danger small"></span>
+                        <label class="form-label fw-bold text-muted small text-uppercase">Thể Loại</label>
+                        <select name="selectedGenres" class="form-select form-control-neon text-white" asp-items="ViewBag.Genres" style="background-color: rgba(0, 0, 0, 0.4); height: 100px;" multiple="multiple"></select>
+                        <small class="text-muted">Giữ Ctrl để chọn nhiều</small>
                     </div>
 
                     @* Thêm thuộc tính asp-for vào thẻ select để gán dữ liệu động *@

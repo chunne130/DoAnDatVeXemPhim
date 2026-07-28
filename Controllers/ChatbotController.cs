@@ -1,4 +1,4 @@
-﻿using DoAnDatVeXemPhim.Data;
+using DoAnDatVeXemPhim.Data;
 using DoAnDatVeXemPhim.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +38,7 @@ namespace DoAnDatVeXemPhim.Controllers
             {
                 //  TRUY VẤN DỮ LIỆU PHIM 
                 var dbMovies = await _context.Movies
-                                             .Include(m => m.Genre)
+                                             .Include(m => m.Genres)
                                              .Include(m => m.Showtimes)
                                              .AsNoTracking()
                                              .ToListAsync();
@@ -65,7 +65,7 @@ namespace DoAnDatVeXemPhim.Controllers
                         {
                             countValidMovies++;
                             string cleanTitle = m.Title.Replace("\"", "'").Replace("\n", " ").Replace("\r", " ");
-                            string cleanGenre = (m.Genre?.Name ?? "Phim").Replace("\"", "'");
+                            string cleanGenre = (m.Genres != null && m.Genres.Any() ? string.Join(", ", m.Genres.Select(g => g.Name)) : "Phim").Replace("\"", "'");
 
                             systemContext.Append($"- Phim: {cleanTitle} [{cleanGenre}]. Suất: ");
                             foreach (var st in futureShowtimes)

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Movie>
+@model IEnumerable<DoAnDatVeXemPhim.Models.Movie>
 
 @{
     Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
@@ -77,7 +77,7 @@
                             </td>
                             <td>
                                 <span class="badge" style="background: rgba(255,255,255,0.05); color: #d1d5db; border: 1px solid rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 6px; font-weight: 500;">
-                                    @(item.Genre?.Name ?? "Chưa phân loại")
+                                    @(item.Genres != null && item.Genres.Any() ? string.Join(", ", item.Genres.Select(g => g.Name)) : "Chưa phân loại")
                                 </span>
                             </td>
                             <td class="text-light small">

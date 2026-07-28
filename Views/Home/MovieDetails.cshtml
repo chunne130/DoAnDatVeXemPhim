@@ -55,7 +55,7 @@
                     <div class="mb-4">
                         <h1 class="display-5 fw-bold text-white mb-3">@Model.Title</h1>
                         <div class="d-flex align-items-center gap-3 flex-wrap">
-                            <span class="badge bg-dark-success text-success-custom px-3 py-2 rounded-pill fw-bold border border-success-custom">@Model.Genre?.Name</span>
+                            <span class="badge bg-dark-success text-success-custom px-3 py-2 rounded-pill fw-bold border border-success-custom">@(Model.Genres != null ? string.Join(", ", Model.Genres.Select(g => g.Name)) : "")</span>
                             <span class="text-light-50 fw-medium"><i class="bi bi-clock-fill text-success-custom me-1"></i> @Model.Duration phút</span>
                             <span class="text-light-50 fw-medium"><i class="bi bi-calendar-event-fill text-success-custom me-1"></i> @(Model.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Đang cập nhật")</span>
                             
@@ -182,7 +182,7 @@
                                     title="@item.Title"
                                     poster-url="@item.PosterUrl"
                                     duration="@item.Duration"
-                                    genre-name="@(item.Genre?.Name ?? "")"
+                                    genre-name="@(item.Genres != null ? string.Join(", ", item.Genres.Select(g => g.Name)) : "")"
                                     is-hot="true"
                                     view-count="@item.ViewCount"
                                     average-rating="@(item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0)">

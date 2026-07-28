@@ -35,12 +35,9 @@ namespace DoAnDatVeXemPhim.Models
         [Display(Name = "Thể loại")]
         public string? GenreName { get; set; }
 
-        // Liên kết với bảng Genre (nếu có bảng riêng)
-        [Display(Name = "Mã thể loại")]
-        public int GenreId { get; set; }
-
-        [ForeignKey("GenreId")]
-        public virtual Genre? Genre { get; set; }
+        // Nhiều Thể loại (M-N Relationship)
+        [Display(Name = "Danh sách Thể loại")]
+        public virtual ICollection<Genre> Genres { get; set; } = new List<Genre>();
 
         //thêm trường AgeRestriction để lưu trữ độ tuổi giới hạn của phim
         [Required(ErrorMessage = "Vui lòng chọn giới hạn độ tuổi cho phim!")]

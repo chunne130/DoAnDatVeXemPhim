@@ -29,7 +29,7 @@ namespace DoAnDatVeXemPhim.Controllers
         // GET: Movies
         public async Task<IActionResult> Index(string searchString)
         {
-            var query = _context.Movies.Include(m => m.Genre).AsQueryable();
+            var query = _context.Movies.Include(m => m.Genres).AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -37,7 +37,7 @@ namespace DoAnDatVeXemPhim.Controllers
                 query = query.Where(m => 
                     m.Title.ToLower().Contains(s) ||
                     (m.Description != null && m.Description.ToLower().Contains(s)) ||
-                    (m.Genre != null && m.Genre.Name.ToLower().Contains(s))
+                    (m.Genres.Any(g => g.Name.ToLower().Contains(s)))
                 );
             }
 
@@ -57,7 +57,7 @@ namespace DoAnDatVeXemPhim.Controllers
             if (id == null) return NotFound();
 
             var movie = await _context.Movies
-                .Include(m => m.Genre)
+                .Include(m => m.Genres)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null) return NotFound();
@@ -69,7 +69,7 @@ namespace DoAnDatVeXemPhim.Controllers
         // GET: Movies/Create
         public IActionResult Create()
         {
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name");
+            ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name");
 
             if (IsAjaxRequest()) return PartialView();
             return View();
@@ -78,16 +78,22 @@ namespace DoAnDatVeXemPhim.Controllers
         // POST: Movies/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // 🚀 ĐÃ SỬA: Thêm AgeRestriction vào cuối danh sách Bind
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,GenreId,AgeRestriction")] Movie movie)
+        public async Task<IActionResult> Create([Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,AgeRestriction")] Movie movie, int[] selectedGenres)
         {
             if (ModelState.IsValid)
             {
+                if (selectedGenres != null)
+                {
+                    var genres = await _context.Genres.Where(g => selectedGenres.Contains(g.Id)).ToListAsync();
+                    movie.Genres = genres;
+                    movie.GenreName = string.Join(", ", genres.Select(g => g.Name));
+                }
+
                 _context.Add(movie);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", movie.GenreId);
+            ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name", selectedGenres);
 
             if (IsAjaxRequest()) return PartialView(movie);
             return View(movie);
@@ -98,10 +104,10 @@ namespace DoAnDatVeXemPhim.Controllers
         {
             if (id == null) return NotFound();
 
-            var movie = await _context.Movies.FindAsync(id);
+            var movie = await _context.Movies.Include(m => m.Genres).FirstOrDefaultAsync(m => m.Id == id);
             if (movie == null) return NotFound();
 
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", movie.GenreId);
+            ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name", movie.Genres.Select(g => g.Id));
 
             if (IsAjaxRequest()) return PartialView(movie);
             return View(movie);
@@ -110,8 +116,7 @@ namespace DoAnDatVeXemPhim.Controllers
         // POST: Movies/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        // 🚀 ĐÃ SỬA: Thêm AgeRestriction vào cuối danh sách Bind
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,GenreId,AgeRestriction")] Movie movie)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,AgeRestriction")] Movie movie, int[] selectedGenres)
         {
             if (id != movie.Id) return NotFound();
 
@@ -119,7 +124,25 @@ namespace DoAnDatVeXemPhim.Controllers
             {
                 try
                 {
-                    _context.Update(movie);
+                    var movieToUpdate = await _context.Movies.Include(m => m.Genres).FirstOrDefaultAsync(m => m.Id == id);
+                    
+                    movieToUpdate.Title = movie.Title;
+                    movieToUpdate.Description = movie.Description;
+                    movieToUpdate.PosterUrl = movie.PosterUrl;
+                    movieToUpdate.Duration = movie.Duration;
+                    movieToUpdate.ReleaseDate = movie.ReleaseDate;
+                    movieToUpdate.TrailerUrl = movie.TrailerUrl;
+                    movieToUpdate.AgeRestriction = movie.AgeRestriction;
+
+                    movieToUpdate.Genres.Clear();
+                    if (selectedGenres != null)
+                    {
+                        var genres = await _context.Genres.Where(g => selectedGenres.Contains(g.Id)).ToListAsync();
+                        foreach (var g in genres) { movieToUpdate.Genres.Add(g); }
+                        movieToUpdate.GenreName = string.Join(", ", genres.Select(g => g.Name));
+                    }
+
+                    _context.Update(movieToUpdate);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -129,7 +152,7 @@ namespace DoAnDatVeXemPhim.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Name", movie.GenreId);
+            ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name", selectedGenres);
 
             if (IsAjaxRequest()) return PartialView(movie);
             return View(movie);
@@ -141,7 +164,7 @@ namespace DoAnDatVeXemPhim.Controllers
             if (id == null) return NotFound();
 
             var movie = await _context.Movies
-                .Include(m => m.Genre)
+                .Include(m => m.Genres)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null) return NotFound();

@@ -43,7 +43,7 @@ namespace DoAnDatVeXemPhim.Controllers
             ClearBookingSession();
 
             var selectDate = date ?? DateTime.Today;
-            var movie = await _context.Movies.Include(m => m.Genre).FirstOrDefaultAsync(m => m.Id == movieId);
+            var movie = await _context.Movies.Include(m => m.Genres).FirstOrDefaultAsync(m => m.Id == movieId);
             if (movie == null) return NotFound();
 
             // Tính năng Behavior Tracking 

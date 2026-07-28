@@ -76,8 +76,10 @@ public class HomeController : Controller
                 .Include(od => od.Order)
                 .Include(od => od.Showtime)
                     .ThenInclude(s => s.Movie)
+                        .ThenInclude(m => m.Genres)
                 .Where(od => od.Order.UserId == userId && od.Order.IsPaid == true)
-                .GroupBy(od => od.Showtime.Movie.GenreId)
+                .SelectMany(od => od.Showtime.Movie.Genres)
+                .GroupBy(g => g.Id)
                 .OrderByDescending(g => g.Count()) // Thể loại đặt nhiều nhất đưa lên đầu
                 .Select(g => g.Key)
                 .FirstOrDefaultAsync();
@@ -95,9 +97,9 @@ public class HomeController : Controller
 
                 // 3. Bốc ra tối đa 4 bộ phim cùng thể loại ưa thích mà họ CHƯA XEM bao giờ
                 recommendedMovies = await _context.Movies
-                    .Include(m => m.Genre)
+                    .Include(m => m.Genres)
                     .Include(m => m.MovieReviews)
-                    .Where(m => m.GenreId == favoriteGenreId && !watchedMovieIds.Contains(m.Id) && m.ReleaseDate <= now)
+                    .Where(m => m.Genres.Any(g => g.Id == favoriteGenreId) && !watchedMovieIds.Contains(m.Id) && m.ReleaseDate <= now)
                     .Take(4)
                     .AsNoTracking()
                     .ToListAsync();
@@ -107,7 +109,7 @@ public class HomeController : Controller
 
         // Lấy toàn bộ danh sách phim active lên bộ nhớ tạm để xử lý chuỗi tiếng Việt nâng cao
         var moviesList = await _context.Movies
-            .Include(m => m.Genre)
+            .Include(m => m.Genres)
             .Include(m => m.Showtimes)
             .Include(m => m.MovieReviews)
             .Where(m => m.ReleaseDate.HasValue && m.ReleaseDate.Value <= now)
@@ -140,7 +142,7 @@ public class HomeController : Controller
         // Lọc các thông số bổ trợ khác
         if (genreId.HasValue && genreId.Value > 0)
         {
-            query = query.Where(m => m.GenreId == genreId);
+            query = query.Where(m => m.Genres.Any(g => g.Id == genreId));
         }
         if (!string.IsNullOrEmpty(format))
         {
@@ -217,7 +219,7 @@ public class HomeController : Controller
         if (id == null) return NotFound();
 
         var movie = await _context.Movies
-            .Include(m => m.Genre)
+            .Include(m => m.Genres)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (movie == null) return NotFound();
@@ -228,10 +230,11 @@ public class HomeController : Controller
 
         // ── THUẬT TOÁN GỢI Ý PHIM TƯƠNG TỰ CÙNG THỂ LOẠI ──
         var now = DateTime.Now;
+        var movieGenreIds = movie.Genres.Select(g => g.Id).ToList();
         var relatedMovies = await _context.Movies
-            .Include(m => m.Genre)
+            .Include(m => m.Genres)
             .Include(m => m.MovieReviews)
-            .Where(m => m.GenreId == movie.GenreId && m.Id != movie.Id && m.ReleaseDate <= now) // Cùng thể loại, loại trừ chính nó
+            .Where(m => m.Genres.Any(g => movieGenreIds.Contains(g.Id)) && m.Id != movie.Id && m.ReleaseDate <= now) // Cùng thể loại, loại trừ chính nó
             .Take(4) // Bốc tối đa 4 phim tương tự
             .AsNoTracking()
             .ToListAsync();
@@ -273,7 +276,7 @@ public class HomeController : Controller
     {
         var now = DateTime.Now;
         var movies = await _context.Movies
-            .Include(m => m.Genre)
+            .Include(m => m.Genres)
             .Include(m => m.MovieReviews)
             .Where(m => m.ReleaseDate.HasValue && m.ReleaseDate.Value <= now)
             .ToListAsync();
@@ -295,7 +298,7 @@ public class HomeController : Controller
     {
         var now = DateTime.Now;
         var upcomingMovies = await _context.Movies
-            .Include(m => m.Genre)
+            .Include(m => m.Genres)
             .Include(m => m.MovieReviews)
             .Where(m => m.ReleaseDate.HasValue && m.ReleaseDate.Value > now)
             .OrderBy(m => m.ReleaseDate)
@@ -351,7 +354,7 @@ public class HomeController : Controller
         if (id == null) return NotFound();
 
         var movie = await _context.Movies
-            .Include(m => m.Genre)
+            .Include(m => m.Genres)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (movie == null) return NotFound();

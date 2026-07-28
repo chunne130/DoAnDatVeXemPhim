@@ -31,7 +31,7 @@ namespace DoAnDatVeXemPhim.Data
                     new Movie
                     {
                         Title = "Dune: Hành Tinh Cát",
-                        GenreId = hanhDong.Id,
+                        Genres = new List<Genre> { hanhDong },
                         Duration = 155,
                         ReleaseDate = DateTime.Now,
                         PosterUrl = "https://image.tmdb.org/t/p/w500/d5NXSklZfs7Z1oAWa7OqyHNCpUe.jpg",
@@ -41,7 +41,7 @@ namespace DoAnDatVeXemPhim.Data
                     new Movie
                     {
                         Title = "Kung Fu Panda 4",
-                        GenreId = hoatHinh.Id,
+                        Genres = new List<Genre> { hoatHinh },
                         Duration = 94,
                         ReleaseDate = DateTime.Now,
                         PosterUrl = "https://image.tmdb.org/t/p/w500/kDp1vUBiRSToMvsnqbebyqDbn8U.jpg",

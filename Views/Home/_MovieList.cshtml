@@ -10,7 +10,7 @@
                     title="@item.Title"
                     poster-url="@item.PosterUrl"
                     duration="@item.Duration"
-                    genre-name="@(item.Genre?.Name ?? "")"
+                    genre-name="@(item.Genres != null ? string.Join(", ", item.Genres.Select(g => g.Name)) : "")"
                     is-hot="true"
                     view-count="@sold"
                     average-rating="@(item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0)">
