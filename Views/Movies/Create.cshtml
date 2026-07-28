@@ -32,15 +32,74 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-12 mb-3">
                         <label class="form-label fw-bold text-muted small text-uppercase">Thể Loại</label>
-                        <select name="selectedGenres" class="form-select form-control-neon text-white" asp-items="ViewBag.Genres" style="background-color: rgba(0, 0, 0, 0.4); height: 100px;" multiple="multiple">
+                        <select name="selectedGenres" class="form-select form-control-neon text-white select2-multiple" asp-items="ViewBag.Genres" multiple="multiple">
                         </select>
-                        <small class="text-muted">Giữ Ctrl để chọn nhiều</small>
+                        <script>
+                            setTimeout(function() {
+                                $('.select2-multiple').select2({
+                                    placeholder: "-- Chọn tùy chọn --",
+                                    allowClear: true,
+                                    width: '100%'
+                                });
+                            }, 100);
+                        </script>
+                        <style>
+                            .select2-container--default .select2-selection--multiple {
+                                background-color: rgba(0, 0, 0, 0.4);
+                                border: 1px solid rgba(255,255,255,0.2);
+                                border-radius: 6px;
+                                min-height: 45px;
+                            }
+                            .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                                background-color: rgba(0, 255, 135, 0.2);
+                                border: 1px solid #00ff87;
+                                color: #00ff87;
+                                border-radius: 6px;
+                                margin-top: 8px;
+                            }
+                            .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+                                color: #00ff87;
+                                margin-right: 5px;
+                            }
+                            .select2-dropdown {
+                                background-color: #111827;
+                                border: 1px solid rgba(255,255,255,0.2);
+                            }
+                            .select2-container--default .select2-results__option--selected {
+                                background-color: rgba(0, 255, 135, 0.1);
+                            }
+                            .select2-results__option {
+                                color: #9ca3af;
+                            }
+                            .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+                                background-color: #00ff87;
+                                color: #000;
+                            }
+                            .select2-search__field {
+                                color: #fff !important;
+                            }
+                        </style>
                     </div>
-
-                    @* Thêm thuộc tính asp-for vào thẻ select để gán dữ liệu động *@
+                </div>
+                
+                <div class="row">
                     <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Đạo Diễn</label>
+                        <select name="selectedDirectors" class="form-select form-control-neon text-white select2-multiple" asp-items="ViewBag.Directors" multiple="multiple">
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Diễn Viên</label>
+                        <select name="selectedActors" class="form-select form-control-neon text-white select2-multiple" asp-items="ViewBag.Actors" multiple="multiple">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    @* Thêm thuộc tính asp-for vào thẻ select để gán dữ liệu động *@
+                    <div class="col-md-12 mb-3">
                         <label asp-for="AgeRestriction" class="form-label fw-bold text-muted small text-uppercase">Giới hạn độ tuổi</label>
                         <select asp-for="AgeRestriction" class="form-select form-control-neon text-white" style="background-color: rgba(0, 0, 0, 0.4);">
                             <option value="" class="bg-dark">-- Chọn nhãn độ tuổi --</option>

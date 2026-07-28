@@ -1,0 +1,83 @@
+@{
+    ViewData["Title"] = "Câu hỏi thường gặp (FAQ)";
+}
+
+<div class="container py-5" style="margin-top: 80px; max-width: 900px;">
+    <div class="p-4 p-md-5 rounded-5" style="background: rgba(13, 31, 16, 0.7); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; line-height: 1.8; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <h2 class="fw-bold mb-3" style="color: #00ff87; letter-spacing: 1px;"><i class="bi bi-question-circle-fill me-2"></i> @ViewData["Title"]</h2>
+        <hr style="border-color: rgba(0, 255, 135, 0.2);" />
+        
+        <div class="accordion accordion-flush mt-4" id="faqAccordion">
+            <!-- FAQ 1 -->
+            <div class="accordion-item custom-accordion-item border-bottom">
+                <h2 class="accordion-header">
+                    <button class="accordion-button custom-accordion-button collapsed fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                        1. Làm sao để mua vé trực tuyến?
+                    </button>
+                </h2>
+                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body custom-accordion-body text-white-50">
+                        Bạn chỉ cần đăng nhập tài khoản, chọn phim, chọn rạp, chọn ghế ngồi và tiến hành thanh toán qua cổng thanh toán trực tuyến. Sau đó vé điện tử sẽ được gửi về email của bạn.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 2 -->
+            <div class="accordion-item custom-accordion-item border-bottom">
+                <h2 class="accordion-header">
+                    <button class="accordion-button custom-accordion-button collapsed fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                        2. Tôi có thể đổi giờ hoặc hủy vé đã mua không?
+                    </button>
+                </h2>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body custom-accordion-body text-white-50">
+                        Có, bạn hoàn toàn có thể hủy vé! Vui lòng truy cập vào mục "Vé của tôi", chọn vé muốn hủy và làm theo hướng dẫn. Lưu ý việc hủy vé có thể cần được thực hiện trước giờ chiếu một khoảng thời gian nhất định theo quy định.
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQ 3 -->
+            <div class="accordion-item custom-accordion-item border-bottom">
+                <h2 class="accordion-header">
+                    <button class="accordion-button custom-accordion-button collapsed fw-bold shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                        3. Làm sao để nhận vé tại rạp?
+                    </button>
+                </h2>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body custom-accordion-body text-white-50">
+                        Bạn chỉ cần đưa mã QR vé điện tử (trong phần "Vé của tôi" hoặc Email) cho nhân viên soát vé quét mã là có thể vào thẳng phòng chiếu, không cần xếp hàng đổi vé giấy.
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+        
+        <style>
+            .custom-accordion-item {
+                background-color: transparent !important;
+                border-color: rgba(255,255,255,0.1) !important;
+            }
+            .custom-accordion-button {
+                background-color: transparent !important;
+                color: #fff !important;
+                box-shadow: none !important;
+            }
+            .custom-accordion-button:focus {
+                box-shadow: none !important;
+            }
+            .custom-accordion-body {
+                background-color: transparent !important;
+            }
+            .custom-accordion-button::after {
+                filter: invert(1);
+            }
+            .custom-accordion-button:not(.collapsed)::after {
+                filter: sepia(1) hue-rotate(100deg) saturate(3);
+            }
+            .custom-accordion-button:not(.collapsed) {
+                color: #00ff87 !important;
+                background-color: rgba(0, 255, 135, 0.05) !important;
+            }
+        </style>
+    </div>
+</div>

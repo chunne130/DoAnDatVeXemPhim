@@ -280,7 +280,13 @@
 
     /* Responsive cho màn hình laptop nhỏ và điện thoại */
     @@media (max-width: 992px) {
-        body { padding: 20px; }
+        body { 
+            padding: 20px; 
+            padding-bottom: max(40px, env(safe-area-inset-bottom));
+            display: flex;
+            align-items: flex-start;
+            min-height: 100dvh;
+        }
         .left-banner { display: none; }
         .right-form-area {
             width: 100%;
@@ -300,6 +306,8 @@
             border-top: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255,255,255,0.02);
             margin: auto;
+            margin-top: 20px; /* Thêm margin-top để khi quá dài vẫn có khoảng cách với mép trên */
+            margin-bottom: 40px; /* Thêm margin-bottom để đảm bảo không bị dính đáy */
             overflow: hidden;
         }
     }

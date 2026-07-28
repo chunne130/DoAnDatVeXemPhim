@@ -39,6 +39,12 @@ namespace DoAnDatVeXemPhim.Models
         [Display(Name = "Danh sách Thể loại")]
         public virtual ICollection<Genre> Genres { get; set; } = new List<Genre>();
 
+        [Display(Name = "Đạo diễn")]
+        public virtual ICollection<Director> Directors { get; set; } = new List<Director>();
+
+        [Display(Name = "Diễn viên")]
+        public virtual ICollection<Actor> Actors { get; set; } = new List<Actor>();
+
         //thêm trường AgeRestriction để lưu trữ độ tuổi giới hạn của phim
         [Required(ErrorMessage = "Vui lòng chọn giới hạn độ tuổi cho phim!")]
         [Display(Name = "Giới hạn độ tuổi")]

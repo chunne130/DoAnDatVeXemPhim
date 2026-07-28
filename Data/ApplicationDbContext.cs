@@ -11,6 +11,8 @@ namespace DoAnDatVeXemPhim.Data
             : base(options) { }
 
         public DbSet<Genre> Genres { get; set; }
+        public DbSet<Actor> Actors { get; set; }
+        public DbSet<Director> Directors { get; set; }
         public DbSet<Movie> Movies { get; set; }
         public DbSet<CinemaHall> CinemaHalls { get; set; }
         public DbSet<Seat> Seats { get; set; }

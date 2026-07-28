@@ -1,0 +1,98 @@
+@model IEnumerable<DoAnDatVeXemPhim.Models.Director>
+
+@{
+    Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="dashboard-panel-card slide-in-bottom">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div>
+            <h4 class="fw-bold m-0 text-uppercase" style="color: #00ff87; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,255,135,0.2);">
+                <i class="bi bi-megaphone me-2"></i> QUẢN LÝ ĐẠO DIỄN
+            </h4>
+            <p class="text-muted small m-0 mt-1">Danh sách đạo diễn làm phim</p>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a href="/AdminControllers/Index" class="btn btn-outline-secondary rounded-pill px-4 fw-bold ajax-link shadow-sm text-light">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+            <a asp-action="Create" class="btn-action-pill ajax-link shadow-sm">
+                <i class="bi bi-person-plus-fill me-1"></i> Thêm đạo diễn mới
+            </a>
+        </div>
+    </div>
+
+    <div class="table-responsive custom-scrollbar">
+        <table class="table table-dark table-borderless align-middle table-hover m-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: rgba(255,255,255,0.02);">
+            <thead>
+                <tr class="text-muted small uppercase border-bottom" style="border-color: rgba(255,255,255,0.1) !important; font-size: 0.75rem;">
+                    <th style="padding-bottom: 12px; width: 300px;" class="ps-4 text-start">Tên Đạo Diễn</th>
+                    <th style="padding-bottom: 12px;" class="text-start">Đường Dẫn Ảnh</th>
+                    <th style="padding-bottom: 12px; width: 140px;" class="text-center pe-4">Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr class="border-bottom transition-all" style="border-color: rgba(255,255,255,0.03) !important;">
+                            <td class="ps-4 text-start py-3">
+                                <div class="d-flex align-items-center">
+                                    <div style="width: 50px; height: 50px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.1); margin-right: 15px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                                        <img src="@(string.IsNullOrEmpty(item.ProfilePictureUrl) ? "https://via.placeholder.com/100" : item.ProfilePictureUrl)" class="w-100 h-100" style="object-fit: cover;" />
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <span class="fw-bold text-white d-block text-truncate mb-1" style="font-size: 0.95rem;">@item.Name</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-start">
+                                <span class="text-muted small d-inline-block text-truncate" style="max-width: 300px;" title="@item.ProfilePictureUrl">
+                                    @(string.IsNullOrEmpty(item.ProfilePictureUrl) ? "Chưa có ảnh" : item.ProfilePictureUrl)
+                                </span>
+                            </td>
+                            <td class="pe-4 text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Sửa">
+                                        <i class="bi bi-pencil" style="color: #fbbf24;"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(239, 68, 68, 0.1); width: 32px; height: 32px; border-radius: 6px;" title="Xóa">
+                                        <i class="bi bi-trash" style="color: #ef4444;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3" class="text-center py-5">
+                            <i class="bi bi-inbox text-muted mb-3" style="font-size: 3rem; display: block;"></i>
+                            <p class="text-muted fw-bold mb-0">Hệ thống chưa có đạo diễn nào.</p>
+                            <p class="text-muted small">Nhấn "Thêm đạo diễn mới" ngay!</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .slide-in-bottom {
+        animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    }
+    @@keyframes slideIn {
+        0% { transform: translateY(20px); opacity: 0; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+    .custom-scrollbar::-webkit-scrollbar { height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+    .transition-all { transition: all 0.2s ease; }
+    .table-hover tbody tr:hover { background-color: rgba(255, 255, 255, 0.03) !important; transform: translateY(-1px); }
+</style>

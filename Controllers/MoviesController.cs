@@ -58,6 +58,8 @@ namespace DoAnDatVeXemPhim.Controllers
 
             var movie = await _context.Movies
                 .Include(m => m.Genres)
+                .Include(m => m.Actors)
+                .Include(m => m.Directors)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie == null) return NotFound();
@@ -70,6 +72,8 @@ namespace DoAnDatVeXemPhim.Controllers
         public IActionResult Create()
         {
             ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name");
+            ViewData["Actors"] = new MultiSelectList(_context.Actors, "Id", "Name");
+            ViewData["Directors"] = new MultiSelectList(_context.Directors, "Id", "Name");
 
             if (IsAjaxRequest()) return PartialView();
             return View();
@@ -78,7 +82,7 @@ namespace DoAnDatVeXemPhim.Controllers
         // POST: Movies/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,AgeRestriction")] Movie movie, int[] selectedGenres)
+        public async Task<IActionResult> Create([Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,AgeRestriction")] Movie movie, int[] selectedGenres, int[] selectedActors, int[] selectedDirectors)
         {
             if (ModelState.IsValid)
             {
@@ -89,11 +93,25 @@ namespace DoAnDatVeXemPhim.Controllers
                     movie.GenreName = string.Join(", ", genres.Select(g => g.Name));
                 }
 
+                if (selectedActors != null)
+                {
+                    var actors = await _context.Actors.Where(a => selectedActors.Contains(a.Id)).ToListAsync();
+                    movie.Actors = actors;
+                }
+
+                if (selectedDirectors != null)
+                {
+                    var directors = await _context.Directors.Where(d => selectedDirectors.Contains(d.Id)).ToListAsync();
+                    movie.Directors = directors;
+                }
+
                 _context.Add(movie);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name", selectedGenres);
+            ViewData["Actors"] = new MultiSelectList(_context.Actors, "Id", "Name", selectedActors);
+            ViewData["Directors"] = new MultiSelectList(_context.Directors, "Id", "Name", selectedDirectors);
 
             if (IsAjaxRequest()) return PartialView(movie);
             return View(movie);
@@ -104,10 +122,16 @@ namespace DoAnDatVeXemPhim.Controllers
         {
             if (id == null) return NotFound();
 
-            var movie = await _context.Movies.Include(m => m.Genres).FirstOrDefaultAsync(m => m.Id == id);
+            var movie = await _context.Movies
+                .Include(m => m.Genres)
+                .Include(m => m.Actors)
+                .Include(m => m.Directors)
+                .FirstOrDefaultAsync(m => m.Id == id);
             if (movie == null) return NotFound();
 
             ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name", movie.Genres.Select(g => g.Id));
+            ViewData["Actors"] = new MultiSelectList(_context.Actors, "Id", "Name", movie.Actors.Select(a => a.Id));
+            ViewData["Directors"] = new MultiSelectList(_context.Directors, "Id", "Name", movie.Directors.Select(d => d.Id));
 
             if (IsAjaxRequest()) return PartialView(movie);
             return View(movie);
@@ -116,7 +140,7 @@ namespace DoAnDatVeXemPhim.Controllers
         // POST: Movies/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,AgeRestriction")] Movie movie, int[] selectedGenres)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,PosterUrl,Duration,ReleaseDate,TrailerUrl,AgeRestriction")] Movie movie, int[] selectedGenres, int[] selectedActors, int[] selectedDirectors)
         {
             if (id != movie.Id) return NotFound();
 
@@ -124,7 +148,11 @@ namespace DoAnDatVeXemPhim.Controllers
             {
                 try
                 {
-                    var movieToUpdate = await _context.Movies.Include(m => m.Genres).FirstOrDefaultAsync(m => m.Id == id);
+                    var movieToUpdate = await _context.Movies
+                        .Include(m => m.Genres)
+                        .Include(m => m.Actors)
+                        .Include(m => m.Directors)
+                        .FirstOrDefaultAsync(m => m.Id == id);
                     
                     movieToUpdate.Title = movie.Title;
                     movieToUpdate.Description = movie.Description;
@@ -142,6 +170,20 @@ namespace DoAnDatVeXemPhim.Controllers
                         movieToUpdate.GenreName = string.Join(", ", genres.Select(g => g.Name));
                     }
 
+                    movieToUpdate.Actors.Clear();
+                    if (selectedActors != null)
+                    {
+                        var actors = await _context.Actors.Where(a => selectedActors.Contains(a.Id)).ToListAsync();
+                        foreach (var a in actors) { movieToUpdate.Actors.Add(a); }
+                    }
+
+                    movieToUpdate.Directors.Clear();
+                    if (selectedDirectors != null)
+                    {
+                        var directors = await _context.Directors.Where(d => selectedDirectors.Contains(d.Id)).ToListAsync();
+                        foreach (var d in directors) { movieToUpdate.Directors.Add(d); }
+                    }
+
                     _context.Update(movieToUpdate);
                     await _context.SaveChangesAsync();
                 }
@@ -153,6 +195,8 @@ namespace DoAnDatVeXemPhim.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["Genres"] = new MultiSelectList(_context.Genres, "Id", "Name", selectedGenres);
+            ViewData["Actors"] = new MultiSelectList(_context.Actors, "Id", "Name", selectedActors);
+            ViewData["Directors"] = new MultiSelectList(_context.Directors, "Id", "Name", selectedDirectors);
 
             if (IsAjaxRequest()) return PartialView(movie);
             return View(movie);

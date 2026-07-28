@@ -220,6 +220,8 @@ public class HomeController : Controller
 
         var movie = await _context.Movies
             .Include(m => m.Genres)
+            .Include(m => m.Actors)
+            .Include(m => m.Directors)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (movie == null) return NotFound();
@@ -339,6 +341,21 @@ public class HomeController : Controller
 
 
     public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    public IActionResult Terms()
+    {
+        return View();
+    }
+
+    public IActionResult PaymentPolicy()
+    {
+        return View();
+    }
+
+    public IActionResult FAQ()
     {
         return View();
     }

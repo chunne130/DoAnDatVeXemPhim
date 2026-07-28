@@ -6,8 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-// --- CỨU CÁNH CHO RENDER FREE TIER (LỖI 139 INOTIFY) ---
-// Phải set biến môi trường TRƯỚC khi gọi CreateBuilder thì nó mới có tác dụng!
 Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
 Environment.SetEnvironmentVariable("ASPNETCORE_hostBuilder:reloadConfigOnChange", "false");
 
@@ -88,7 +86,6 @@ builder.Services.ConfigureApplicationCookie(options => {
 var app = builder.Build();
 // --------------------------------
 
-// ÉP BUỘC DÙNG HTTPS KHI CHẠY TRÊN RENDER (Sửa lỗi Google Login redirect_uri_mismatch)
 app.Use((context, next) =>
 {
     context.Request.Scheme = "https";

@@ -26,12 +26,25 @@ namespace DoAnDatVeXemPhim.Data
                 context.Genres.AddRange(hanhDong, hoatHinh, kinhDi);
                 context.SaveChanges();
 
+                // 1.5 Seed Đạo diễn & Diễn viên
+                var dirDenis = new Director { Name = "Denis Villeneuve", ProfilePictureUrl = "https://image.tmdb.org/t/p/w200/zdqOaaJEnE8o26l21QoWp5l0u7U.jpg" };
+                var dirMike = new Director { Name = "Mike Mitchell", ProfilePictureUrl = "https://image.tmdb.org/t/p/w200/A0H3Kk4r70d5Rk7O581Zq5JbMhN.jpg" };
+                context.Directors.AddRange(dirDenis, dirMike);
+
+                var actorTim = new Actor { Name = "Timothée Chalamet", ProfilePictureUrl = "https://image.tmdb.org/t/p/w200/8tJVcs4zX5v20Rwe4Z8c5e6r4OQ.jpg" };
+                var actorZen = new Actor { Name = "Zendaya", ProfilePictureUrl = "https://image.tmdb.org/t/p/w200/jE3LgE8hLqLktX5b1oX1jOq1dY3.jpg" };
+                var actorJack = new Actor { Name = "Jack Black", ProfilePictureUrl = "https://image.tmdb.org/t/p/w200/rtCx0fiYxJVhzXXdwZE2XRTfIKE.jpg" };
+                context.Actors.AddRange(actorTim, actorZen, actorJack);
+                context.SaveChanges();
+
                 // 2. Seed Phim
                 context.Movies.AddRange(
                     new Movie
                     {
                         Title = "Dune: Hành Tinh Cát",
                         Genres = new List<Genre> { hanhDong },
+                        Directors = new List<Director> { dirDenis },
+                        Actors = new List<Actor> { actorTim, actorZen },
                         Duration = 155,
                         ReleaseDate = DateTime.Now,
                         PosterUrl = "https://image.tmdb.org/t/p/w500/d5NXSklZfs7Z1oAWa7OqyHNCpUe.jpg",
@@ -42,6 +55,8 @@ namespace DoAnDatVeXemPhim.Data
                     {
                         Title = "Kung Fu Panda 4",
                         Genres = new List<Genre> { hoatHinh },
+                        Directors = new List<Director> { dirMike },
+                        Actors = new List<Actor> { actorJack },
                         Duration = 94,
                         ReleaseDate = DateTime.Now,
                         PosterUrl = "https://image.tmdb.org/t/p/w500/kDp1vUBiRSToMvsnqbebyqDbn8U.jpg",

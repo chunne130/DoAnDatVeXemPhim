@@ -5,205 +5,498 @@
     ViewData["Title"] = Model.Title + " - Chi tiết & Đặt vé";
 }
 
-<div class="container mt-5 mb-5 movie-detail-page">
-    @* Breadcrumb *@
-    <div class="d-inline-flex align-items-center mb-4 px-4 py-2 rounded-pill" style="background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);">
-        <a asp-controller="Home" asp-action="Index" class="text-decoration-none fw-semibold" style="color: #9ca3af; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'">
-            <i class="bi bi-house-door" style="color: #00ff87;"></i> Home
-        </a>
-        <i class="bi bi-chevron-right mx-3" style="font-size: 0.7rem; color: #4b5563;"></i>
-        <a asp-controller="Home" asp-action="Movies" class="text-decoration-none fw-semibold" style="color: #9ca3af; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'">
-            Phim
-        </a>
-        <i class="bi bi-chevron-right mx-3" style="font-size: 0.7rem; color: #4b5563;"></i>
-        <span class="fw-bold text-white">@Model.Title</span>
-    </div>
+@* 
+    GIAO DIỆN HOÀN TOÀN MỚI 
+    Cảm hứng từ phong cách rạp chiếu phim hiện đại cao cấp, 
+    kết hợp Glassmorphism, bóng đổ neon và bố cục tràn viền.
+*@
 
-    @* Khối chi tiết phim - Đã chuyển sang nền tối của hệ thống *@
-    <div class="card border-0 rounded-4 bg-transparent-card shadow-lg text-light">
-        <div class="card-body p-4 p-md-5">
-            <div class="row g-5">
-                @* Cột trái: Poster & Nút hành động *@
-                <div class="col-md-4">
-                    <div class="position-relative mb-4 group">
-                        <img src="@Model.PosterUrl" class="img-fluid rounded-4 shadow-lg w-100 image-border-glow" style="object-fit: cover; min-height: 480px;" alt="Poster" />
-                        <div class="position-absolute top-0 start-0 m-3">
-                            <span class="badge bg-success-custom rounded-pill px-3 shadow fw-bold">ĐANG CHIẾU</span>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-3">
-                        @* Nút Mua Vé - Đổi sang màu xanh neon giống ảnh *@
-                        <a asp-controller="Booking" asp-action="SelectShowtime" asp-route-movieId="@Model.Id"
-                           class="btn btn-success-custom btn-lg fw-bold rounded-pill shadow py-3 text-uppercase animate-pulse">
-                            <i class="bi bi-ticket-perforated-fill me-2"></i> Mua vé ngay
-                        </a>
-
-                        @* Nút Trailer - Border trắng trong suốt *@
-                        @if (!string.IsNullOrEmpty(Model.TrailerUrl))
-                        {
-                            <button id="btnPlayTrailer" class="btn btn-outline-light-custom btn-lg fw-bold rounded-pill shadow-sm py-2 text-uppercase"
-                                    data-bs-toggle="modal" data-bs-target="#trailerModal" data-url="@Model.TrailerUrl">
-                                <i class="bi bi-play-circle-fill me-2"></i> XEM TRAILER
-                            </button>
-                        }
-                    </div>
-                </div>
-
-                @* Cột phải: Thông tin phim *@
-                <div class="col-md-8">
-                    <div class="mb-4">
-                        <h1 class="display-5 fw-bold text-white mb-3">@Model.Title</h1>
-                        <div class="d-flex align-items-center gap-3 flex-wrap">
-                            <span class="badge bg-dark-success text-success-custom px-3 py-2 rounded-pill fw-bold border border-success-custom">@(Model.Genres != null ? string.Join(", ", Model.Genres.Select(g => g.Name)) : "")</span>
-                            <span class="text-light-50 fw-medium"><i class="bi bi-clock-fill text-success-custom me-1"></i> @Model.Duration phút</span>
-                            <span class="text-light-50 fw-medium"><i class="bi bi-calendar-event-fill text-success-custom me-1"></i> @(Model.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Đang cập nhật")</span>
-                            
-                            @* --- ĐÃ THÊM: Tính năng Behavior Tracking (ViewCount) đổi thành Tickets Sold --- *@
-                            <span class="text-light-50 fw-bold"><i class="bi bi-eye-fill text-warning me-1"></i> @ViewBag.TicketsSold vé đã bán</span>
-                        </div>
-                    </div>
-
-                    @* Nội dung phim *@
-                    <div class="mb-5 py-4 border-top border-bottom border-dark-custom">
-                        <h5 class="fw-bold text-success-custom text-uppercase mb-3" style="letter-spacing: 1px;">Nội dung phim</h5>
-                        <p class="text-light-80" style="font-size: 1.05rem; line-height: 1.8; text-align: justify;">@Model.Description</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @* KHOẢNG TRỐNG CHO KHU VỰC ĐÁNH GIÁ *@
-    <div class="mt-5 pt-4">
-        <div class="row g-4">
-            @* KHỐI TRÁI: ĐÁNH GIÁ PHIM *@
-            <div class="col-lg-5">
-                <div class="review-box h-100 p-4 rounded-4 bg-transparent-card">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="rating-icon-wrap me-3 rounded-circle d-flex justify-content-center align-items-center" style="width: 50px; height: 50px; background-color: rgba(226, 135, 67, 0.15);">
-                            <i class="bi bi-star-fill" style="color: #e28743; font-size: 1.5rem;"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-white fw-bold mb-0">Đánh giá phim</h4>
-                            <p class="text-white-50 small mb-0">Ý kiến từ khách hàng đã xem phim.</p>
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center mb-4">
-                        <h1 class="display-3 fw-black text-white me-3 mb-0" id="avgRatingBig">0.0</h1>
-                        <div>
-                            <div class="d-flex text-warning fs-5" id="avgStars">
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                                <i class="bi bi-star"></i>
-                            </div>
-                            <p class="text-white-50 small mb-0 mt-1"><span id="totalReviewsText">0</span> lượt đánh giá</p>
-                        </div>
-                    </div>
-
-                    <div class="review-action-box mt-4 p-3 rounded-3 text-center" style="background-color: rgba(0,0,0,0.3);">
-                        @if (ViewBag.HasReviewed == true)
-                        {
-                            <p class="text-success mb-0 fw-semibold"><i class="bi bi-check-circle-fill me-2"></i>Cảm ơn bạn đã đánh giá phim này!</p>
-                        }
-                        else if (ViewBag.CanReview == true)
-                        {
-                            <button class="btn btn-outline-warning rounded-pill px-4 fw-bold" onclick="showReviewForm()">
-                                <i class="bi bi-pencil-square me-2"></i>Viết đánh giá (Thưởng 1đ)
-                            </button>
-                        }
-                        else
-                        {
-                            <p class="text-white-50 mb-0 small">Bạn cần mua vé phim này để bình luận.</p>
-                        }
-                    </div>
-
-                    @* Form Đánh giá (ẩn) *@
-                    <div id="reviewFormArea" class="mt-4 d-none">
-                        <hr class="border-secondary" />
-                        <h6 class="text-white mb-3">Đánh giá của bạn:</h6>
-                        <div class="d-flex justify-content-center gap-2 mb-3 rating-stars-select">
-                            <i class="bi bi-star fs-3 text-secondary cursor-pointer" data-rating="1"></i>
-                            <i class="bi bi-star fs-3 text-secondary cursor-pointer" data-rating="2"></i>
-                            <i class="bi bi-star fs-3 text-secondary cursor-pointer" data-rating="3"></i>
-                            <i class="bi bi-star fs-3 text-secondary cursor-pointer" data-rating="4"></i>
-                            <i class="bi bi-star fs-3 text-secondary cursor-pointer" data-rating="5"></i>
-                        </div>
-                        <input type="hidden" id="selectedRating" value="0" />
-                        <textarea id="reviewComment" class="form-control bg-dark text-white border-secondary mb-3" rows="3" placeholder="Chia sẻ cảm nhận của bạn..."></textarea>
-                        <button class="btn btn-warning w-100 fw-bold rounded-pill" onclick="submitReview(@Model.Id)">Gửi Đánh Giá</button>
-                    </div>
-                </div>
-            </div>
-
-            @* KHỐI PHẢI: BÌNH LUẬN *@
-            <div class="col-lg-7">
-                <div class="review-box h-100 p-4 rounded-4 d-flex flex-column bg-transparent-card">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="text-white fw-bold mb-0"><i class="bi bi-chat-dots me-2" style="color: #e28743;"></i>Bình luận</h5>
-                        <button class="btn btn-sm btn-outline-secondary rounded-pill text-light px-3" onclick="loadReviews(@Model.Id)">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Làm mới
-                        </button>
-                    </div>
-
-                    <div id="commentsContainer" class="comments-scroll-area flex-grow-1 p-3 rounded-3" style="background-color: rgba(0,0,0,0.2); overflow-y: auto; max-height: 400px;">
-                        <div class="text-center p-5 mt-4 opacity-50" id="noCommentsBox">
-                            <i class="bi bi-chat-square-quote fs-1 text-warning mb-3 d-block"></i>
-                            <h6 class="text-white">Chưa có bình luận nào.</h6>
-                            <p class="text-white-50 small">Hãy là người đầu tiên chia sẻ cảm nhận sau khi xem phim.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @* Khu vực phim tương tự *@
-    @{
-        var relatedMovies = ViewBag.RelatedMovies as List<DoAnDatVeXemPhim.Models.Movie>;
+<style>
+    :root {
+        --neon-green: #00ff87;
+        --neon-green-dim: rgba(0, 255, 135, 0.2);
+        --dark-bg: #0a0a0c;
+        --glass-bg: rgba(15, 20, 25, 0.65);
+        --glass-border: rgba(255, 255, 255, 0.08);
     }
 
-    @if (relatedMovies != null && relatedMovies.Count > 0)
-    {
-        <div class="mt-5 pt-4">
-            <div class="d-flex align-items-center gap-2 mb-4 border-start border-success-custom border-5 ps-3 py-1">
-                <h4 class="fw-bold mb-0 text-white text-uppercase" style="letter-spacing: 0.5px; font-size: 1.15rem;">🎬 PHIM CÙNG THỂ LOẠI</h4>
-            </div>
+    body {
+        background-color: var(--dark-bg);
+        color: #fff;
+    }
 
-            <div class="row g-4">
-                @foreach (var item in relatedMovies)
-                {
-                    if (item != null)
+    /* Hero Banner: Làm mờ và làm tối ảnh poster làm nền */
+    .hero-banner {
+        position: relative;
+        width: 100%;
+        min-height: 85vh;
+        background-image: url('@Model.PosterUrl');
+        background-size: cover;
+        background-position: center 20%;
+        background-attachment: fixed;
+        display: flex;
+        align-items: center;
+        padding-top: 100px; /* Bù cho navbar */
+        padding-bottom: 60px;
+    }
+
+    /* Lớp phủ gradient cực xịn */
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(10,10,12,0.6) 0%, rgba(10,10,12,0.85) 40%, rgba(10,10,12,1) 100%),
+                    radial-gradient(circle at 70% 30%, rgba(0,255,135,0.15) 0%, transparent 60%);
+        backdrop-filter: blur(8px);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Hiệu ứng viền Poster */
+    .movie-poster-wrapper {
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 255, 135, 0.15);
+        border: 1px solid var(--glass-border);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .movie-poster-wrapper:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 255, 135, 0.25);
+    }
+
+    /* Typography */
+    .movie-title {
+        font-family: 'Inter', sans-serif;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 900;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+        background: linear-gradient(to right, #fff, #b3b3b3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    /* Các thẻ tag (thể loại, thời lượng...) */
+    .meta-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #d1d5db;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s;
+    }
+    .meta-tag:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .meta-tag.highlight {
+        background: var(--neon-green-dim);
+        border-color: rgba(0, 255, 135, 0.3);
+        color: var(--neon-green);
+    }
+
+    /* Nút bấm mua vé & trailer */
+    .btn-buy-ticket {
+        background: var(--neon-green);
+        color: #000;
+        font-weight: 800;
+        font-size: 1.1rem;
+        padding: 16px 36px;
+        border-radius: 50px;
+        border: none;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0, 255, 135, 0.2), 0 0 0 0 rgba(0, 255, 135, 0.5);
+    }
+    .btn-buy-ticket:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(0, 255, 135, 0.3), 0 0 15px 0 rgba(0, 255, 135, 0.6);
+        color: #000;
+    }
+    .btn-trailer {
+        background: var(--glass-bg);
+        color: #fff;
+        font-weight: 700;
+        padding: 14px 32px;
+        border-radius: 50px;
+        border: 1px solid var(--glass-border);
+        letter-spacing: 1px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    .btn-trailer:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #fff;
+        color: #fff;
+        transform: translateY(-3px);
+    }
+
+    /* Section Tiêu đề vàng vát cong */
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+    }
+    .section-title::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 24px;
+        background: var(--neon-green);
+        border-radius: 4px;
+        box-shadow: 0 0 10px var(--neon-green);
+    }
+
+    /* Cast Card (Diễn viên / Đạo diễn) */
+    .cast-card {
+        background: transparent;
+        border: none;
+        width: 100px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    .cast-card:hover {
+        transform: translateY(-8px);
+    }
+    .cast-img-wrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        padding: 3px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+        margin: 0 auto 12px auto;
+        transition: all 0.3s ease;
+    }
+    .cast-card:hover .cast-img-wrapper {
+        background: linear-gradient(135deg, var(--neon-green) 0%, #009951 100%);
+        box-shadow: 0 10px 20px rgba(0, 255, 135, 0.2);
+    }
+    .cast-img-wrapper img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--dark-bg);
+    }
+    .cast-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #e5e7eb;
+        line-height: 1.2;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    /* Nút Review (Đánh giá) */
+    .review-panel {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 35px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    }
+
+    .spin-anim {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+    }
+    @@keyframes spin {
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Đảm bảo bo tròn ngay cả khi thiếu class Bootstrap 5 */
+    .rounded-4 { border-radius: 16px !important; }
+    .rounded-5 { border-radius: 24px !important; }
+    .rounded-6 { border-radius: 32px !important; }
+    
+    .btn-refresh-custom {
+        border: 2px solid rgba(255,255,255,0.3) !important;
+        background: rgba(255,255,255,0.05);
+    }
+    .btn-refresh-custom:hover {
+        background: rgba(255,255,255,0.15);
+        border-color: #fff !important;
+    }
+
+    /* Khung nội dung bên trong */
+    .inner-glass-box {
+        background: rgba(0, 255, 135, 0.03) !important;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+    }
+</style>
+
+<div class="hero-banner">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+        @* Breadcrumb nhỏ phía trên *@
+        <nav aria-label="breadcrumb" class="mb-4 d-none d-md-block">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted hover-white"><i class="bi bi-house-door"></i></a></li>
+                <li class="breadcrumb-item"><a href="/Home/Movies" class="text-decoration-none text-muted hover-white">Kho Phim</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page" style="opacity: 0.8;">@Model.Title</li>
+            </ol>
+        </nav>
+
+        <div class="row g-5 align-items-center">
+            @* BÊN TRÁI: POSTER *@
+            <div class="col-lg-4 col-md-5 d-flex flex-column align-items-center">
+                <div class="movie-poster-wrapper w-100 mb-4 position-relative">
+                    <img src="@Model.PosterUrl" class="w-100 img-fluid" alt="@Model.Title" />
+                    <div class="position-absolute top-0 end-0 m-3">
+                        <span class="badge bg-danger rounded-pill fs-6 px-3 py-2 shadow fw-bold border border-danger">@Model.AgeRestriction</span>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column w-100 gap-3">
+                    <a asp-controller="Booking" asp-action="SelectShowtime" asp-route-movieId="@Model.Id" class="btn btn-buy-ticket text-center w-100">
+                        <i class="bi bi-ticket-perforated-fill me-2 fs-5"></i> MUA VÉ NGAY
+                    </a>
+                    
+                    @if (!string.IsNullOrEmpty(Model.TrailerUrl))
                     {
-                        <movie-card id="@item.Id"
-                                    title="@item.Title"
-                                    poster-url="@item.PosterUrl"
-                                    duration="@item.Duration"
-                                    genre-name="@(item.Genres != null ? string.Join(", ", item.Genres.Select(g => g.Name)) : "")"
-                                    is-hot="true"
-                                    view-count="@item.ViewCount"
-                                    average-rating="@(item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0)">
-                        </movie-card>
+                        <button class="btn btn-trailer text-center w-100" data-bs-toggle="modal" data-bs-target="#trailerModal" data-url="@Model.TrailerUrl">
+                            <i class="bi bi-play-circle-fill me-2 fs-5"></i> XEM TRAILER
+                        </button>
                     }
-                }
+                </div>
+            </div>
+
+            @* BÊN PHẢI: THÔNG TIN PHIM *@
+            <div class="col-lg-8 col-md-7">
+                <h1 class="movie-title mb-3">@Model.Title</h1>
+                
+                <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+                    @* Thể loại *@
+                    @if (Model.Genres != null && Model.Genres.Any())
+                    {
+                        <div class="meta-tag highlight">
+                            <i class="bi bi-tags-fill me-2"></i> @string.Join(", ", Model.Genres.Select(g => g.Name))
+                        </div>
+                    }
+                    
+                    <div class="meta-tag">
+                        <i class="bi bi-clock-history me-2" style="color: #60a5fa;"></i> @Model.Duration phút
+                    </div>
+                    
+                    <div class="meta-tag">
+                        <i class="bi bi-calendar3 me-2" style="color: #fbbf24;"></i> @(Model.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Đang cập nhật")
+                    </div>
+                    
+                    <div class="meta-tag">
+                        <i class="bi bi-fire me-2" style="color: #ef4444;"></i> @ViewBag.TicketsSold vé đã bán
+                    </div>
+                </div>
+
+                @* Điểm đánh giá *@
+                <div class="d-flex align-items-center mb-5 gap-3 p-3 rounded-pill pe-5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); display: inline-flex;">
+                    <div class="d-flex justify-content-center align-items-center rounded-circle" style="width: 55px; height: 55px; background: rgba(251, 191, 36, 0.15);">
+                        <i class="bi bi-star-fill text-warning fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-baseline gap-2">
+                            <span class="fs-4 fw-black text-white" id="avgRatingHeader">0.0</span>
+                            <span class="text-muted small">/ 5</span>
+                        </div>
+                        <div class="text-white-50 small"><span id="totalReviewsHeader">0</span> lượt đánh giá</div>
+                    </div>
+                </div>
+
+                <div class="section-title">Nội dung phim</div>
+                <p class="text-light mb-5 pe-lg-5" style="font-size: 1.05rem; line-height: 1.8; color: #cbd5e1 !important; text-align: justify; font-weight: 300;">
+                    @Model.Description
+                </p>
+
+                <div class="row g-5">
+                    @* Khu vực Đạo diễn *@
+                    @if (Model.Directors != null && Model.Directors.Any())
+                    {
+                        <div class="col-12 col-xl-5">
+                            <div class="section-title">Đạo diễn</div>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var d in Model.Directors)
+                                {
+                                    <div class="cast-card" title="@d.Name">
+                                        <div class="cast-img-wrapper">
+                                            <img src="@(string.IsNullOrEmpty(d.ProfilePictureUrl) ? "https://via.placeholder.com/100" : d.ProfilePictureUrl)" alt="@d.Name" />
+                                        </div>
+                                        <div class="cast-name">@d.Name</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* Khu vực Diễn viên *@
+                    @if (Model.Actors != null && Model.Actors.Any())
+                    {
+                        <div class="col-12 col-xl-7">
+                            <div class="section-title">Diễn viên chính</div>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var a in Model.Actors)
+                                {
+                                    <div class="cast-card" title="@a.Name">
+                                        <div class="cast-img-wrapper">
+                                            <img src="@(string.IsNullOrEmpty(a.ProfilePictureUrl) ? "https://via.placeholder.com/100" : a.ProfilePictureUrl)" alt="@a.Name" />
+                                        </div>
+                                        <div class="cast-name">@a.Name</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
-    }
+    </div>
 </div>
+
+@* PHẦN DƯỚI: REVIEW & BÌNH LUẬN *@
+<div class="container mt-5 pt-5 mb-5">
+    <div class="row g-5">
+        <div class="col-lg-5">
+            <div class="review-panel p-4 p-xl-5 h-100">
+                <h3 class="fw-bold text-white mb-2">Đánh giá từ khán giả</h3>
+                <p class="text-muted mb-4">Chia sẻ cảm nhận của bạn sau khi thưởng thức phim.</p>
+                
+                <div class="d-flex align-items-center mb-5">
+                    <h1 class="display-1 fw-black text-white me-4 mb-0" id="avgRatingBig" style="text-shadow: 0 5px 15px rgba(251, 191, 36, 0.2);">0.0</h1>
+                    <div>
+                        <div class="d-flex text-warning fs-3 gap-1 mb-2" id="avgStars">
+                            <i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                        </div>
+                        <span class="badge inner-glass-box border border-secondary text-light px-3 py-2 rounded-pill"><span id="totalReviewsText">0</span> bài đánh giá</span>
+                    </div>
+                </div>
+
+                <div class="inner-glass-box p-4 p-xl-5 rounded-5 border border-secondary border-opacity-25 text-center mt-4 position-relative overflow-hidden">
+                    @if (ViewBag.HasReviewed == true)
+                    {
+                        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0, 255, 135, 0.1);"></div>
+                        <i class="bi bi-check-circle-fill text-success fs-1 mb-3 d-block position-relative z-1"></i>
+                        <h5 class="text-white fw-bold position-relative z-1">Đã gửi đánh giá</h5>
+                        <p class="text-white-50 mb-0 position-relative z-1">Cảm ơn bạn đã đóng góp ý kiến!</p>
+                    }
+                    else if (ViewBag.CanReview == true)
+                    {
+                        <button class="btn btn-warning btn-lg rounded-pill px-5 fw-bold w-100 shadow-sm" onclick="showReviewForm()">
+                            <i class="bi bi-pencil-square me-2"></i> Viết Đánh Giá Mới
+                        </button>
+                    }
+                    else
+                    {
+                        <i class="bi bi-ticket-perforated text-secondary fs-1 mb-3 d-block"></i>
+                        <p class="text-white-50 mb-0">Bạn cần mua vé xem phim này để mở khóa tính năng bình luận.</p>
+                    }
+                </div>
+
+                @* Form Đánh giá (ẩn) *@
+                <div id="reviewFormArea" class="mt-4 d-none p-4 rounded-5" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05);">
+                    <h6 class="text-white mb-3 text-center">Chạm vào sao để đánh giá:</h6>
+                    <div class="d-flex justify-content-center gap-2 mb-4 rating-stars-select">
+                        <i class="bi bi-star fs-1 text-secondary cursor-pointer transition-all hover-scale" data-rating="1"></i>
+                        <i class="bi bi-star fs-1 text-secondary cursor-pointer transition-all hover-scale" data-rating="2"></i>
+                        <i class="bi bi-star fs-1 text-secondary cursor-pointer transition-all hover-scale" data-rating="3"></i>
+                        <i class="bi bi-star fs-1 text-secondary cursor-pointer transition-all hover-scale" data-rating="4"></i>
+                        <i class="bi bi-star fs-1 text-secondary cursor-pointer transition-all hover-scale" data-rating="5"></i>
+                    </div>
+                    <style>
+                        .hover-scale:hover { transform: scale(1.2); }
+                        .rating-stars-select i.text-warning { text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+                    </style>
+                    <input type="hidden" id="selectedRating" value="0" />
+                    <textarea id="reviewComment" class="form-control bg-transparent text-white border-secondary mb-3 rounded-3" rows="4" placeholder="Nhập cảm nhận của bạn tại đây..."></textarea>
+                    <button class="btn btn-buy-ticket w-100 rounded-pill" onclick="submitReview(@Model.Id)">
+                        GỬI BÌNH LUẬN
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="review-panel p-4 p-xl-5 h-100 d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+                    <h4 class="text-white fw-bold mb-0">Cộng đồng nhận xét</h4>
+                    <button class="btn btn-sm rounded-pill text-light px-4 py-2 fw-bold transition-all btn-refresh-custom" onclick="loadReviews(@Model.Id, this)">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Làm mới
+                    </button>
+                </div>
+
+                <div id="commentsContainer" class="flex-grow-1 custom-scrollbar pe-2" style="overflow-y: auto; max-height: 500px;">
+                    <div class="text-center p-5 mt-4 opacity-50 border border-secondary border-opacity-25 rounded-5" style="border-style: dashed !important;" id="noCommentsBox">
+                        <div class="d-inline-flex justify-content-center align-items-center rounded-circle mb-3" style="width: 80px; height: 80px; background: rgba(255,255,255,0.05);">
+                            <i class="bi bi-chat-square-quote fs-1 text-secondary"></i>
+                        </div>
+                        <h5 class="text-white">Trống trơn!</h5>
+                        <p class="text-white-50">Bộ phim này chưa có bình luận nào.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Khu vực phim tương tự *@
+@{
+    var relatedMovies = ViewBag.RelatedMovies as List<DoAnDatVeXemPhim.Models.Movie>;
+}
+
+@if (relatedMovies != null && relatedMovies.Count > 0)
+{
+    <div class="container mt-5 pt-4 mb-5">
+        <div class="section-title mb-4" style="font-size: 1.5rem;">CÓ THỂ BẠN SẼ THÍCH</div>
+        <div class="row g-4">
+            @foreach (var item in relatedMovies)
+            {
+                if (item != null)
+                {
+                    <movie-card id="@item.Id"
+                                title="@item.Title"
+                                poster-url="@item.PosterUrl"
+                                duration="@item.Duration"
+                                genre-name="@(item.Genres != null ? string.Join(", ", item.Genres.Select(g => g.Name)) : "")"
+                                is-hot="false"
+                                view-count="@item.ViewCount"
+                                average-rating="@(item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0)">
+                    </movie-card>
+                }
+            }
+        </div>
+    </div>
+}
 
 @* Modal Trailer *@
 <div class="modal fade" id="trailerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-dark border-0 rounded-4 overflow-hidden">
-            <div class="modal-header border-0 pb-0 bg-dark-custom">
-                <h5 class="modal-title text-white fw-bold">Trailer: @Model.Title</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pb-0 justify-content-end position-absolute top-0 end-0 z-3 p-4">
+                <button type="button" class="btn-close btn-close-white fs-4" data-bs-dismiss="modal" aria-label="Close" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></button>
             </div>
-            <div class="modal-body p-3 bg-dark-custom">
-                <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-black shadow-lg">
+            <div class="modal-body p-0">
+                <div class="ratio ratio-16x9 rounded-5 overflow-hidden shadow-lg border border-secondary border-opacity-50" style="background: #000;">
                     <iframe id="videoFrame" src="" title="YouTube video" allowfullscreen allow="autoplay"></iframe>
                 </div>
             </div>
@@ -211,347 +504,183 @@
     </div>
 </div>
 
-<style>
-    /* Ép toàn bộ background trang chi tiết về màu xanh đen huyền bí theo ảnh mẫu */
-    body {
-        background-color: #060f0c !important;
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* Khối card chứa nội dung phim (đậm hơn background một chút tạo chiều sâu) */
-    .bg-transparent-card {
-        background-color: #0b1612 !important;
-        border: 1px solid rgba(2, 226, 114, 0.1) !important;
-    }
-
-    /* Các màu chữ đặc chủng phối hợp độ sáng giảm dần tránh mỏi mắt */
-    .text-light-80 {
-        color: #e0e6e4 !important;
-    }
-
-    .text-light-50 {
-        color: #9aa7a3 !important;
-    }
-
-    /* Màu xanh Neon chuẩn từ nút "Đặt vé ngay" và "Tìm phim" trong hình */
-    .text-success-custom {
-        color: #00ff87 !important;
-    }
-
-    .bg-success-custom {
-        background-color: #00ff87 !important;
-        color: #000000 !important;
-    }
-
-    .bg-dark-success {
-        background-color: rgba(0, 255, 135, 0.1) !important;
-    }
-
-    /* Nút Mua vé xanh Neon nổi bật */
-    .btn-success-custom {
-        background-color: #00ff87 !important;
-        color: #000000 !important;
-        border: none;
-    }
-
-    /* Đường kẻ viền phân cách mờ tối */
-    .border-dark-custom {
-        border-color: rgba(255, 255, 255, 0.08) !important;
-    }
-
-    /* Border line cho cụm tiêu đề phim cùng loại */
-    .border-success-custom {
-        border-color: #00ff87 !important;
-    }
-
-    .rounded-4 {
-        border-radius: 1.25rem !important;
-    }
-
-    /* Hiệu ứng nút Xem Trailer phong cách tối */
-    .btn-outline-light-custom {
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        background: transparent;
-        transition: all 0.3s;
-    }
-
-        .btn-outline-light-custom:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #00ff87;
-            border-color: #00ff87;
-        }
-
-    /* Animation mạch đập cho nút Mua Vé */
-    .animate-pulse {
-        animation: pulse 2s infinite;
-        transition: all 0.3s ease;
-    }
-
-        .animate-pulse:hover {
-            background-color: #00e074 !important;
-            transform: translateY(-2px);
-        }
-
-    @@keyframes pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.5);
-        }
-
-        70% {
-            box-shadow: 0 0 0 12px rgba(0, 255, 135, 0);
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(0, 255, 135, 0);
-        }
-    }
-
-    /* Đồng bộ danh sách đặt vé */
-    .booking-list .row {
-        background-color: #0b1612 !important;
-        color: white;
-    }
-
-    /* Modal nền tối */
-    .bg-dark-custom {
-        background-color: #0b1612 !important;
-    }
-
-   
-    .poster-container {
-        transition: transform 0.4s cubic-bezier(0.2,1,0.2,1), box-shadow 0.4s;
-        border-radius: 14px;
-        overflow: hidden;
-        aspect-ratio: 2 / 3 !important;
-        width: 100% !important;
-        position: relative;
-    }
-
-    .movie-card:hover .poster-container {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0, 255, 135, 0.15) !important;
-    }
-
-    .poster-container img,
-    .poster-container .poster-img {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
-    }
-
-    .movie-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.8);
-        opacity: 0;
-        transition: opacity 0.28s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        padding: 20px;
-        z-index: 5;
-    }
-
-    .movie-card:hover .movie-overlay {
-        opacity: 1;
-    }
-
-    .movie-card:hover .poster-img {
-        filter: blur(2px) brightness(0.85);
-        transform: scale(1.06);
-        transition: 0.45s;
-    }
-
-    /* --- ĐÃ THÊM: Đồng bộ CSS cho thẻ phim (MovieCardTagHelper) giống trang chủ --- */
-    .btn-overlay-action {
-        width: 78%;
-        padding: 9px 0;
-        font-size: 0.78rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        border-radius: 50px;
-        text-align: center;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        display: block;
-        letter-spacing: 0.04em;
-    }
-
-    .btn-overlay-book {
-        background-color: #dc3545;
-        color: #fff;
-        border: none;
-    }
-
-    .btn-overlay-book:hover {
-        background-color: #b02a37;
-        transform: scale(1.04);
-        color: #fff;
-    }
-
-    .btn-overlay-detail {
-        background-color: transparent;
-        color: #fff;
-        border: 1px solid rgba(255,255,255,0.6);
-    }
-
-    .btn-overlay-detail:hover {
-        background-color: #fff;
-        color: #000;
-        transform: scale(1.04);
-    }
-
-    .movie-title-text {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #6b8c78;
-        text-align: center;
-        margin-top: 10px;
-        transition: color 0.2s;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .movie-card:hover .movie-title-text {
-        color: #00ff87;
-    }
-</style>
-
 @section Scripts {
     <script>
-        // JS Cho Trailer
-        function getYouTubeId(url) {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        }
-
-        const trailerModal = document.getElementById('trailerModal');
-        const videoFrame = document.getElementById('videoFrame');
-
-        if (trailerModal) {
-            trailerModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const url = button.getAttribute('data-url');
-                const videoId = getYouTubeId(url);
-                if (videoId) { videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`; }
+        // JS xử lý Review giữ nguyên
+        $(document).ready(function () {
+            $('#trailerModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget);
+                var url = button.data('url');
+                var videoId = "";
+                if (url) {
+                    var regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    var match = url.match(regExp);
+                    if (match && match[2].length == 11) {
+                        videoId = match[2];
+                    }
+                }
+                if (videoId) {
+                    var embedUrl = "https://www.youtube.com/embed/" + videoId + "?autoplay=1&mute=0";
+                    $(this).find('#videoFrame').attr('src', embedUrl);
+                }
             });
-            trailerModal.addEventListener('hide.bs.modal', function () { videoFrame.src = ""; });
-        }
 
-        // JS Cho Bình luận & Đánh giá
-        document.addEventListener('DOMContentLoaded', function() {
+            $('#trailerModal').on('hide.bs.modal', function () {
+                $(this).find('#videoFrame').attr('src', '');
+            });
+
             loadReviews(@Model.Id);
-            
-            // Xử lý chọn sao đánh giá
-            const stars = document.querySelectorAll('.rating-stars-select i');
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    let rating = this.getAttribute('data-rating');
-                    document.getElementById('selectedRating').value = rating;
-                    
-                    stars.forEach(s => {
-                        if(s.getAttribute('data-rating') <= rating) {
-                            s.classList.remove('bi-star', 'text-secondary');
-                            s.classList.add('bi-star-fill', 'text-warning');
-                        } else {
-                            s.classList.remove('bi-star-fill', 'text-warning');
-                            s.classList.add('bi-star', 'text-secondary');
-                        }
-                    });
-                });
+
+            setInterval(function() {
+                loadReviews(@Model.Id);
+            }, 5000); // Tự động cập nhật mỗi 5 giây (Realtime)
+
+            $('.rating-stars-select i').hover(
+                function() {
+                    $(this).prevAll().addBack().removeClass('text-secondary').addClass('text-warning bi-star-fill').removeClass('bi-star');
+                    $(this).nextAll().removeClass('text-warning bi-star-fill').addClass('text-secondary bi-star');
+                },
+                function() {
+                    let rating = parseInt($('#selectedRating').val());
+                    updateStarsSelect(rating);
+                }
+            );
+
+            $('.rating-stars-select i').click(function() {
+                let rating = $(this).data('rating');
+                $('#selectedRating').val(rating);
+                updateStarsSelect(rating);
             });
         });
 
-        function showReviewForm() {
-            document.getElementById('reviewFormArea').classList.remove('d-none');
-            document.querySelector('.review-action-box button').classList.add('d-none');
+        function updateStarsSelect(rating) {
+            $('.rating-stars-select i').each(function() {
+                let val = $(this).data('rating');
+                if (val <= rating) {
+                    $(this).removeClass('text-secondary bi-star').addClass('text-warning bi-star-fill');
+                } else {
+                    $(this).removeClass('text-warning bi-star-fill').addClass('text-secondary bi-star');
+                }
+            });
         }
 
-        function loadReviews(movieId) {
-            fetch(`/api/Reviews/${movieId}`)
-                .then(res => res.json())
-                .then(data => {
-                    document.getElementById('avgRatingBig').textContent = data.averageRating.toFixed(1);
-                    document.getElementById('totalReviewsText').textContent = data.totalReviews;
-                    
-                    // Vẽ sao trung bình
-                    let avgStarsHtml = '';
-                    let roundedAvg = Math.round(data.averageRating);
-                    for(let i=1; i<=5; i++) {
-                        if(i <= roundedAvg) avgStarsHtml += '<i class="bi bi-star-fill"></i>';
-                        else avgStarsHtml += '<i class="bi bi-star"></i>';
-                    }
-                    document.getElementById('avgStars').innerHTML = avgStarsHtml;
-
-                    // Vẽ danh sách comment
-                    const container = document.getElementById('commentsContainer');
-                    if (data.reviews.length === 0) {
-                        document.getElementById('noCommentsBox').classList.remove('d-none');
-                    } else {
-                        document.getElementById('noCommentsBox').classList.add('d-none');
-                        container.innerHTML = '';
-                        data.reviews.forEach(r => {
-                            let starsHtml = '';
-                            for(let i=1; i<=5; i++) {
-                                starsHtml += i <= r.rating ? '<i class="bi bi-star-fill text-warning"></i>' : '<i class="bi bi-star text-secondary"></i>';
-                            }
-
-                            let html = `
-                                <div class="mb-3 pb-3 border-bottom border-dark">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div class="d-flex align-items-center" style="min-width: 0;">
-                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center text-white fw-bold me-2 flex-shrink-0" style="width:32px; height:32px; font-size:12px;">
-                                                ${r.userName.substring(0,2).toUpperCase()}
-                                            </div>
-                                            <span class="text-white fw-semibold small text-truncate">${r.userName}</span>
-                                        </div>
-                                        <span class="text-white-50 flex-shrink-0 ms-2" style="font-size: 0.7rem;">${r.createdAt}</span>
-                                    </div>
-                                    <div class="mb-1" style="font-size: 0.8rem;">${starsHtml}</div>
-                                    <p class="text-light mb-0" style="font-size: 0.9rem; line-height: 1.5;">${r.comment}</p>
-                                </div>
-                            `;
-                            container.innerHTML += html;
-                        });
-                    }
-                });
+        function showReviewForm() {
+            $('#reviewFormArea').removeClass('d-none').hide().slideDown(300);
+            $('html, body').animate({
+                scrollTop: $("#reviewFormArea").offset().top - 200
+            }, 500);
         }
 
         function submitReview(movieId) {
-            let rating = document.getElementById('selectedRating').value;
-            let comment = document.getElementById('reviewComment').value;
+            var rating = $('#selectedRating').val();
+            var comment = $('#reviewComment').val();
             
             if (rating == 0) {
-                alert("Vui lòng chọn số sao đánh giá!");
-                return;
-            }
-            if (!comment.trim()) {
-                alert("Vui lòng nhập nội dung đánh giá!");
+                alert("Vui lòng chọn số sao để đánh giá!");
                 return;
             }
 
-            fetch(`/api/Reviews/${movieId}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+            var btn = event.target;
+            $(btn).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Đang gửi...');
+            $(btn).prop('disabled', true);
+
+            $.ajax({
+                url: '/api/Reviews/' + movieId,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    rating: parseInt(rating),
+                    comment: comment
+                }),
+                success: function (res) {
+                    $('#reviewFormArea').slideUp();
+                    loadReviews(movieId);
+                    $(btn).parent().siblings().first().html('<div class="alert alert-success mt-3 py-2"><i class="bi bi-check-circle-fill me-2"></i>' + (res.message || 'Đánh giá thành công!') + '</div>');
                 },
-                body: JSON.stringify({ rating: parseInt(rating), comment: comment })
-            })
-            .then(res => res.json().then(data => ({status: res.status, body: data})))
-            .then(res => {
-                if(res.status === 200) {
-                    alert(res.body.message);
-                    location.reload(); // Tải lại trang để cập nhật điểm và ẩn form
+                error: function (xhr) {
+                    var msg = "Có lỗi xảy ra, vui lòng thử lại sau.";
+                    if(xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    alert(msg);
+                },
+                complete: function() {
+                    $(btn).html('GỬI BÌNH LUẬN').prop('disabled', false);
+                }
+            });
+        }
+
+        function loadReviews(movieId, btn = null) {
+            if (btn) {
+                $(btn).html('<i class="bi bi-arrow-clockwise me-1 spin-anim"></i> Đang tải...').prop('disabled', true);
+            }
+            
+            $.get('/api/Reviews/' + movieId, function (res) {
+                var html = '';
+                var data = res.reviews || [];
+                var total = res.totalReviews || 0;
+                var avg = res.averageRating || 0;
+
+                if (data && data.length > 0) {
+                    $('#noCommentsBox').hide();
+                    data.forEach(function (r) {
+                        var stars = '';
+                        for(var i = 1; i <= 5; i++) {
+                            if(i <= r.rating) stars += '<i class="bi bi-star-fill text-warning me-1"></i>';
+                            else stars += '<i class="bi bi-star text-secondary me-1"></i>';
+                        }
+                        
+                        var dateStr = new Date(r.createdAt).toLocaleDateString('vi-VN', {
+                            year: 'numeric', month: 'short', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+
+                        html += `
+                            <div class="mb-4 inner-glass-box rounded-5 p-4 border border-secondary border-opacity-25 transition-all" style="animation: slideIn 0.3s ease-out forwards;">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="rounded-circle overflow-hidden d-flex justify-content-center align-items-center me-3 border border-secondary" style="width: 45px; height: 45px; background: rgba(255,255,255,0.05);">
+                                        <i class="bi bi-person-fill text-secondary fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-white mb-0 fw-bold">${r.userName}</h6>
+                                        <div class="text-white-50 small mt-1"><i class="bi bi-clock me-1"></i>${dateStr}</div>
+                                    </div>
+                                    <div class="ms-auto inner-glass-box px-3 py-1 rounded-pill border border-secondary border-opacity-50">
+                                        ${stars}
+                                    </div>
+                                </div>
+                                <p class="text-light mb-0" style="line-height: 1.6;">${r.comment ? r.comment : '<i class="text-white-50">(Khách hàng không để lại nhận xét)</i>'}</p>
+                            </div>
+                        `;
+                    });
+                    
+                    $('#avgRatingBig, #avgRatingHeader').text(avg.toFixed(1));
+                    $('#totalReviewsText, #totalReviewsHeader').text(total);
+                    
+                    var avgStarsHtml = '';
+                    var intAvg = Math.floor(avg);
+                    for(var i = 1; i <= 5; i++) {
+                        if(i <= intAvg) avgStarsHtml += '<i class="bi bi-star-fill"></i>';
+                        else if(i == intAvg + 1 && avg % 1 >= 0.5) avgStarsHtml += '<i class="bi bi-star-half"></i>';
+                        else avgStarsHtml += '<i class="bi bi-star"></i>';
+                    }
+                    $('#avgStars').html(avgStarsHtml);
                 } else {
-                    alert(res.body.message || "Có lỗi xảy ra!");
+                    $('#noCommentsBox').show();
+                    $('#avgRatingBig, #avgRatingHeader').text("0.0");
+                    $('#totalReviewsText, #totalReviewsHeader').text("0");
+                    $('#avgStars').html('<i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>');
+                }
+                
+                $('#commentsContainer').html(html || $('#commentsContainer').html());
+            }).always(function() {
+                if (btn) {
+                    setTimeout(() => {
+                        $(btn).html('<i class="bi bi-check-lg me-1 text-success"></i> Đã tải!').css('border-color', '#00ff87');
+                        setTimeout(() => {
+                            $(btn).html('<i class="bi bi-arrow-clockwise me-1"></i> Làm mới').css('border-color', '').prop('disabled', false);
+                        }, 1500);
+                    }, 500);
                 }
             });
         }
