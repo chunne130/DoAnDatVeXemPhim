@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity.UI.Services;
-using System.Net;
-using System.Net.Mail;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace DoAnDatVeXemPhim.Services
 {
@@ -8,53 +10,45 @@ namespace DoAnDatVeXemPhim.Services
     {
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
-            // THÔNG TIN GMAIL 
-            var fromEmail = "nguyenthanhho2005@gmail.com";
+            // THÔNG TIN BREVO API (Thay thế hoàn toàn SMTP bị Render chặn)
+            var fromEmail = "nguyenthanhho2005@gmail.com"; // Email đã verify trên Brevo
+            var fromName = "Cinema Hub Support";
+            var apiKey = "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";
 
-            // MẬT KHẨU ỨNG DỤNG
-            var fromPassword = "mijwgtnfdgpfddao";
-
-            // FIX LỖI GỬI MAIL TRÊN RENDER: 
-            // Render ưu tiên dùng IPv6, nhưng Gmail sẽ tự động chặn mọi email gửi từ IPv6 nếu không có Reverse DNS (PTR).
-            // Do đó ta phải ép hệ thống dùng IPv4 của Gmail và bỏ qua lỗi xác thực tên miền chứng chỉ (do dùng thẳng IP).
-            string smtpHost = "smtp.gmail.com";
-            try
+            // Chuẩn bị payload JSON theo chuẩn API v3 của Brevo
+            var payload = new
             {
-                var addresses = Dns.GetHostAddresses("smtp.gmail.com");
-                var ipv4 = addresses.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
-                if (ipv4 != null) smtpHost = ipv4.ToString();
-            }
-            catch { }
+                sender = new { name = fromName, email = fromEmail },
+                to = new[] { new { email = email } },
+                subject = subject,
+                htmlContent = htmlMessage
+            };
 
-            ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
+            string jsonPayload = JsonSerializer.Serialize(payload);
+            var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
-            using (var client = new SmtpClient(smtpHost, 587))
+            using (var client = new HttpClient())
             {
-                client.EnableSsl = true;
-                client.UseDefaultCredentials = false;
-                client.Credentials = new NetworkCredential(fromEmail, fromPassword);
-
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(fromEmail, "Cinema Hub Support"),
-                    Subject = subject,
-                    Body = htmlMessage,
-                    IsBodyHtml = true
-                };
-                mailMessage.To.Add(email);
+                // Gắn API Key vào Header (Giao tiếp qua cổng 443 HTTPS chống chặn)
+                client.DefaultRequestHeaders.Add("api-key", apiKey);
+                client.DefaultRequestHeaders.Add("accept", "application/json");
 
                 try
                 {
-                    // Thực hiện gửi mail thực tế
-                    await client.SendMailAsync(mailMessage);
+                    // Gửi request POST tới máy chủ Brevo
+                    var response = await client.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorResponse = await response.Content.ReadAsStringAsync();
+                        System.Diagnostics.Debug.WriteLine("=== LỖI BREVO API: " + errorResponse);
+                        throw new System.Exception($"Lỗi gọi Brevo API: {response.StatusCode} - {errorResponse}");
+                    }
                 }
-                catch (Exception ex)
+                catch (System.Exception ex)
                 {
-                    // Ép lỗi hiện ra cửa sổ Output để có lỗi dễ báo
-                    System.Diagnostics.Debug.WriteLine("=== LỖI GỬI MAIL THIỆT NÈ: " + ex.Message);
-
-                    // Nếu lỗi SMTP, nó sẽ quăng lỗi ra trình duyệt để biết 
-                    throw new Exception("Lỗi hệ thống không gửi được Email: " + ex.Message);
+                    System.Diagnostics.Debug.WriteLine("=== LỖI GỬI MAIL BREVO: " + ex.Message);
+                    throw new System.Exception("Lỗi hệ thống gửi Mail (Brevo API): " + ex.Message);
                 }
             }
         }
