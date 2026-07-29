@@ -204,6 +204,8 @@ namespace DoAnDatVeXemPhim.Controllers
                 var orders = await _context.Orders
                     .Include(o => o.User)
                     .Include(o => o.OrderDetails).ThenInclude(od => od.Seat)
+                    .Include(o => o.OrderDetails).ThenInclude(od => od.Showtime).ThenInclude(s => s.Movie)
+                    .Include(o => o.Promotion)
                     .OrderByDescending(o => o.OrderDate)
                     .ToListAsync();
                 return PartialView("ManageOrders", orders);
@@ -299,6 +301,8 @@ namespace DoAnDatVeXemPhim.Controllers
                 var orders = await _context.Orders
                     .Include(o => o.User)
                     .Include(o => o.OrderDetails).ThenInclude(od => od.Seat)
+                    .Include(o => o.OrderDetails).ThenInclude(od => od.Showtime).ThenInclude(s => s.Movie)
+                    .Include(o => o.Promotion)
                     .OrderByDescending(o => o.OrderDate)
                     .ToListAsync();
                 return PartialView("ManageOrders", orders);

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Net;
 using System.Net.Mail;
 
@@ -14,7 +14,21 @@ namespace DoAnDatVeXemPhim.Services
             // MẬT KHẨU ỨNG DỤNG
             var fromPassword = "mijwgtnfdgpfddao";
 
-            using (var client = new SmtpClient("smtp.gmail.com", 587))
+            // FIX LỖI GỬI MAIL TRÊN RENDER: 
+            // Render ưu tiên dùng IPv6, nhưng Gmail sẽ tự động chặn mọi email gửi từ IPv6 nếu không có Reverse DNS (PTR).
+            // Do đó ta phải ép hệ thống dùng IPv4 của Gmail và bỏ qua lỗi xác thực tên miền chứng chỉ (do dùng thẳng IP).
+            string smtpHost = "smtp.gmail.com";
+            try
+            {
+                var addresses = Dns.GetHostAddresses("smtp.gmail.com");
+                var ipv4 = addresses.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+                if (ipv4 != null) smtpHost = ipv4.ToString();
+            }
+            catch { }
+
+            ServicePointManager.ServerCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) => true;
+
+            using (var client = new SmtpClient(smtpHost, 587))
             {
                 client.EnableSsl = true;
                 client.UseDefaultCredentials = false;
