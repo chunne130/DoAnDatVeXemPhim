@@ -274,15 +274,25 @@ namespace DoAnDatVeXemPhim.Controllers
                     </div>
                 </div>";
 
-            try
+            string userEmail = order.User.Email;
+            int currentOrderId = order.Id;
+
+            // Chạy ngầm việc gửi mail để không làm treo giao diện nếu mạng chậm hoặc SMTP bị chặn (trên Render)
+            _ = Task.Run(async () =>
             {
-                await _emailSender.SendEmailAsync(order.User.Email, subject, message);
-                TempData["Success"] = $"Đã duyệt đơn #{orderId} và gửi vé thành công!";
-            }
-            catch (Exception ex)
-            {
-                TempData["Success"] = $"Đã duyệt đơn #{orderId} nhưng không gửi được Email. Lỗi: {ex.Message}";
-            }
+                try
+                {
+                    // Tạo một instance mới của EmailSender để tránh lỗi Scoped Service bị dispose
+                    var emailService = new DoAnDatVeXemPhim.Services.EmailSender();
+                    await emailService.SendEmailAsync(userEmail, subject, message);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Lỗi gửi mail ngầm cho đơn {currentOrderId}: " + ex.Message);
+                }
+            });
+
+            TempData["Success"] = $"Đã duyệt đơn #{orderId} thành công! Vé đang được gửi ngầm qua Email.";
 
             if (IsAjaxRequest())
             {
