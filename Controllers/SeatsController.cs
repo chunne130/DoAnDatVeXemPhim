@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -133,7 +133,33 @@ namespace DoAnDatVeXemPhim.Controllers
             return View(seat);
         }
 
-        // 5. XÓA (DELETE) 
+        // 5. HOÁN ĐỔI VỊ TRÍ GHẾ (DRAG & DROP SWAP)
+        [HttpPost]
+        public async Task<IActionResult> SwapSeats(int seatId1, int seatId2)
+        {
+            var seat1 = await _context.Seats.FindAsync(seatId1);
+            var seat2 = await _context.Seats.FindAsync(seatId2);
+
+            if (seat1 == null || seat2 == null)
+            {
+                return BadRequest("Không tìm thấy ghế.");
+            }
+
+            // Hoán đổi số ghế (SeatNumber) cho nhau
+            string tempNumber = seat1.SeatNumber;
+            seat1.SeatNumber = seat2.SeatNumber;
+            seat2.SeatNumber = tempNumber;
+
+            // Nếu muốn đổi cả loại ghế (VIP/Normal) khi kéo thả, bạn có thể uncomment dòng dưới
+            // string tempType = seat1.SeatType;
+            // seat1.SeatType = seat2.SeatType;
+            // seat2.SeatType = tempType;
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        // 6. XÓA (DELETE) 
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();

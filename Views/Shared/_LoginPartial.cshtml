@@ -18,7 +18,7 @@
             <div class="dropdown-menu dropdown-menu-end dropdown-menu-custom shadow-lg mt-3 p-0" aria-labelledby="notiDropdown" style="width: 340px; border-radius: 16px; overflow: hidden; right: -10px;">
                 <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom" style="background: rgba(0,255,135,0.03); border-color: rgba(0,255,135,0.1) !important;">
                     <h6 class="mb-0 fw-bold text-white fs-6">Thông báo</h6>
-                    <a href="javascript:void(0)" class="text-decoration-none small fw-semibold" style="color: #00ff87; letter-spacing: 0.5px;" onclick="fetchNotifications()">Làm mới</a>
+                    <a href="javascript:void(0)" id="btnRefreshNoti" class="text-decoration-none small fw-semibold d-flex align-items-center gap-1" style="color: #00ff87; letter-spacing: 0.5px;" onclick="fetchNotifications(this)">Làm mới</a>
                 </div>
                 <div id="notiList" style="max-height: 400px; overflow-y: auto; overflow-x: hidden;" class="custom-scrollbar">
                     <div class="p-5 text-center" style="background: rgba(2,28,14,0.3);">
@@ -92,14 +92,39 @@
                 }
 
                 <li>
-                    <form class="form-inline w-100" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                        <button type="submit" class="dropdown-item dropdown-item-custom w-100 text-start">
+                    <form id="logoutForm" class="form-inline w-100" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                        <button type="button" class="dropdown-item dropdown-item-custom w-100 text-start" onclick="confirmLogout()">
                             <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
                         </button>
                     </form>
                 </li>
             </ul>
         </li>
+
+        <script>
+            function confirmLogout() {
+                Swal.fire({
+                    title: 'Xác Nhận Đăng Xuất',
+                    text: 'Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?',
+                    icon: 'warning',
+                    iconColor: '#ef4444',
+                    showCancelButton: true,
+                    background: '#0d1f10',
+                    color: '#fff',
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: 'rgba(255,255,255,0.1)',
+                    confirmButtonText: 'Đăng Xuất',
+                    cancelButtonText: 'Hủy',
+                    customClass: {
+                        popup: 'border border-success'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        document.getElementById('logoutForm').submit();
+                    }
+                });
+            }
+        </script>
     }
     else
     {
@@ -241,6 +266,15 @@
         color: #00ff87 !important;
     }
 
+    /* Animation xoay icon khi loading */
+    .spin-icon {
+        display: inline-block;
+        animation: spinRefresh 0.8s linear infinite;
+    }
+    @@keyframes spinRefresh {
+        100% { transform: rotate(360deg); }
+    }
+
     /* Tùy chỉnh thanh cuộn cho Dropdown */
     .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
@@ -319,7 +353,14 @@
         });
     });
 
-    function fetchNotifications() {
+    function fetchNotifications(btn) {
+        // Hiệu ứng loading trên nút
+        if (btn) {
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise spin-icon me-1"></i> Đang tải...';
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.6';
+        }
+
         fetch('/api/Notifications/GetMyNotifications')
             .then(res => res.json())
             .then(data => {
@@ -355,6 +396,23 @@
                         <i class="bi bi-bell-slash text-white-50 mb-3" style="font-size: 2.5rem; opacity: 0.5;"></i>
                         <p class="text-white-50 small mb-0 fw-medium">Chưa có thông báo mới</p>
                     </div>`;
+                }
+
+                // Hiệu ứng thành công
+                if (btn) {
+                    btn.innerHTML = '<i class="bi bi-check-lg me-1" style="color:#00ff87"></i> Đã cập nhật!';
+                    btn.style.opacity = '1';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Làm mới';
+                        btn.style.pointerEvents = 'auto';
+                    }, 1500);
+                }
+            })
+            .catch(() => {
+                if (btn) {
+                    btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i> Làm mới';
+                    btn.style.pointerEvents = 'auto';
+                    btn.style.opacity = '1';
                 }
             });
     }

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace DoAnDatVeXemPhim.Controllers
 {
@@ -50,9 +51,10 @@ namespace DoAnDatVeXemPhim.Controllers
             movie.ViewCount++;
             await _context.SaveChangesAsync();
 
+            var now = DateTime.Now;
             var showtimes = await _context.Showtimes
                 .Include(s => s.CinemaHall).ThenInclude(h => h.Cinema)
-                .Where(s => s.MovieId == movieId && s.IsActive && s.StartTime.Date == selectDate.Date && s.StartTime > DateTime.Now)
+                .Where(s => s.MovieId == movieId && s.IsActive && s.StartTime.Date == selectDate.Date && s.StartTime > now)
                 .OrderBy(s => s.StartTime)
                 .ToListAsync();
 
@@ -72,6 +74,7 @@ namespace DoAnDatVeXemPhim.Controllers
             if (showtime == null) return NotFound();
 
             // THUẬT TOÁN: Bỏ qua các đơn đã bị HỦY (CANCELLED) để giải phóng ghế
+            var now = DateTime.Now;
             var bookedSeatIds = await _context.OrderDetails
                 .Include(od => od.Order)
                 .Where(od => od.ShowtimeId == showtimeId
@@ -79,7 +82,7 @@ namespace DoAnDatVeXemPhim.Controllers
                           && (
                                 od.Order.IsPaid == true
                                 || od.Order.Status == "WAITING_CONFIRM"
-                                || (od.Order.Status == "PENDING" && od.Order.OrderDate > DateTime.Now.AddMinutes(-10) && showtime.StartTime > DateTime.Now)
+                                || (od.Order.Status == "PENDING" && od.Order.OrderDate > now.AddMinutes(-10) && showtime.StartTime > now)
                              )
                        )
                 .Select(od => od.SeatId)
@@ -517,6 +520,83 @@ namespace DoAnDatVeXemPhim.Controllers
             else
             {
                 return RedirectToAction("PaymentQR", new { orderId = newOrderId });
+            }
+        }
+
+        // --- THANH TOÁN LẠI ĐƠN HÀNG ĐÃ TỒN TẠI (TỪ TRANG VÉ CỦA TÔI) ---
+        [Authorize]
+        public async Task<IActionResult> PayExistingOrder(int orderId, string paymentMethod)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var order = await _context.Orders.Include(o => o.User).FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+
+            if (order == null || order.IsPaid || order.Status != "PENDING")
+            {
+                return RedirectToAction("MyTickets");
+            }
+
+            if (paymentMethod == "Wallet")
+            {
+                var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);
+                if (wallet == null || wallet.Balance < order.TotalAmount)
+                {
+                    TempData["Error"] = "Số dư ví không đủ để thanh toán vé này!";
+                    return RedirectToAction("MyTickets"); 
+                }
+
+                // Trừ tiền ví
+                wallet.Balance -= order.TotalAmount;
+                wallet.UpdatedAt = DateTime.Now;
+                _context.Wallets.Update(wallet);
+
+                // Ghi lịch sử giao dịch
+                _context.WalletTransactions.Add(new WalletTransaction
+                {
+                    WalletId = wallet.Id,
+                    Amount = order.TotalAmount,
+                    Type = "PAYMENT",
+                    Description = $"Thanh toán vé xem phim đơn hàng #{order.Id}",
+                    CreatedAt = DateTime.Now
+                });
+
+                // Đánh dấu đơn hàng là đã thanh toán 
+                order.IsPaid = true;
+                order.Status = "PAID";
+                _context.Orders.Update(order);
+
+                // --- TÍCH ĐIỂM THƯỞNG ---
+                var profile = await _context.CustomerProfiles.FirstOrDefaultAsync(p => p.UserId == userId);
+                if (profile != null)
+                {
+                    int earnedPoints = (int)(order.TotalAmount / 10000);
+                    profile.RewardPoints += earnedPoints;
+                    _context.CustomerProfiles.Update(profile);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Gửi mail xác nhận & thông báo
+                await SendConfirmationEmail(order);
+                await _notificationService.SendNotificationAsync(order.UserId, "🎉 Thanh toán thành công!", $"Đơn hàng {order.Id} trị giá {order.TotalAmount.ToString("N0")}đ đã được thanh toán bằng Ví nội bộ.", $"/User/OrderHistory");
+
+                return RedirectToAction("PaymentSuccess", new { orderId = order.Id, status = "PAID" });
+            }
+            else if (paymentMethod == "PayOS")
+            {
+                try
+                {
+                    string customCancelUrl = $"{Request.Scheme}://{Request.Host}/Booking/MyTickets";
+                    string checkoutUrl = await _thanhToanService.CreatePaymentLink(order.Id, order.TotalAmount, customCancelUrl);
+                    return Redirect(checkoutUrl);
+                }
+                catch (Exception ex)
+                {
+                    return Content("Lỗi gọi PayOS: " + ex.Message);
+                }
+            }
+            else
+            {
+                return RedirectToAction("PaymentQR", new { orderId = order.Id });
             }
         }
 

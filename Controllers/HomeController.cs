@@ -292,7 +292,7 @@ public class HomeController : Controller
             .ToDictionaryAsync(x => x.MovieId, x => x.Count);
         ViewBag.TicketsSold = ticketsSoldDict;
 
-        return View("Index", movies);
+        return View(movies);
     }
 
     // 4. PHIM SẮP CHIẾU

@@ -1,47 +1,38 @@
-﻿@model DoAnDatVeXemPhim.Models.Seat
+@model DoAnDatVeXemPhim.Models.Seat
 
 @{
-    ViewData["Title"] = "Chỉnh sửa ghế";
+    Layout = null;
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-dark text-warning py-3 text-center rounded-top-4">
-                    <h5 class="mb-0 fw-bold text-uppercase"><i class="bi bi-pencil-square me-2"></i>Cập nhật ghế @Model.SeatNumber</h5>
-                </div>
-                <div class="card-body p-4">
-                    <form asp-action="Edit">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-                        <input type="hidden" asp-for="Id" />
-                        <input type="hidden" asp-for="CinemaHallId" />
+<div class="modal-header border-bottom border-secondary p-4" style="border-color: rgba(255,255,255,0.05) !important;">
+    <h5 class="modal-title fw-bold text-uppercase" style="color: #60a5fa;"><i class="bi bi-pencil-square me-2"></i>Cập nhật ghế @Model.SeatNumber</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body p-4 text-light">
+    <form asp-action="Edit" id="actionForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="CinemaHallId" />
 
-                        <div class="mb-3">
-                            <label asp-for="SeatNumber" class="form-label fw-bold small">MÃ SỐ GHẾ</label>
-                            <input asp-for="SeatNumber" class="form-control border-2 shadow-sm" placeholder="Ví dụ: A1" />
-                            <span asp-validation-for="SeatNumber" class="text-danger small"></span>
-                        </div>
-
-                        <div class="mb-4">
-                            <label asp-for="SeatType" class="form-label fw-bold small">LOẠI GHẾ</label>
-                            <select asp-for="SeatType" class="form-select border-2 shadow-sm">
-                                <option value="Normal">Ghế Thường</option>
-                                <option value="VIP">Ghế VIP</option>
-                                <option value="Sweetbox">Ghế Đôi (Sweetbox)</option>
-                            </select>
-                            <span asp-validation-for="SeatType" class="text-danger small"></span>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-warning fw-bold py-2 shadow-sm">LƯU THAY ĐỔI</button>
-                            <a asp-action="Index" asp-route-hallId="@Model.CinemaHallId" class="btn btn-link text-muted small text-decoration-none">
-                                <i class="bi bi-arrow-left"></i> Quay lại sơ đồ
-                            </a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <div class="mb-4">
+            <label asp-for="SeatNumber" class="form-label fw-bold small text-muted">MÃ SỐ GHẾ</label>
+            <input asp-for="SeatNumber" class="form-control form-control-neon" placeholder="Ví dụ: A1" />
+            <span asp-validation-for="SeatNumber" class="text-danger small"></span>
         </div>
-    </div>
+
+        <div class="mb-4">
+            <label asp-for="SeatType" class="form-label fw-bold small text-muted">LOẠI GHẾ</label>
+            <select asp-for="SeatType" class="form-select form-control-neon">
+                <option value="Normal">Ghế Thường</option>
+                <option value="VIP">Ghế VIP</option>
+                <option value="Sweetbox">Ghế Đôi (Sweetbox)</option>
+            </select>
+            <span asp-validation-for="SeatType" class="text-danger small"></span>
+        </div>
+
+        <div class="d-grid gap-2 mt-4">
+            <button type="submit" class="btn btn-cyber-warning fw-bold py-2 shadow-sm text-dark rounded-pill">LƯU THAY ĐỔI</button>
+            <button type="button" class="btn btn-link text-muted small text-decoration-none" data-bs-dismiss="modal">Hủy bỏ</button>
+        </div>
+    </form>
 </div>

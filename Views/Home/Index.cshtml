@@ -445,60 +445,60 @@
                 @foreach (var item in (List<Movie>)ViewBag.RecommendedMovies)
                 {
                     <div class="col">
-                        <div class="movie-card movie-card-recommend" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
-                            <div class="poster-container shadow">
+                        <div class="mc-wrap" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                            <div class="mc-poster-wrap" id="mc-rec-@item.Id">
+                                <img src="@item.PosterUrl" alt="@item.Title"
+                                     loading="lazy"
+                                     onload="this.classList.add('mc-loaded'); document.getElementById('mc-rec-@item.Id').classList.add('img-loaded')"
+                                     onerror="this.src='/img/placeholder.jpg'; this.classList.add('mc-loaded')" />
+                                
                                 @if (!string.IsNullOrEmpty(item.AgeRestriction))
                                 {
-                                    <div class="badge-age-cyber-floating">
-                                        @RenderAgeBadge(item.AgeRestriction)
-                                    </div>
+                                    <div class="badge-age-cyber-floating">@RenderAgeBadge(item.AgeRestriction)</div>
                                 }
 
-                                @* 🚀 BỔ SUNG: Nút tim góc phải cho danh mục GỢI Ý PHIM 🚀 *@
-                                @{
-                                    bool isFavRec = ViewBag.FavoriteMovieIds != null && ((List<int>)ViewBag.FavoriteMovieIds).Contains(item.Id);
-                                }
+                                @{ bool isFavRec = ViewBag.FavoriteMovieIds != null && ((List<int>)ViewBag.FavoriteMovieIds).Contains(item.Id); }
                                 <button class="btn-favorite-heart @(isFavRec ? "active" : "")" data-movie-id="@item.Id">
                                     <i class="bi @(isFavRec ? "bi-heart-fill" : "bi-heart")"></i>
                                 </button>
-
-                                <img src="@item.PosterUrl" class="img-fluid w-100"
-                                     style="aspect-ratio:2/3;object-fit:cover;display:block;" alt="@item.Title" onload="this.classList.add('loaded')">
                                 
-                                @* 🚀 BỔ SUNG: Hiển thị Điểm số đánh giá trên Poster 🚀 *@
-                                @{
-                                    double avgRating = item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0;
-                                }
-                                @if (avgRating > 0)
-                                {
-                                    <div style="position: absolute; bottom: 8px; right: 8px; background-color: rgba(0, 0, 0, 0.75); color: #fbbf24; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2); z-index: 2; display: flex; align-items: center;">
-                                        <i class="bi bi-star-fill me-1"></i>@avgRating.ToString("F1")
-                                    </div>
-                                }
-                                <div class="movie-overlay">
+                                <div class="mc-overlay">
                                     <span class="badge mb-1" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);font-size:0.6rem;">
                                         <i class="bi bi-stars me-1"></i>GỢI Ý
                                     </span>
-                                    <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })"
-                                       class="btn-overlay-action btn-overlay-book">Đặt vé</a>
-                                    <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })"
-                                       class="btn-overlay-action btn-overlay-detail">Chi tiết</a>
+                                    <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })" class="mc-btn-p">
+                                        <i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay
+                                    </a>
+                                    <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="mc-btn-o">
+                                        <i class="bi bi-info-circle me-2"></i>Xem chi tiết
+                                    </a>
                                 </div>
                             </div>
-                            <div class="movie-title-text" style="color:#9ca3af;">@item.Title</div>
-                            
-                            @* --- ĐÃ THÊM: Tính năng Behavior Tracking (ViewCount) đổi thành Tickets Sold --- *@
-                            @{
-                                var ticketsDict = ViewBag.TicketsSold as Dictionary<int, int>;
-                                int sold = ticketsDict != null && ticketsDict.ContainsKey(item.Id) ? ticketsDict[item.Id] : 0;
-                            }
-                            <div class="d-flex justify-content-between align-items-center mt-1" style="padding: 0 10px 10px 10px;">
-                                <small class="text-muted"><i class="bi bi-clock me-1"></i> @item.Duration phút</small>
-                                <span class="fw-bold" style="color:#fbbf24; font-size:0.75rem;"><i class="bi bi-eye-fill me-1"></i>@sold</span>
-                            </div>
-                            <div class="movie-mobile-actions">
-                                <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })" class="btn btn-sm btn-success w-100" style="background:#00ff87; color:#022c22; border:none;">Đặt vé</a>
-                                <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="btn btn-sm btn-outline-light w-100">Chi tiết</a>
+                            <div class="mc-body">
+                                <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="text-decoration-none">
+                                    <h6 class="mc-title">@item.Title</h6>
+                                </a>
+                                <div class="mc-genres">
+                                    @if (item.Genres != null && item.Genres.Any()) {
+                                        foreach (var g in item.Genres.Take(2)) { <span class="mc-genre-tag">@g.Name</span> }
+                                    }
+                                </div>
+                                <div class="mc-meta">
+                                    <div>
+                                        @{ double avgRatingRec = item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0; }
+                                        @if (avgRatingRec > 0) { <span class="mc-star"><i class="bi bi-star-fill me-1"></i>@avgRatingRec.ToString("F1")</span> } else { <span style="color:#6b7280">—</span> }
+                                    </div>
+                                    <span><i class="bi bi-clock me-1"></i>@item.Duration phút</span>
+                                </div>
+                                @{
+                                    var ticketsDictRec = ViewBag.TicketsSold as Dictionary<int, int>;
+                                    int soldRec = ticketsDictRec != null && ticketsDictRec.ContainsKey(item.Id) ? ticketsDictRec[item.Id] : 0;
+                                    int pctRec = Math.Min(soldRec, 100);
+                                }
+                                <div class="mc-ticket-wrap">
+                                    <div class="mc-ticket-lbl"><i class="bi bi-ticket-perforated me-1"></i>@soldRec vé đã bán</div>
+                                    <div class="mc-ticket-bar"><div class="mc-ticket-fill" style="width:@(pctRec)%"></div></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -590,60 +590,58 @@
                     @foreach (var item in Model)
                     {
                         <div class="col">
-                            <div class="movie-card" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
-                                <div class="poster-container shadow">
+                            <div class="mc-wrap" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare="true" data-tilt-max-glare="0.2">
+                                <div class="mc-poster-wrap" id="mc-now-@item.Id">
+                                    <img src="@item.PosterUrl" alt="@item.Title"
+                                         loading="lazy"
+                                         onload="this.classList.add('mc-loaded'); document.getElementById('mc-now-@item.Id').classList.add('img-loaded')"
+                                         onerror="this.src='/img/placeholder.jpg'; this.classList.add('mc-loaded')" />
+                                    
                                     @if (!string.IsNullOrEmpty(item.AgeRestriction))
                                     {
-                                        <div class="badge-age-cyber-floating">
-                                            @RenderAgeBadge(item.AgeRestriction)
-                                        </div>
+                                        <div class="badge-age-cyber-floating">@RenderAgeBadge(item.AgeRestriction)</div>
                                     }
 
-                                    @* 🚀 BỔ SUNG: Nút tim góc phải cho danh mục NOW SHOWING 🚀 *@
-                                    @{
-                                        bool isFav = ViewBag.FavoriteMovieIds != null && ((List<int>)ViewBag.FavoriteMovieIds).Contains(item.Id);
-                                    }
+                                    @{ bool isFav = ViewBag.FavoriteMovieIds != null && ((List<int>)ViewBag.FavoriteMovieIds).Contains(item.Id); }
                                     <button class="btn-favorite-heart @(isFav ? "active" : "")" data-movie-id="@item.Id">
                                         <i class="bi @(isFav ? "bi-heart-fill" : "bi-heart")"></i>
                                     </button>
+                                    
 
-                                    <img src="@item.PosterUrl" class="img-fluid w-100"
-                                         style="aspect-ratio:2/3;object-fit:cover;display:block;" alt="@item.Title" onload="this.classList.add('loaded')">
-
-                                    @* 🚀 BỔ SUNG: Hiển thị Điểm số đánh giá trên Poster 🚀 *@
-                                    @{
-                                        double avgRating = item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0;
-                                    }
-                                    @if (avgRating > 0)
-                                    {
-                                        <div style="position: absolute; bottom: 8px; right: 8px; background-color: rgba(0, 0, 0, 0.75); color: #fbbf24; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2); z-index: 2; display: flex; align-items: center;">
-                                            <i class="bi bi-star-fill me-1"></i>@avgRating.ToString("F1")
-                                        </div>
-                                    }
-                                    <div class="movie-overlay">
-                                        <span class="badge bg-danger mb-1" style="font-size:0.6rem;letter-spacing:0.05em;">HOT</span>
-                                        <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })"
-                                           class="btn-overlay-action btn-overlay-book">Đặt vé</a>
-                                        <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })"
-                                           class="btn-overlay-action btn-overlay-detail">
-                                            Chi tiết
+                                    <div class="mc-overlay">
+                                        <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })" class="mc-btn-p">
+                                            <i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay
+                                        </a>
+                                        <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="mc-btn-o">
+                                            <i class="bi bi-info-circle me-2"></i>Xem chi tiết
                                         </a>
                                     </div>
                                 </div>
-                                <div class="movie-title-text">@item.Title</div>
-                                
-                                @* --- ĐÃ THÊM: Tính năng Behavior Tracking (ViewCount) đổi thành Tickets Sold --- *@
-                                @{
-                                    var ticketsDictMain = ViewBag.TicketsSold as Dictionary<int, int>;
-                                    int soldMain = ticketsDictMain != null && ticketsDictMain.ContainsKey(item.Id) ? ticketsDictMain[item.Id] : 0;
-                                }
-                                <div class="d-flex justify-content-between align-items-center mt-1" style="padding: 0 10px 10px 10px;">
-                                    <small class="text-muted"><i class="bi bi-clock me-1"></i> @item.Duration phút</small>
-                                    <span class="fw-bold" style="color:#fbbf24; font-size:0.75rem;"><i class="bi bi-eye-fill me-1"></i>@soldMain</span>
-                                </div>
-                                <div class="movie-mobile-actions">
-                                    <a href="@Url.Action("SelectShowtime", "Booking", new { movieId = item.Id })" class="btn btn-sm btn-success w-100" style="background:#00ff87; color:#022c22; border:none;">Đặt vé</a>
-                                    <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="btn btn-sm btn-outline-light w-100">Chi tiết</a>
+                                <div class="mc-body">
+                                    <a href="@Url.Action("MovieDetails", "Home", new { id = item.Id })" class="text-decoration-none">
+                                        <h6 class="mc-title">@item.Title</h6>
+                                    </a>
+                                    <div class="mc-genres">
+                                        @if (item.Genres != null && item.Genres.Any()) {
+                                            foreach (var g in item.Genres.Take(2)) { <span class="mc-genre-tag">@g.Name</span> }
+                                        }
+                                    </div>
+                                    <div class="mc-meta">
+                                        <div>
+                                            @{ double avgRating = item.MovieReviews?.Any() == true ? item.MovieReviews.Average(r => r.Rating) : 0; }
+                                            @if (avgRating > 0) { <span class="mc-star"><i class="bi bi-star-fill me-1"></i>@avgRating.ToString("F1")</span> } else { <span style="color:#6b7280">—</span> }
+                                        </div>
+                                        <span><i class="bi bi-clock me-1"></i>@item.Duration phút</span>
+                                    </div>
+                                    @{
+                                        var ticketsDictMain = ViewBag.TicketsSold as Dictionary<int, int>;
+                                        int soldMain = ticketsDictMain != null && ticketsDictMain.ContainsKey(item.Id) ? ticketsDictMain[item.Id] : 0;
+                                        int pct = Math.Min(soldMain, 100);
+                                    }
+                                    <div class="mc-ticket-wrap">
+                                        <div class="mc-ticket-lbl"><i class="bi bi-ticket-perforated me-1"></i>@soldMain vé đã bán</div>
+                                        <div class="mc-ticket-bar"><div class="mc-ticket-fill" style="width:@(pct)%"></div></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

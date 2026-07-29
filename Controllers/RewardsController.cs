@@ -33,7 +33,7 @@ namespace DoAnDatVeXemPhim.Controllers
 
             if (profile == null)
             {
-                TempData["ErrorMessage"] = "Vui lòng cập nhật đầy đủ thông tin 'Dữ liệu cá nhân' trong phần Cài Đặt Tài Khoản để tham gia Trung Tâm Ưu Đãi!";
+                TempData["WarningMessage"] = "Vui lòng cập nhật đầy đủ thông tin 'Dữ liệu cá nhân' trong phần Cài Đặt Tài Khoản để tham gia Trung Tâm Ưu Đãi!";
                 return RedirectToAction("Index", "Home");
             }
 

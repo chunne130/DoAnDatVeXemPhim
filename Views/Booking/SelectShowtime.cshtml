@@ -328,7 +328,7 @@
 
     @if (Model != null && Model.Any())
     {
-        @foreach (var cinemaGroup in Model.GroupBy(s => s.CinemaHall.Cinema))
+        @foreach (var cinemaGroup in Model.Where(s => s.CinemaHall?.Cinema != null).GroupBy(s => s.CinemaHall.Cinema))
         {
             <div class="cinema-card">
                 <div class="cinema-name">

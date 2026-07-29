@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject ApplicationDbContext Db
 @inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager NavManager
 
 <style>
     .my-tickets-container {
@@ -419,13 +420,24 @@
                                 </div>
                             </div>
 
-                             @* Nút hủy vé *@
-                             @if (canCancel)
-                             {
-                                 <button class="btn-cancel-ticket" onclick="cancelTicket(@order.Id)">
-                                     <i class="bi bi-x-circle"></i> @(order.IsPaid ? "Hủy vé & Hoàn tiền" : "Hủy giữ ghế")
-                                 </button>
-                             }
+                             @* Nút hành động *@
+                             <div class="d-flex gap-2 w-100 mt-2">
+                                 @if (canCancel)
+                                 {
+                                     <button class="btn-cancel-ticket flex-fill" onclick="cancelTicket(@order.Id)">
+                                         <i class="bi bi-x-circle"></i> @(order.IsPaid ? "Hủy vé & Hoàn tiền" : "Hủy giữ ghế")
+                                     </button>
+                                 }
+                                 
+                                 @if (!order.IsPaid && order.Status == "PENDING")
+                                 {
+                                     <button class="btn-cancel-ticket flex-fill text-decoration-none d-flex align-items-center justify-content-center" 
+                                             style="background: rgba(0,255,135,0.15); border-color: #00ff87; color: #00ff87; margin-top: 10px;"
+                                             @onclick="() => OpenPaymentModal(order.Id)">
+                                         <i class="bi bi-credit-card me-1"></i> Thanh toán
+                                     </button>
+                                 }
+                             </div>
 
                             <div class="text-center mt-3 pt-3" style="border-top:1px solid rgba(255,255,255,0.04);">
                                 <small style="font-size:0.65rem;color:#3d6650;font-family:monospace;">
@@ -645,11 +657,125 @@
             confirmButtonText: 'Đã hiểu'
         });
     }
+
+    function confirmWalletPayment(orderId) {
+        Swal.fire({
+            title: 'Xác nhận thanh toán',
+            text: 'Bạn có chắc chắn muốn thanh toán vé này bằng Ví nội bộ không?',
+            icon: 'question',
+            showCancelButton: true,
+            background: '#0f1f13',
+            color: '#ffffff',
+            confirmButtonColor: '#00ff87',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Đồng ý thanh toán',
+            cancelButtonText: 'Hủy'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/Booking/PayExistingOrder?orderId=${orderId}&paymentMethod=Wallet`;
+            }
+        });
+    }
 </script>
+
+@if (showPaymentModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background: #111827; border: 1px solid rgba(0,255,135,0.3); border-radius: 16px; box-shadow: 0 0 30px rgba(0,255,135,0.1);">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-uppercase" style="color: #00ff87; letter-spacing: 0.5px;">
+                        <i class="bi bi-wallet2 me-2"></i>Chọn phương thức thanh toán
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="ClosePaymentModal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <p class="text-muted small mb-4">Vui lòng chọn 1 trong các phương thức bên dưới để hoàn tất thanh toán cho đơn hàng #@selectedPaymentOrderId.ToString().PadLeft(6, '0').</p>
+                    
+                    <div class="d-flex flex-column gap-3">
+                        <label class="payment-method-label @(selectedPaymentMethod == "PayOS" ? "selected" : "")" style="cursor: pointer; padding: 15px; border-radius: 12px; border: 1px solid @(selectedPaymentMethod == "PayOS" ? "#00ff87" : "rgba(255,255,255,0.1)"); background: @(selectedPaymentMethod == "PayOS" ? "rgba(0,255,135,0.05)" : "transparent"); transition: all 0.2s;">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" value="PayOS" class="form-check-input mt-0 me-3 custom-radio" 
+                                       checked="@(selectedPaymentMethod == "PayOS")" 
+                                       @onchange="@(() => selectedPaymentMethod = "PayOS")" style="background-color: transparent;" />
+                                <div>
+                                    <div class="fw-bold text-white mb-1"><i class="bi bi-credit-card-2-front text-info me-2"></i>Thẻ ATM / Ngân hàng (PayOS)</div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">Quét mã QR tự động xác nhận qua ứng dụng ngân hàng</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="payment-method-label @(selectedPaymentMethod == "Wallet" ? "selected" : "")" style="cursor: pointer; padding: 15px; border-radius: 12px; border: 1px solid @(selectedPaymentMethod == "Wallet" ? "#00ff87" : "rgba(255,255,255,0.1)"); background: @(selectedPaymentMethod == "Wallet" ? "rgba(0,255,135,0.05)" : "transparent"); transition: all 0.2s;">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" value="Wallet" class="form-check-input mt-0 me-3 custom-radio" 
+                                       checked="@(selectedPaymentMethod == "Wallet")" 
+                                       @onchange="@(() => selectedPaymentMethod = "Wallet")" style="background-color: transparent;" />
+                                <div>
+                                    <div class="fw-bold text-white mb-1"><i class="bi bi-wallet-fill text-warning me-2"></i>Ví nội bộ Cinema Hub</div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">Thanh toán bằng số dư tích lũy hoặc tiền hoàn vé</div>
+                                </div>
+                            </div>
+                        </label>
+
+                        <label class="payment-method-label @(selectedPaymentMethod == "QR" ? "selected" : "")" style="cursor: pointer; padding: 15px; border-radius: 12px; border: 1px solid @(selectedPaymentMethod == "QR" ? "#00ff87" : "rgba(255,255,255,0.1)"); background: @(selectedPaymentMethod == "QR" ? "rgba(0,255,135,0.05)" : "transparent"); transition: all 0.2s;">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" value="QR" class="form-check-input mt-0 me-3 custom-radio" 
+                                       checked="@(selectedPaymentMethod == "QR")" 
+                                       @onchange="@(() => selectedPaymentMethod = "QR")" style="background-color: transparent;" />
+                                <div>
+                                    <div class="fw-bold text-white mb-1"><i class="bi bi-qr-code-scan text-success me-2"></i>Chuyển khoản thủ công</div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">Quét mã QR VietQR và chụp bill xác nhận qua Fanpage</div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 justify-content-center">
+                    <button type="button" class="btn text-white fw-bold px-4 py-2 me-2" style="background: rgba(255,255,255,0.1); border-radius: 8px;" @onclick="ClosePaymentModal">Hủy bỏ</button>
+                    @if (selectedPaymentMethod == "Wallet")
+                    {
+                        <button type="button" class="btn text-dark fw-bold px-4 py-2" style="background: #00ff87; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,255,135,0.3);" onclick="confirmWalletPayment(@selectedPaymentOrderId)">Xác nhận thanh toán</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn text-dark fw-bold px-4 py-2" style="background: #00ff87; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,255,135,0.3);" @onclick="ConfirmPayment">Xác nhận thanh toán</button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<Order> orders;
     private string searchQuery = "";
+
+    // Thêm biến cho Payment Modal
+    private bool showPaymentModal = false;
+    private int selectedPaymentOrderId = 0;
+    private string selectedPaymentMethod = "PayOS";
+
+    private void OpenPaymentModal(int orderId)
+    {
+        selectedPaymentOrderId = orderId;
+        selectedPaymentMethod = "PayOS";
+        showPaymentModal = true;
+    }
+
+    private void ClosePaymentModal()
+    {
+        showPaymentModal = false;
+        selectedPaymentOrderId = 0;
+    }
+
+    private void ConfirmPayment()
+    {
+        if (selectedPaymentOrderId > 0)
+        {
+            // Điều hướng sang BookingController
+            NavManager.NavigateTo($"/Booking/PayExistingOrder?orderId={selectedPaymentOrderId}&paymentMethod={selectedPaymentMethod}", forceLoad: true);
+        }
+    }
 
     private IEnumerable<Order> FilteredOrders => string.IsNullOrWhiteSpace(searchQuery)
         ? orders

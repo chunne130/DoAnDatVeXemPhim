@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -30,7 +30,7 @@ namespace DoAnDatVeXemPhim.Services
         /// <summary>
         /// Hàm chính để tạo Link thanh toán QR Code từ PayOS
         /// </summary>
-        public async Task<string> CreatePaymentLink(int orderId, decimal amount)
+        public async Task<string> CreatePaymentLink(int orderId, decimal amount, string customCancelUrl = null)
         {
             try
             {
@@ -43,7 +43,7 @@ namespace DoAnDatVeXemPhim.Services
                 string description = "Thanh toan don hang " + orderId;
 
                 // Đường dẫn trả về khi khách bấm "Hủy" hoặc "Thành công" trên trang QR
-                string cancelUrl = $"{_baseUrl}/Booking/Checkout";
+                string cancelUrl = customCancelUrl ?? $"{_baseUrl}/Booking/Checkout";
                 string returnUrl = $"{_baseUrl}/Booking/PaymentSuccess?orderId={orderId}";
 
                 // BƯỚC 2: TẠO CHỮ KÝ BẢO MẬT (SIGNATURE)

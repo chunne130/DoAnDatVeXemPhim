@@ -399,8 +399,96 @@
                 }
         }
     </style>
+    <style>
+        /* INTRO SCREEN LOGIC - CYBERPUNK HYPERSPACE EFFECT */
+        #cinema-hub-intro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #010a04;
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, background 0.6s ease;
+            overflow: hidden; /* Cần thiết để khi logo phóng to không hiện scrollbar */
+        }
+        
+        /* Hiệu ứng mờ viền màn hình (Vignette) mang lại cảm giác điện ảnh */
+        #cinema-hub-intro::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 30%, #000 120%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #cinema-hub-intro.fade-out {
+            opacity: 0;
+            pointer-events: none;
+            background: transparent;
+        }
+        
+        .intro-logo {
+            max-width: 450px;
+            width: 90%;
+            opacity: 0;
+            z-index: 2;
+            /* Animation kéo dài 3.2s */
+            animation: cinematicIntro 3.2s forwards cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        
+        @@keyframes cinematicIntro {
+            /* 0% - 12%: Neon Flicker (Nhấp nháy như đèn neon bị hỏng rồi sáng lên) */
+            0% { opacity: 0; transform: scale(0.9); filter: drop-shadow(0 0 0 transparent); }
+            3% { opacity: 1; filter: drop-shadow(0 0 40px #00ff87) brightness(1.5); }
+            5% { opacity: 0; filter: drop-shadow(0 0 0 transparent); }
+            7% { opacity: 1; filter: drop-shadow(0 0 50px #00ff87) brightness(1.5); }
+            9% { opacity: 0.2; }
+            12% { opacity: 1; filter: drop-shadow(0 0 35px #00ff87); transform: scale(1.15); }
+            
+            /* 12% - 70%: Ổn định và nhịp tim nhẹ (Heartbeat float) */
+            18% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(0, 255, 135, 0.4)); }
+            45% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(0, 255, 135, 0.7)); }
+            70% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 15px rgba(0, 255, 135, 0.4)); }
+            
+            /* 75% - 100%: Hyperspace Exit (Thu lấy đà rồi Phóng to rách màn hình lao thẳng vào web) */
+            80% { transform: scale(0.85); opacity: 1; filter: drop-shadow(0 0 50px #00ff87); } 
+            100% { transform: scale(12); opacity: 0; filter: blur(15px); }
+        }
+    </style>
 </head>
 <body>
+    <!-- CINEMA HUB INTRO -->
+    <div id="cinema-hub-intro">
+        <div class="intro-content text-center">
+            <img src="~/images/cinema-hub-logo-neon.png" alt="Cinema Hub Logo" class="intro-logo" />
+        </div>
+    </div>
+    
+    <script>
+        if (sessionStorage.getItem("cinemaIntroPlayed")) {
+            document.getElementById("cinema-hub-intro").style.display = "none";
+        } else {
+            sessionStorage.setItem("cinemaIntroPlayed", "true");
+            
+            // Background sẽ mờ dần sau 2.8s (khi logo đang lao thẳng vào mặt người dùng)
+            setTimeout(function () {
+                var introEl = document.getElementById("cinema-hub-intro");
+                if (introEl) {
+                    introEl.classList.add("fade-out");
+                    // Xóa hẳn thẻ div sau đó
+                    setTimeout(function () { introEl.remove(); }, 600);
+                }
+            }, 2800); 
+        }
+    </script>
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
             <div class="container-xl d-flex align-items-center justify-content-between flex-wrap flex-lg-nowrap">
@@ -640,7 +728,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Lỗi',
-                    text: '@TempData["ErrorMessage"]',
+                    text: @Html.Raw(Json.Serialize(TempData["ErrorMessage"])),
                     confirmButtonColor: '#ef4444',
                     background: '#0d1f10',
                     color: '#fff',
@@ -659,8 +747,29 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Thành công',
-                    text: '@TempData["SuccessMessage"]',
+                    text: @Html.Raw(Json.Serialize(TempData["SuccessMessage"])),
                     confirmButtonColor: '#00ff87',
+                    background: '#0d1f10',
+                    color: '#fff',
+                    customClass: {
+                        popup: 'border border-success'
+                    }
+                });
+            });
+        </script>
+    }
+
+    @if (TempData["WarningMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                Swal.fire({
+                    icon: 'warning',
+                    iconColor: '#00ff87',
+                    title: 'Thông báo',
+                    text: @Html.Raw(Json.Serialize(TempData["WarningMessage"])),
+                    confirmButtonColor: '#00ff87',
+                    confirmButtonText: 'Đã hiểu',
                     background: '#0d1f10',
                     color: '#fff',
                     customClass: {

@@ -1,4 +1,4 @@
-﻿@model DoAnDatVeXemPhim.Models.Showtime
+@model DoAnDatVeXemPhim.Models.Showtime
 
 @{
     Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
@@ -62,7 +62,7 @@
 
                 <div class="mb-4">
                     <label asp-for="StartTime" class="form-label fw-bold small text-muted">GIỜ BẮT ĐẦU</label>
-                    <input asp-for="StartTime" class="form-control form-control-neon" type="datetime-local" />
+                    <input asp-for="StartTime" class="form-control form-control-neon" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
                     <span asp-validation-for="StartTime" class="text-danger small"></span>
                 </div>
 
@@ -100,6 +100,7 @@
         background-color: rgba(0, 0, 0, 0.4) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         color: #ffffff !important;
+        color-scheme: dark;
         transition: all 0.3s ease;
     }
 
@@ -149,7 +150,7 @@
 </style>
 
 <script>
-    // 🚀 AJAX CHO FORM CREATE SHOWTIMES
+    // AJAX CHO FORM CREATE SHOWTIMES
     $('#createShowtimeForm').on('submit', function(e) {
         e.preventDefault();
         var $form = $(this);

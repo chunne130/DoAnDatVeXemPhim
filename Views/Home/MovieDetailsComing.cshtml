@@ -2,141 +2,333 @@
 @model Movie
 
 @{
-    ViewData["Title"] = Model.Title + " - Chi tiết & Đặt vé";
+    ViewData["Title"] = Model.Title + " - Chi tiết phim sắp chiếu";
 }
 
-<div class="container mt-5 mb-5">
-    @* Breadcrumb *@
-    <div class="d-inline-flex align-items-center mb-4 px-4 py-2 rounded-pill" style="background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1);">
-        <a asp-controller="Home" asp-action="Index" class="text-decoration-none fw-semibold" style="color: #9ca3af; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'">
-            <i class="bi bi-house-door" style="color: #00ff87;"></i> Home
-        </a>
-        <i class="bi bi-chevron-right mx-3" style="font-size: 0.7rem; color: #4b5563;"></i>
-        <a asp-controller="Home" asp-action="Movies" class="text-decoration-none fw-semibold" style="color: #9ca3af; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#9ca3af'">
-            Phim
-        </a>
-        <i class="bi bi-chevron-right mx-3" style="font-size: 0.7rem; color: #4b5563;"></i>
-        <span class="fw-bold text-white">@Model.Title</span>
-    </div>
+<style>
+    :root {
+        --neon-green: #00ff87;
+        --neon-green-dim: rgba(0, 255, 135, 0.2);
+        --dark-bg: #0a0a0c;
+        --glass-bg: rgba(15, 20, 25, 0.65);
+        --glass-border: rgba(255, 255, 255, 0.08);
+    }
 
-    <div class="card shadow-lg border-0 rounded-4 overflow-hidden bg-white">
-        <div class="card-body p-4 p-md-5">
-            <div class="row g-5">
-                @* Cột trái: Poster & Nút hành động *@
-                <div class="col-md-4">
-                    <div class="position-relative mb-4 group">
-                        <img src="@Model.PosterUrl" class="img-fluid rounded-4 shadow-lg w-100" style="object-fit: cover; min-height: 480px;" alt="Poster" />
-                        <div class="position-absolute top-0 start-0 m-3">
-                            <span class="badge bg-danger rounded-pill px-3 shadow">HOT MOVIE</span>
+    body {
+        background-color: var(--dark-bg) !important;
+        color: #fff;
+    }
+
+    /* Hero Banner: Làm mờ và làm tối ảnh poster làm nền */
+    .hero-banner {
+        position: relative;
+        width: 100%;
+        min-height: 85vh;
+        background-image: url('@Model.PosterUrl');
+        background-size: cover;
+        background-position: center 20%;
+        background-attachment: fixed;
+        display: flex;
+        align-items: center;
+        padding-top: 100px;
+        padding-bottom: 60px;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(10,10,12,0.6) 0%, rgba(10,10,12,0.85) 40%, rgba(10,10,12,1) 100%),
+                    radial-gradient(circle at 70% 30%, rgba(0,255,135,0.15) 0%, transparent 60%);
+        backdrop-filter: blur(8px);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .movie-poster-wrapper {
+        border-radius: 30px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 255, 135, 0.15);
+        border: 1px solid var(--glass-border);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .movie-poster-wrapper:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 255, 135, 0.25);
+    }
+
+    .movie-title {
+        font-family: 'Inter', sans-serif;
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 900;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+        background: linear-gradient(to right, #fff, #b3b3b3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .meta-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #d1d5db;
+        backdrop-filter: blur(5px);
+        transition: all 0.3s;
+    }
+    .meta-tag:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .meta-tag.highlight {
+        background: var(--neon-green-dim);
+        border-color: rgba(0, 255, 135, 0.3);
+        color: var(--neon-green);
+    }
+
+    .btn-buy-ticket {
+        background: var(--neon-green);
+        color: #000;
+        font-weight: 800;
+        font-size: 1.1rem;
+        padding: 16px 36px;
+        border-radius: 50px;
+        border: none;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0, 255, 135, 0.2), 0 0 0 0 rgba(0, 255, 135, 0.5);
+    }
+    .btn-buy-ticket:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 25px rgba(0, 255, 135, 0.3), 0 0 15px 0 rgba(0, 255, 135, 0.6);
+        color: #000;
+    }
+
+    .btn-trailer {
+        background: var(--glass-bg);
+        color: #fff;
+        font-weight: 700;
+        padding: 14px 32px;
+        border-radius: 50px;
+        border: 1px solid var(--glass-border);
+        letter-spacing: 1px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    .btn-trailer:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #fff;
+        color: #fff;
+        transform: translateY(-3px);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 1.5rem;
+    }
+    .section-title::before {
+        content: '';
+        display: block;
+        width: 4px;
+        height: 24px;
+        background: var(--neon-green);
+        border-radius: 4px;
+        box-shadow: 0 0 10px var(--neon-green);
+    }
+
+    .cast-card {
+        background: transparent;
+        border: none;
+        width: 100px;
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+    .cast-card:hover {
+        transform: translateY(-8px);
+    }
+    .cast-img-wrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        padding: 3px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+        margin: 0 auto 12px auto;
+        transition: all 0.3s ease;
+    }
+    .cast-card:hover .cast-img-wrapper {
+        background: linear-gradient(135deg, var(--neon-green) 0%, #009951 100%);
+        box-shadow: 0 10px 20px rgba(0, 255, 135, 0.2);
+    }
+    .cast-img-wrapper img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--dark-bg);
+    }
+    .cast-name {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #e5e7eb;
+        line-height: 1.2;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    
+    .rounded-4 { border-radius: 16px !important; }
+    .rounded-5 { border-radius: 24px !important; }
+</style>
+
+<div class="hero-banner">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content">
+        @* Breadcrumb *@
+        <nav aria-label="breadcrumb" class="mb-4 d-none d-md-block">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted hover-white"><i class="bi bi-house-door"></i></a></li>
+                <li class="breadcrumb-item"><a href="/Home/Upcoming" class="text-decoration-none text-muted hover-white">Kho Phim Sắp Chiếu</a></li>
+                <li class="breadcrumb-item active text-white" aria-current="page" style="opacity: 0.8;">@Model.Title</li>
+            </ol>
+        </nav>
+
+        <div class="row g-5 align-items-center">
+            @* BÊN TRÁI: POSTER *@
+            <div class="col-lg-4 col-md-5 d-flex flex-column align-items-center">
+                <div class="movie-poster-wrapper w-100 mb-4 position-relative">
+                    <img src="@Model.PosterUrl" class="w-100 img-fluid" alt="@Model.Title" />
+                    @if (!string.IsNullOrEmpty(Model.AgeRestriction))
+                    {
+                        <div class="position-absolute top-0 end-0 m-3">
+                            <span class="badge bg-danger rounded-pill fs-6 px-3 py-2 shadow fw-bold border border-danger">@Model.AgeRestriction</span>
                         </div>
-                    </div>
+                    }
+                </div>
 
-                    <div class="d-grid gap-3">
-                        @* Nút Trailer *@
-                        @if (!string.IsNullOrEmpty(Model.TrailerUrl))
-                        {
-                            <button id="btnPlayTrailer" class="btn btn-outline-dark btn-lg fw-bold rounded-pill shadow-sm py-2"
-                                    data-bs-toggle="modal" data-bs-target="#trailerModal" data-url="@Model.TrailerUrl">
-                                <i class="bi bi-play-circle-fill me-2"></i> XEM TRAILER
-                            </button>
-                        }
+                <div class="d-flex flex-column w-100 gap-3">
+                    @* Không có MUA VÉ NGAY vì phim sắp chiếu *@
+                    <button class="btn btn-trailer text-center w-100" style="background: rgba(255,255,255,0.05); color: #9ca3af; cursor: not-allowed; border: 1px dashed rgba(255,255,255,0.2);">
+                        <i class="bi bi-calendar-event me-2 fs-5"></i> SẮP KHỞI CHIẾU
+                    </button>
+                    
+                    @if (!string.IsNullOrEmpty(Model.TrailerUrl))
+                    {
+                        <button class="btn btn-buy-ticket text-center w-100" data-bs-toggle="modal" data-bs-target="#trailerModal" data-url="@Model.TrailerUrl">
+                            <i class="bi bi-play-circle-fill me-2 fs-5"></i> XEM TRAILER
+                        </button>
+                    }
+                </div>
+            </div>
+
+            @* BÊN PHẢI: THÔNG TIN PHIM *@
+            <div class="col-lg-8 col-md-7">
+                <h1 class="movie-title mb-3">@Model.Title</h1>
+                
+                <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+                    @* Thể loại *@
+                    @if (Model.Genres != null && Model.Genres.Any())
+                    {
+                        <div class="meta-tag highlight">
+                            <i class="bi bi-tags-fill me-2"></i> @string.Join(", ", Model.Genres.Select(g => g.Name))
+                        </div>
+                    }
+                    
+                    <div class="meta-tag">
+                        <i class="bi bi-clock-history me-2" style="color: #60a5fa;"></i> @Model.Duration phút
+                    </div>
+                    
+                    <div class="meta-tag">
+                        <i class="bi bi-calendar3 me-2" style="color: #fbbf24;"></i> Khởi chiếu: @(Model.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Đang cập nhật")
                     </div>
                 </div>
 
-                @* Cột phải: Thông tin phim *@
-                <div class="col-md-8">
-                    <div class="mb-4">
-                        <h1 class="display-4 fw-bold text-dark mb-2">@Model.Title</h1>
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="badge bg-warning text-dark px-3 rounded-pill fw-bold">@(Model.Genres != null ? string.Join(", ", Model.Genres.Select(g => g.Name)) : "")</span>
-                            <span class="text-muted"><i class="bi bi-clock-fill text-danger me-1"></i> @Model.Duration phút</span>
-                            <span class="text-muted"><i class="bi bi-calendar-event-fill text-danger me-1"></i> @(Model.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Đang cập nhật")</span>
-                        </div>
-                    </div>
+                <div class="section-title mt-5">Nội dung phim</div>
+                <p class="text-light pe-lg-5" style="font-size: 1.05rem; line-height: 1.8; color: #cbd5e1 !important; text-align: justify; font-weight: 300;">
+                    @Model.Description
+                </p>
 
-                    <div class="mb-5 py-4 border-top border-bottom">
-                        <h5 class="fw-bold text-dark text-uppercase mb-3" style="letter-spacing: 1px;">Nội dung phim</h5>
-                        <p class="text-secondary" style="font-size: 1.1rem; line-height: 1.9; text-align: justify;">@Model.Description</p>
-                    </div>
+                <div class="row g-5 mt-2">
+                    @* Khu vực Đạo diễn *@
+                    @if (Model.Directors != null && Model.Directors.Any())
+                    {
+                        <div class="col-12 col-xl-5">
+                            <div class="section-title">Đạo diễn</div>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var d in Model.Directors)
+                                {
+                                    <div class="cast-card" title="@d.Name">
+                                        <div class="cast-img-wrapper">
+                                            <img src="@(string.IsNullOrEmpty(d.ProfilePictureUrl) ? "https://via.placeholder.com/100" : d.ProfilePictureUrl)" alt="@d.Name" />
+                                        </div>
+                                        <div class="cast-name">@d.Name</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @* Khu vực Diễn viên *@
+                    @if (Model.Actors != null && Model.Actors.Any())
+                    {
+                        <div class="col-12 col-xl-7">
+                            <div class="section-title">Diễn viên chính</div>
+                            <div class="d-flex flex-wrap gap-3">
+                                @foreach (var a in Model.Actors)
+                                {
+                                    <div class="cast-card" title="@a.Name">
+                                        <div class="cast-img-wrapper">
+                                            <img src="@(string.IsNullOrEmpty(a.ProfilePictureUrl) ? "https://via.placeholder.com/100" : a.ProfilePictureUrl)" alt="@a.Name" />
+                                        </div>
+                                        <div class="cast-name">@a.Name</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-@* Modal Trailer  *@
+@* Modal Trailer *@
 <div class="modal fade" id="trailerModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content bg-dark border-0 rounded-4 overflow-hidden">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title text-white fw-bold">Trailer: @Model.Title</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pb-0 justify-content-end position-absolute top-0 end-0 z-3 p-4">
+                <button type="button" class="btn-close btn-close-white fs-4" data-bs-dismiss="modal" aria-label="Close" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></button>
             </div>
-            <div class="modal-body p-3">
-                <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-black shadow-lg">
+            <div class="modal-body p-0">
+                <div class="ratio ratio-16x9 rounded-5 overflow-hidden shadow-lg border border-secondary border-opacity-50" style="background: #000;">
                     <iframe id="videoFrame" src="" title="YouTube video" allowfullscreen allow="autoplay"></iframe>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    /* Ép toàn bộ background trang chi tiết về màu xanh đen huyền bí theo ảnh mẫu */
-    body {
-        background-color: #060f0c !important;
-        font-family: 'Inter', sans-serif;
-    }
-
-    .rounded-4 {
-        border-radius: 1.25rem !important;
-    }
-
-    .hover-shadow:hover {
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        border-color: #dc3545 !important;
-    }
-
-    .transition {
-        transition: all 0.3s ease;
-    }
-
-    .btn-danger {
-        background-color: #dc3545;
-        border: none;
-    }
-
-    .btn-outline-danger:hover {
-        background-color: #dc3545;
-        color: white !important;
-    }
-
-    /* Hiệu ứng nháy nhẹ cho nút Mua vé */
-    .animate-pulse {
-        animation: pulse 2s infinite;
-    }
-
-    @@keyframes pulse {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
-        }
-
-        70% {
-            transform: scale(1.02);
-            box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
-        }
-
-        100% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
-        }
-    }
-
-    .booking-list .row {
-        background-color: #fff;
-    }
-</style>
 
 @section Scripts {
     <script>

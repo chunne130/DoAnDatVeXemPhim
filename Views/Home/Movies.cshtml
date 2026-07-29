@@ -1,6 +1,7 @@
 @model IEnumerable<DoAnDatVeXemPhim.Models.Movie>
 @{
-    ViewData["Title"] = "Phim sắp chiếu - Cinema Hub";
+    ViewData["Title"] = "Phim Đang Chiếu - Cinema Hub";
+    var ticketsSold = ViewBag.TicketsSold as Dictionary<int, int> ?? new Dictionary<int, int>();
     var allGenres = Model?.SelectMany(m => m.Genres ?? new List<DoAnDatVeXemPhim.Models.Genre>())
                           .GroupBy(g => g.Id).Select(g => g.First()).ToList()
                     ?? new List<DoAnDatVeXemPhim.Models.Genre>();
@@ -287,19 +288,22 @@
     .badge-t18 { background: #7c3aed; color: #fff; }
     .badge-p { background: #10b981; color: #000; }
 
-    .date-badge {
+    .hot-badge {
         position: absolute;
         top: 12px; right: 12px;
-        background: rgba(0,255,135,0.15);
-        color: #00ff87;
-        border: 1px solid rgba(0,255,135,0.3);
-        backdrop-filter: blur(4px);
+        background: linear-gradient(135deg, #ff416c, #ff4b2b);
+        color: #fff;
         padding: 3px 10px;
         border-radius: 6px;
         font-weight: 700;
         font-size: 0.7rem;
         letter-spacing: 0.5px;
         z-index: 2;
+        animation: pulseHot 2s infinite;
+    }
+    @@keyframes pulseHot {
+        0%, 100% { box-shadow: 0 0 6px rgba(255,65,108,0.5); }
+        50% { box-shadow: 0 0 18px rgba(255,65,108,0.9); }
     }
 
     /* Card body */
@@ -342,12 +346,23 @@
         color: #6b7280;
         margin-top: auto;
     }
-    .movie-meta .release-date {
-        color: #00ff87;
-        font-weight: 600;
+    .movie-meta .rating {
         display: flex;
         align-items: center;
         gap: 4px;
+        color: #f59e0b;
+        font-weight: 700;
+    }
+
+    /* Ticket counter */
+    .ticket-bar-wrap { margin-top: 2px; }
+    .ticket-label { font-size: 0.72rem; color: #6b7280; margin-bottom: 4px; display: flex; justify-content: space-between; }
+    .ticket-bar { height: 3px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+    .ticket-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #00ff87, #00e676);
+        border-radius: 3px;
+        transition: width 1s ease;
     }
 
     /* Empty state */
@@ -386,11 +401,11 @@
             <div class="col-lg-7">
                 <div class="d-flex align-items-center gap-2 mb-3">
                     <span style="width:5px; height:5px; border-radius:50%; background:#00ff87; box-shadow:0 0 8px #00ff87;"></span>
-                    <span style="font-size:0.8rem; color:#00ff87; letter-spacing:2px; text-transform:uppercase; font-weight:600;">Sắp Chiếu</span>
+                    <span style="font-size:0.8rem; color:#00ff87; letter-spacing:2px; text-transform:uppercase; font-weight:600;">Đang Chiếu</span>
                 </div>
-                <h1 class="hero-title-gradient mb-3">Phim Sắp<br>Chiếu Tại Rạp</h1>
+                <h1 class="hero-title-gradient mb-3">Phim Đang<br>Chiếu Tại Rạp</h1>
                 <p style="color:#6b7280; font-size:1.05rem; max-width:500px; line-height:1.7;">
-                    Khám phá các tựa phim bom tấn sắp đổ bộ tại hệ thống rạp Cinema Hub trên toàn quốc. Lên lịch ngay hôm nay!
+                    Khám phá các tựa phim đang được chiếu tại hệ thống rạp Cinema Hub trên toàn quốc. Đặt vé ngay hôm nay!
                 </p>
             </div>
             <div class="col-lg-5">
@@ -398,13 +413,30 @@
                     <div class="col-6">
                         <div class="hero-stat-card">
                             <div class="hero-stat-num">@(Model?.Count() ?? 0)</div>
-                            <div class="hero-stat-label">Phim sắp chiếu</div>
+                            <div class="hero-stat-label">Phim đang chiếu</div>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="hero-stat-card">
                             <div class="hero-stat-num">@allGenres.Count</div>
                             <div class="hero-stat-label">Thể loại</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-stat-card">
+                            <div class="hero-stat-num">@(ticketsSold.Values.Sum())</div>
+                            <div class="hero-stat-label">Vé đã bán</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-stat-card">
+                            @{
+                                var avgRating = Model?.Where(m => m.MovieReviews?.Any() == true)
+                                                     .Select(m => m.MovieReviews.Average(r => r.Rating))
+                                                     .DefaultIfEmpty(0).Average() ?? 0;
+                            }
+                            <div class="hero-stat-num">@avgRating.ToString("F1")<span style="font-size:1rem;">★</span></div>
+                            <div class="hero-stat-label">Điểm TB</div>
                         </div>
                     </div>
                 </div>
@@ -438,8 +470,14 @@
                         <div class="sort-option selected" data-value="default" onclick="selectSort(this, 'default', 'Mặc định')">
                             <span class="sort-icon">✦</span> Mặc định
                         </div>
-                        <div class="sort-option" data-value="newest" onclick="selectSort(this, 'newest', 'Gần nhất')">
-                            <span class="sort-icon"></span> Gần nhất
+                        <div class="sort-option" data-value="rating" onclick="selectSort(this, 'rating', 'Đánh giá cao')">
+                            <span class="sort-icon"></span> Đánh giá cao
+                        </div>
+                        <div class="sort-option" data-value="tickets" onclick="selectSort(this, 'tickets', 'Bán chạy')">
+                            <span class="sort-icon"></span> Bán chạy
+                        </div>
+                        <div class="sort-option" data-value="newest" onclick="selectSort(this, 'newest', 'Mới nhất')">
+                            <span class="sort-icon"></span> Mới nhất
                         </div>
                     </div>
                 </div>
@@ -468,9 +506,15 @@
             <div class="row g-4" id="movieGrid">
                 @foreach (var movie in Model)
                 {
+                    var sold = ticketsSold.ContainsKey(movie.Id) ? ticketsSold[movie.Id] : 0;
+                    var avgRev = movie.MovieReviews?.Any() == true ? movie.MovieReviews.Average(r => r.Rating) : 0;
+                    var isHot = sold > 20;
                     var genreNames = movie.Genres != null ? string.Join(",", movie.Genres.Select(g => g.Name)) : "";
-                    
-                    <div class="col-6 col-md-4 col-lg-3 movie-col" data-genre="@genreNames" data-date="@(movie.ReleaseDate?.ToString("yyyyMMdd") ?? "0")">
+                    var genreDisplay = movie.Genres != null ? string.Join(", ", movie.Genres.Select(g => g.Name)) : "";
+                    var maxSold = ticketsSold.Values.Any() ? ticketsSold.Values.Max() : 1;
+                    var barPct = maxSold > 0 ? Math.Min((double)sold / maxSold * 100, 100) : 0;
+
+                    <div class="col-6 col-md-4 col-lg-3 movie-col" data-genre="@genreNames" data-rating="@avgRev" data-tickets="@sold" data-date="@(movie.ReleaseDate?.ToString("yyyyMMdd") ?? "0")">
                         <div class="movie-card-wrap h-100">
                             <div class="poster-wrap" id="pw-@movie.Id">
                                 <img src="@movie.PosterUrl" alt="@movie.Title"
@@ -487,17 +531,23 @@
                                     <span class="age-badge @ageClass">@movie.AgeRestriction</span>
                                 }
 
-                                <span class="date-badge"><i class="bi bi-calendar-event me-1"></i>@(movie.ReleaseDate?.ToString("dd/MM") ?? "Sắp chiếu")</span>
+                                @if (isHot)
+                                {
+                                    <span class="hot-badge"> HOT</span>
+                                }
 
                                 <div class="poster-overlay">
-                                    <a href="/Home/MovieDetailsComing/@movie.Id" class="overlay-btn-primary">
+                                    <a href="/Home/MovieDetails/@movie.Id" class="overlay-btn-primary">
+                                        <i class="bi bi-ticket-perforated me-2"></i>Đặt vé ngay
+                                    </a>
+                                    <a href="/Home/MovieDetails/@movie.Id" class="overlay-btn-outline">
                                         <i class="bi bi-info-circle me-2"></i>Xem chi tiết
                                     </a>
                                 </div>
                             </div>
 
                             <div class="movie-card-body">
-                                <a href="/Home/MovieDetailsComing/@movie.Id" class="text-decoration-none">
+                                <a href="/Home/MovieDetails/@movie.Id" class="text-decoration-none">
                                     <h6 class="movie-card-title">@movie.Title</h6>
                                 </a>
 
@@ -512,11 +562,28 @@
                                 }
 
                                 <div class="movie-meta">
-                                    <div class="release-date">
-                                        <i class="bi bi-calendar-check"></i> Khởi chiếu: @(movie.ReleaseDate?.ToString("dd/MM/yyyy") ?? "Chưa có")
+                                    <div class="rating">
+                                        <i class="bi bi-star-fill"></i>
+                                        <span>@(avgRev > 0 ? avgRev.ToString("F1") : "—")</span>
+                                        @if (movie.MovieReviews?.Any() == true)
+                                        {
+                                            <span style="color:#6b7280; font-weight:400;">(@movie.MovieReviews.Count)</span>
+                                        }
                                     </div>
-                                    <span><i class="bi bi-clock me-1"></i>@movie.Duration p</span>
+                                    <span><i class="bi bi-clock me-1"></i>@movie.Duration phút</span>
                                 </div>
+
+                                @if (sold > 0)
+                                {
+                                    <div class="ticket-bar-wrap">
+                                        <div class="ticket-label">
+                                            <span><i class="bi bi-ticket-perforated me-1"></i>@sold vé đã bán</span>
+                                        </div>
+                                        <div class="ticket-bar">
+                                            <div class="ticket-bar-fill" style="width: @barPct.ToString("F0")%"></div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         </div>
                     </div>
@@ -527,10 +594,10 @@
         {
             <div class="empty-state">
                 <div class="empty-icon"><i class="bi bi-film"></i></div>
-                <h4 class="text-white mb-2">Hiện chưa có phim nào sắp chiếu</h4>
-                <p style="color:#6b7280;">Hãy quay lại sau để cập nhật những bom tấn mới nhất nhé!</p>
-                <a asp-controller="Home" asp-action="Index" class="btn mt-3" style="background:#00ff87; color:#022c22; font-weight:700; border-radius:50px; padding: 12px 32px;">
-                    <i class="bi bi-film me-2"></i>Xem phim đang chiếu
+                <h4 class="text-white mb-2">Hiện không có phim nào đang chiếu</h4>
+                <p style="color:#6b7280;">Vui lòng quay lại sau hoặc khám phá phim sắp chiếu!</p>
+                <a asp-controller="Home" asp-action="Upcoming" class="btn mt-3" style="background:#00ff87; color:#022c22; font-weight:700; border-radius:50px; padding: 12px 32px;">
+                    <i class="bi bi-calendar-event me-2"></i>Xem phim sắp chiếu
                 </a>
             </div>
         }
@@ -538,100 +605,105 @@
 </div>
 
 @section Scripts {
-    <script>
-        let currentSort = 'default';
-        let currentGenre = 'all';
+<script>
+    let currentGenre = 'all';
+    let currentView = 'grid';
 
-        function toggleSortMenu() {
-            const menu = document.getElementById('sortMenu');
-            const trigger = document.getElementById('sortTrigger');
-            if (menu.classList.contains('open')) {
-                menu.classList.remove('open');
-                trigger.classList.remove('open');
-            } else {
-                menu.classList.add('open');
-                trigger.classList.add('open');
-            }
+    // ─── CUSTOM SORT DROPDOWN ───
+    function toggleSortMenu() {
+        const trigger = document.getElementById('sortTrigger');
+        const menu = document.getElementById('sortMenu');
+        trigger.classList.toggle('open');
+        menu.classList.toggle('open');
+    }
+    function selectSort(el, value, label) {
+        document.querySelectorAll('.sort-option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        document.getElementById('sortLabel').textContent = label;
+        document.getElementById('sortTrigger').classList.remove('open');
+        document.getElementById('sortMenu').classList.remove('open');
+        sortMovies(value);
+    }
+    // Click outside to close
+    document.addEventListener('click', e => {
+        const wrapper = document.getElementById('sortWrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            document.getElementById('sortTrigger').classList.remove('open');
+            document.getElementById('sortMenu').classList.remove('open');
         }
+    });
 
-        document.addEventListener('click', function(e) {
-            const wrap = document.getElementById('sortWrapper');
-            if (wrap && !wrap.contains(e.target)) {
-                document.getElementById('sortMenu')?.classList.remove('open');
-                document.getElementById('sortTrigger')?.classList.remove('open');
+    function filterGenre(el, genre) {
+        // Update pills
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        currentGenre = genre;
+        applyFilters();
+    }
+
+    function sortMovies(sortBy) {
+        const grid = document.getElementById('movieGrid');
+        const cols = [...grid.querySelectorAll('.movie-col')];
+
+        cols.sort((a, b) => {
+            if (sortBy === 'rating') {
+                return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+            } else if (sortBy === 'tickets') {
+                return parseInt(b.dataset.tickets) - parseInt(a.dataset.tickets);
+            } else if (sortBy === 'newest') {
+                return (b.dataset.date || '0').localeCompare(a.dataset.date || '0');
             }
+            return 0;
         });
 
-        function selectSort(element, val, label) {
-            document.querySelectorAll('.sort-option').forEach(el => {
-                el.classList.remove('selected');
-                el.querySelector('.sort-icon').innerHTML = '';
-            });
-            element.classList.add('selected');
-            element.querySelector('.sort-icon').innerHTML = '✦';
+        grid.innerHTML = '';
+        cols.forEach(c => grid.appendChild(c));
+        applyFilters();
+    }
 
-            document.getElementById('sortLabel').innerText = label;
-            toggleSortMenu();
-            currentSort = val;
-            applyFilters();
+    function applyFilters() {
+        const cols = document.querySelectorAll('.movie-col');
+        let visible = 0;
+
+        cols.forEach(col => {
+            const genres = col.dataset.genre || '';
+            const show = currentGenre === 'all' || genres.split(',').some(g => g.trim() === currentGenre);
+            col.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+
+        document.getElementById('countNum').textContent = visible;
+    }
+
+    function setView(view) {
+        currentView = view;
+        const grid = document.getElementById('movieGrid');
+        const btnGrid = document.getElementById('btnGrid');
+        const btnList = document.getElementById('btnList');
+
+        if (view === 'list') {
+            grid.classList.add('list-view');
+            btnList.classList.add('active');
+            btnGrid.classList.remove('active');
+        } else {
+            grid.classList.remove('list-view');
+            btnGrid.classList.add('active');
+            btnList.classList.remove('active');
         }
+    }
 
-        function filterGenre(element, genre) {
-            document.querySelectorAll('.filter-pill').forEach(el => el.classList.remove('active'));
-            element.classList.add('active');
-            currentGenre = genre;
-            applyFilters();
-        }
-
-        function setView(viewType) {
-            const grid = document.getElementById('movieGrid');
-            const btnGrid = document.getElementById('btnGrid');
-            const btnList = document.getElementById('btnList');
-
-            if (!grid) return;
-
-            if (viewType === 'list') {
-                grid.classList.add('list-view');
-                btnList.classList.add('active');
-                btnGrid.classList.remove('active');
-            } else {
-                grid.classList.remove('list-view');
-                btnGrid.classList.add('active');
-                btnList.classList.remove('active');
-            }
-        }
-
-        function applyFilters() {
-            const grid = document.getElementById('movieGrid');
-            if (!grid) return;
-
-            const items = Array.from(grid.getElementsByClassName('movie-col'));
-            let visibleCount = 0;
-
-            items.sort((a, b) => {
-                if (currentSort === 'newest') {
-                    return parseInt(a.getAttribute('data-date')) - parseInt(b.getAttribute('data-date'));
-                }
-                return 0;
-            });
-
-            items.forEach(item => grid.appendChild(item));
-
-            items.forEach(item => {
-                const itemGenres = item.getAttribute('data-genre').split(',');
-                if (currentGenre === 'all' || itemGenres.includes(currentGenre)) {
-                    item.style.display = '';
-                    visibleCount++;
-                    item.style.animation = 'none';
-                    item.offsetHeight;
-                    item.style.animation = `sortDropIn 0.4s ease forwards ${visibleCount * 0.05}s`;
-                    item.style.opacity = '0';
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            document.getElementById('countNum').innerText = visibleCount;
-        }
-    </script>
+    // Staggered animation khi load
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.movie-col');
+        cards.forEach((card, i) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            setTimeout(() => {
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, i * 60);
+        });
+    });
+</script>
 }
