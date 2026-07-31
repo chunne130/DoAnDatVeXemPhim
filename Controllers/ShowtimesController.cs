@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -96,6 +96,11 @@ namespace DoAnDatVeXemPhim.Controllers
             var showtime = await _context.Showtimes.FindAsync(id);
             if (showtime == null) return NotFound();
 
+            if (showtime.StartTime <= DateTime.Now)
+            {
+                return BadRequest("Không thể sửa suất chiếu đã hoặc đang chiếu.");
+            }
+
             LoadDropdownData(showtime);
 
             if (IsAjaxRequest()) return PartialView(showtime);
@@ -107,6 +112,12 @@ namespace DoAnDatVeXemPhim.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("Id,StartTime,BasePrice,Format,IsActive,MovieId,CinemaHallId")] Showtime showtime)
         {
             if (id != showtime.Id) return NotFound();
+
+            var existingShowtime = await _context.Showtimes.AsNoTracking().FirstOrDefaultAsync(s => s.Id == id);
+            if (existingShowtime != null && existingShowtime.StartTime <= DateTime.Now)
+            {
+                return BadRequest("Không thể sửa suất chiếu đã hoặc đang chiếu.");
+            }
 
             if (ModelState.IsValid)
             {

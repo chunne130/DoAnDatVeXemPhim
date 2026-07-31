@@ -108,9 +108,12 @@
                                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Chi tiết">
                                         <i class="bi bi-info-circle" style="color: #60a5fa;"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Sửa">
-                                        <i class="bi bi-pencil" style="color: #fbbf24;"></i>
-                                    </a>
+                                    @if (item.StartTime > DateTime.Now)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-light border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 6px;" title="Sửa">
+                                            <i class="bi bi-pencil" style="color: #fbbf24;"></i>
+                                        </a>
+                                    }
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0 ajax-link d-flex align-items-center justify-content-center" style="background: rgba(239, 68, 68, 0.1); width: 32px; height: 32px; border-radius: 6px;" title="Xóa">
                                         <i class="bi bi-trash" style="color: #ef4444;"></i>
                                     </a>
