@@ -84,7 +84,6 @@
 - [ ] Add Email/SMS ticket confirmation
 - [ ] Implement AI-based movie recommendation
 - [ ] Multi-language support (English/Vietnamese)
-- [ ] Advanced Admin Analytics Dashboard with Charts
 
 ---
 
