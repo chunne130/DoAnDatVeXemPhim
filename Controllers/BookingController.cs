@@ -572,6 +572,17 @@ namespace DoAnDatVeXemPhim.Controllers
                 return RedirectToAction("MyTickets");
             }
 
+            var firstDetail = await _context.OrderDetails
+                .Include(od => od.Showtime)
+                .FirstOrDefaultAsync(od => od.OrderId == orderId);
+                
+            if (firstDetail != null && firstDetail.Showtime.StartTime < DateTime.Now)
+            {
+                if (isAjax) return Json(new { success = false, message = "Suất chiếu của vé này đã bắt đầu hoặc kết thúc, không thể thanh toán nữa!" });
+                TempData["Error"] = "Suất chiếu của vé này đã bắt đầu hoặc kết thúc, không thể thanh toán nữa!";
+                return RedirectToAction("MyTickets");
+            }
+
             if (paymentMethod == "Wallet")
             {
                 var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);

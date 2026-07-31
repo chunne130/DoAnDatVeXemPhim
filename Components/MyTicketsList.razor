@@ -293,9 +293,10 @@
                 // KIỂM TRA ĐỒNG BỘ ĐIỀU KIỆN HỦY
                 bool isMoreThan1Hour = showtime > DateTime.Now.AddHours(1);
                 bool isWithinGracePeriod = (DateTime.Now - order.OrderDate).TotalMinutes <= 10 && showtime > DateTime.Now;
+                bool isPast = showtime < DateTime.Now;
 
-                // canCancel: Đơn PENDING chưa thanh toán OR Đơn PAID có đủ điều kiện thời gian
-                bool canCancel = (!order.IsPaid && order.Status == "PENDING")
+                // canCancel: Đơn PENDING chưa thanh toán (chưa chiếu) OR Đơn PAID có đủ điều kiện thời gian
+                bool canCancel = (!order.IsPaid && order.Status == "PENDING" && !isPast)
                               || (order.IsPaid && order.Status == "PAID" && (isMoreThan1Hour || isWithinGracePeriod));
 
                 <div class="col-md-6 col-lg-4">
@@ -406,10 +407,16 @@
                                             <i class="bi bi-qr-code-scan"></i> Đã soát vé
                                         </span>
                                     }
+                                    else if (isPast)
+                                    {
+                                        <span class="badge-status" style="background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid rgba(156,163,175,0.25);">
+                                            <i class="bi bi-clock-history"></i> Hết hạn
+                                        </span>
+                                    }
                                     else
                                     {
                                         <span class="badge-status badge-pending">
-                                            <i class="bi bi-clock-history"></i> Chờ thanh toán
+                                            <i class="bi bi-hourglass-split"></i> Chờ thanh toán
                                         </span>
                                     }
                                     <div>
@@ -431,7 +438,7 @@
                                      </button>
                                  }
                                  
-                                 @if (!order.IsPaid && order.Status == "PENDING")
+                                 @if (!order.IsPaid && order.Status == "PENDING" && !isPast)
                                  {
                                      <button class="btn-cancel-ticket flex-fill text-decoration-none d-flex align-items-center justify-content-center" 
                                              style="background: rgba(0,255,135,0.15); border-color: #00ff87; color: #00ff87; margin-top: 10px;"
