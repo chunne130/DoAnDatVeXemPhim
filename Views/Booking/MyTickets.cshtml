@@ -2,12 +2,86 @@
     ViewData["Title"] = "Vé của tôi";
 }
 
-@* Nhúng component Blazor vào đây *@
 <div style="min-height: calc(100vh - 350px);">
     <component type="typeof(DoAnDatVeXemPhim.Components.MyTicketsList)" render-mode="ServerPrerendered" />
 </div>
 
-@* Bắt buộc phải có gòng này *@
+<!-- Bootstrap Modal chứa Iframe PayOS -->
+<div class="modal fade" id="payosModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: 2px solid #00ff87; height: 85vh; border-radius: 16px; background-color: #ffffff; overflow: hidden; box-shadow: 0 0 30px rgba(0, 255, 135, 0.3);">
+            <div class="modal-header pb-3 pt-3" style="background-color: #010a04; border-bottom: 2px solid #00ff87;">
+                <h5 class="modal-title fw-bold text-uppercase" style="color: #00ff87; letter-spacing: 1px;"><i class="bi bi-qr-code-scan me-2"></i>Cổng thanh toán PayOS</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="cancelPayOS()"></button>
+            </div>
+            <div class="modal-body p-0 d-flex flex-column" style="position: relative; background-color: #ffffff;">
+                <div id="payos-checkout-iframe" style="width: 100%; height: 100%; flex: 1;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/_framework/blazor.server.js"></script>
+    <script src="https://cdn.payos.vn/payos-checkout/v1/stable/payos-initialize.js"></script>
+    <script>
+        window.openPayOSPopup = function (orderId, paymentMethod) {
+            Swal.fire({
+                title: 'Đang kết nối cổng thanh toán...',
+                background: '#0f1f13',
+                color: '#ffffff',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            fetch(`/Booking/PayExistingOrder?orderId=${orderId}&paymentMethod=${paymentMethod}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                Swal.close();
+                if (data.success) {
+                    if (data.method === 'PayOS') {
+                        const payOSConfig = {
+                            RETURN_URL: window.location.origin + "/Booking/PaymentSuccess?orderId=" + data.orderId, 
+                            ELEMENT_ID: "payos-checkout-iframe",
+                            CHECKOUT_URL: data.checkoutUrl,
+                            embedded: true,
+                            onSuccess: (event) => {
+                                window.location.href = `/Booking/PaymentSuccess?orderId=${data.orderId}&orderCode=${data.orderCode}&status=PAID`;
+                            },
+                            onCancel: (event) => {
+                                var modalInstance = bootstrap.Modal.getInstance(document.getElementById('payosModal'));
+                                if (modalInstance) modalInstance.hide();
+                            },
+                            onExit: (event) => {
+                                var modalInstance = bootstrap.Modal.getInstance(document.getElementById('payosModal'));
+                                if (modalInstance) modalInstance.hide();
+                            }
+                        };
+                        const { open } = PayOSCheckout.usePayOS(payOSConfig);
+                        open();
+                        
+                        var payosModal = new bootstrap.Modal(document.getElementById('payosModal'));
+                        payosModal.show();
+                        
+                        window.cancelPayOS = function() {
+                            document.getElementById('payos-checkout-iframe').innerHTML = '';
+                        }
+                    } else if (data.method === 'Wallet') {
+                        window.location.href = data.redirectUrl;
+                    }
+                } else {
+                    Swal.fire('Lỗi!', data.message, 'error');
+                }
+            }).catch(err => {
+                Swal.close();
+                Swal.fire('Lỗi!', err.message, 'error');
+            });
+        }
+    </script>
 }

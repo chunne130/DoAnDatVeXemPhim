@@ -64,10 +64,25 @@
         background: rgba(10,20,13,0.8);
         backdrop-filter: blur(15px);
         border-bottom: 1px solid rgba(255,255,255,0.05);
-        padding: 16px 0;
+        padding: 12px 0;
         position: sticky;
         top: 70px;
         z-index: 20;
+    }
+    @@media (max-width: 991px) {
+        .filter-bar {
+            position: relative; /* Tắt sticky trên điện thoại để không bị đi theo khi cuộn */
+            top: auto;
+            z-index: 10;
+        }
+    }
+    /* Hide scrollbar for horizontally scrollable elements */
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
     }
     .filter-pill {
         background: rgba(255,255,255,0.05);
@@ -416,15 +431,17 @@
 @* ─── FILTER BAR ─── *@
 <div class="filter-bar">
     <div class="container-xl">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1" id="genrePills">
-                <span class="filter-pill active" data-genre="all" onclick="filterGenre(this, 'all')">
-                    <i class="bi bi-grid-3x3-gap me-1"></i> Tất cả
-                </span>
-                @foreach (var g in allGenres)
-                {
-                    <span class="filter-pill" data-genre="@g.Name" onclick="filterGenre(this, '@g.Name')">@g.Name</span>
-                }
+        <div class="d-flex align-items-center gap-3 flex-wrap flex-md-nowrap" style="max-width: 100%;">
+            <div id="genrePills" style="width: 100%; max-width: 100%; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none;" class="pb-1">
+                <div style="display: flex; gap: 8px; flex-wrap: nowrap; width: max-content;">
+                    <span class="filter-pill active" data-genre="all" onclick="filterGenre(this, 'all')">
+                        <i class="bi bi-grid-3x3-gap me-1"></i> Tất cả
+                    </span>
+                    @foreach (var g in allGenres)
+                    {
+                        <span class="filter-pill" data-genre="@g.Name" onclick="filterGenre(this, '@g.Name')">@g.Name</span>
+                    }
+                </div>
             </div>
             <div class="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
                 <!-- Custom Sort Dropdown -->

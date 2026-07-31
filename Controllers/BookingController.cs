@@ -280,7 +280,11 @@ namespace DoAnDatVeXemPhim.Controllers
             var combosJson = HttpContext.Session.GetString("SelectedCombos");
 
             if (showtimeId == null || string.IsNullOrEmpty(finalTotalStr) || string.IsNullOrEmpty(seatsJson))
+            {
+                bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                if (isAjax) return Json(new { success = false, message = "Đơn hàng của bạn đã được khởi tạo thành công trước đó." });
                 return RedirectToAction("Index", "Home");
+            }
 
             var userId = _userManager.GetUserId(User);
 
@@ -501,6 +505,11 @@ namespace DoAnDatVeXemPhim.Controllers
                 // Bắn thông báo Real-time
                 await _notificationService.SendNotificationAsync(order.UserId, "🎉 Thanh toán thành công!", $"Đơn hàng {order.Id} trị giá {order.TotalAmount.ToString("N0")}đ đã được thanh toán bằng Ví nội bộ.", $"/User/OrderHistory");
 
+                bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                if (isAjax)
+                {
+                    return Json(new { success = true, method = "Wallet", redirectUrl = $"/Booking/PaymentSuccess?orderId={newOrderId}&status=PAID" });
+                }
                 return RedirectToAction("PaymentSuccess", new { orderId = newOrderId, status = "PAID" });
             }
 
@@ -508,30 +517,58 @@ namespace DoAnDatVeXemPhim.Controllers
             {
                 try
                 {
-                    string checkoutUrl = await _thanhToanService.CreatePaymentLink(newOrderId, finalTotal);
+                    var (checkoutUrl, orderCode) = await _thanhToanService.CreatePaymentLink(newOrderId, finalTotal);
                     ClearBookingSession();
+                    
+                    bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                    if (isAjax)
+                    {
+                        return Json(new { success = true, method = "PayOS", checkoutUrl = checkoutUrl, orderCode = orderCode, orderId = newOrderId });
+                    }
+                    
                     return Redirect(checkoutUrl);
                 }
                 catch (Exception ex)
                 {
+                    bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                    if (isAjax) return Json(new { success = false, message = "Lỗi gọi PayOS: " + ex.Message });
                     return Content("Lỗi gọi PayOS: " + ex.Message);
                 }
             }
-            else
-            {
-                return RedirectToAction("PaymentQR", new { orderId = newOrderId });
-            }
+            
+            return BadRequest("Phương thức thanh toán không hợp lệ.");
         }
 
         // --- THANH TOÁN LẠI ĐƠN HÀNG ĐÃ TỒN TẠI (TỪ TRANG VÉ CỦA TÔI) ---
         [Authorize]
         public async Task<IActionResult> PayExistingOrder(int orderId, string paymentMethod)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var order = await _context.Orders.Include(o => o.User).FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+            var userId = _userManager.GetUserId(User);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
 
-            if (order == null || order.IsPaid || order.Status != "PENDING")
+            bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+
+            if (order == null)
             {
+                if (isAjax) return Json(new { success = false, message = $"Không tìm thấy đơn hàng ID {orderId} trong DB." });
+                return RedirectToAction("MyTickets");
+            }
+
+            if (order.UserId != userId)
+            {
+                if (isAjax) return Json(new { success = false, message = $"Bạn không có quyền thanh toán đơn hàng này. (Đơn của {order.UserId}, bạn là {userId})" });
+                return RedirectToAction("MyTickets");
+            }
+
+            if (order.IsPaid)
+            {
+                if (isAjax) return Json(new { success = false, message = "Đơn hàng này đã được thanh toán rồi!" });
+                return RedirectToAction("MyTickets");
+            }
+
+            if (order.Status != "PENDING")
+            {
+                if (isAjax) return Json(new { success = false, message = $"Đơn hàng không ở trạng thái chờ thanh toán. (Trạng thái hiện tại: {order.Status})" });
                 return RedirectToAction("MyTickets");
             }
 
@@ -540,6 +577,10 @@ namespace DoAnDatVeXemPhim.Controllers
                 var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);
                 if (wallet == null || wallet.Balance < order.TotalAmount)
                 {
+                    if (isAjax)
+                    {
+                        return Json(new { success = false, message = "Số dư ví không đủ để thanh toán vé này!" });
+                    }
                     TempData["Error"] = "Số dư ví không đủ để thanh toán vé này!";
                     return RedirectToAction("MyTickets"); 
                 }
@@ -579,6 +620,11 @@ namespace DoAnDatVeXemPhim.Controllers
                 await SendConfirmationEmail(order);
                 await _notificationService.SendNotificationAsync(order.UserId, "🎉 Thanh toán thành công!", $"Đơn hàng {order.Id} trị giá {order.TotalAmount.ToString("N0")}đ đã được thanh toán bằng Ví nội bộ.", $"/User/OrderHistory");
 
+                if (isAjax)
+                {
+                    return Json(new { success = true, method = "Wallet", redirectUrl = $"/Booking/PaymentSuccess?orderId={order.Id}&status=PAID" });
+                }
+
                 return RedirectToAction("PaymentSuccess", new { orderId = order.Id, status = "PAID" });
             }
             else if (paymentMethod == "PayOS")
@@ -586,33 +632,23 @@ namespace DoAnDatVeXemPhim.Controllers
                 try
                 {
                     string customCancelUrl = $"{Request.Scheme}://{Request.Host}/Booking/MyTickets";
-                    string checkoutUrl = await _thanhToanService.CreatePaymentLink(order.Id, order.TotalAmount, customCancelUrl);
+                    var (checkoutUrl, orderCode) = await _thanhToanService.CreatePaymentLink(order.Id, order.TotalAmount, customCancelUrl);
+                    
+                    if (isAjax)
+                    {
+                        return Json(new { success = true, method = "PayOS", checkoutUrl = checkoutUrl, orderCode = orderCode, orderId = order.Id });
+                    }
+
                     return Redirect(checkoutUrl);
                 }
                 catch (Exception ex)
                 {
+                    if (isAjax) return Json(new { success = false, message = "Lỗi gọi PayOS: " + ex.Message });
                     return Content("Lỗi gọi PayOS: " + ex.Message);
                 }
             }
-            else
-            {
-                return RedirectToAction("PaymentQR", new { orderId = order.Id });
-            }
-        }
 
-        // --- HIỆN MÃ QR CÁ NHÂN (VietQR THỦ CÔNG) ---
-        public async Task<IActionResult> PaymentQR(int orderId)
-        {
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
-            if (order == null) return NotFound();
-
-            ViewBag.OrderId = orderId;
-            ViewBag.Total = order.TotalAmount;
-            ViewBag.OrderCode = $"CHUB{orderId}{order.OrderDate:HHmm}";
-
-            ViewBag.QRUrl = $"https://img.vietqr.io/image/MB-123456789-compact2.png?amount={order.TotalAmount}&addInfo={ViewBag.OrderCode}&accountName=NGUYEN THANH HO";
-
-            return View();
+            return BadRequest("Phương thức thanh toán không hợp lệ.");
         }
 
         [HttpPost]
@@ -641,25 +677,62 @@ namespace DoAnDatVeXemPhim.Controllers
             {
                 if (order != null && !order.IsPaid)
                 {
-                    order.IsPaid = true;
-                    order.Status = "PAID";
+                    bool isLegit = true;
                     
-                    // --- TÍCH ĐIỂM THƯỞNG (10.000đ = 1 điểm) ---
-                    var profile = await _context.CustomerProfiles.FirstOrDefaultAsync(p => p.UserId == order.UserId);
-                    if (profile != null)
+                    // NẾU LÀ PAYOS -> BẮT BUỘC KIỂM TRA API ĐỂ CHỐNG HACK GIẢ MẠO LINK
+                    if (order.PaymentMethod == "PayOS")
                     {
-                        int earnedPoints = (int)(order.TotalAmount / 10000);
-                        profile.RewardPoints += earnedPoints;
-                        _context.CustomerProfiles.Update(profile);
+                        string orderCodeStr = Request.Query["orderCode"];
+                        if (long.TryParse(orderCodeStr, out long orderCode))
+                        {
+                            var paymentInfo = await _thanhToanService.GetPaymentInfo(orderCode);
+                            
+                            // Phải đúng trạng thái PAID và số tiền phải khớp với database mới được duyệt
+                            if (paymentInfo == null || 
+                                paymentInfo["status"]?.ToString() != "PAID" ||
+                                (decimal)paymentInfo["amount"] != order.TotalAmount)
+                            {
+                                isLegit = false;
+                            }
+                        }
+                        else
+                        {
+                            isLegit = false;
+                        }
                     }
 
-                    await _context.SaveChangesAsync();
-                    await SendConfirmationEmail(order);
+                    if (isLegit)
+                    {
+                        order.IsPaid = true;
+                        order.Status = "PAID";
+                        
+                        // --- TÍCH ĐIỂM THƯỞNG (10.000đ = 1 điểm) ---
+                        var profile = await _context.CustomerProfiles.FirstOrDefaultAsync(p => p.UserId == order.UserId);
+                        if (profile != null)
+                        {
+                            int earnedPoints = (int)(order.TotalAmount / 10000);
+                            profile.RewardPoints += earnedPoints;
+                            _context.CustomerProfiles.Update(profile);
+                        }
 
-                    // Bắn thông báo Real-time
-                    await _notificationService.SendNotificationAsync(order.UserId, "🎉 Thanh toán thành công!", $"Đơn hàng {order.Id} trị giá {order.TotalAmount.ToString("N0")}đ đã được thanh toán.", $"/User/OrderHistory");
+                        await _context.SaveChangesAsync();
+                        await SendConfirmationEmail(order);
+
+                        // Bắn thông báo Real-time
+                        await _notificationService.SendNotificationAsync(order.UserId, "🎉 Thanh toán thành công!", $"Đơn hàng {order.Id} trị giá {order.TotalAmount.ToString("N0")}đ đã được thanh toán.", $"/User/OrderHistory");
+                        
+                        ViewBag.Status = "Thành công";
+                    }
+                    else
+                    {
+                        ViewBag.Status = "Gian lận hoặc lỗi xác thực thanh toán";
+                        status = "ERROR";
+                    }
                 }
-                ViewBag.Status = "Thành công";
+                else
+                {
+                    ViewBag.Status = "Thành công";
+                }
             }
             else if (status == "WAITING")
             {

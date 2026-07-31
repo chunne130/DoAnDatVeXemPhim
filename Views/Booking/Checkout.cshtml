@@ -514,15 +514,12 @@
 
             @* ── PAYMENT METHOD ── *@
             <div class="section-label" style="margin-bottom:12px;"><i class="bi bi-credit-card me-1"></i> Phương thức thanh toán</div>
-            <div class="payment-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="payment-grid" style="grid-template-columns: 1fr 1fr;">
                 <div class="payment-option" data-value="PayOS" onclick="selectPayment(this)">
                     <img src="https://payos.vn/wp-content/uploads/2025/06/Casso-payOSLogo-1.svg" alt="PayOS" />
                     <span>Thanh toán QR (payOS)</span>
                 </div>
-                <div class="payment-option" data-value="VietQR" onclick="selectPayment(this)">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/6/68/VietQR_Logo.svg" alt="VietQR" />
-                    <span>Chuyển khoản VietQR</span>
-                </div>
+
                 <div class="payment-option" data-value="Wallet" onclick="selectPayment(this)">
                     <i class="bi bi-wallet2-fill" style="font-size:2rem;color:#00ff87;display:block;margin:0 auto 8px;"></i>
                     <span>Ví Cinema Hub</span>
@@ -549,7 +546,23 @@
     </div>
 </div>
 
+<!-- Bootstrap Modal chứa Iframe PayOS -->
+<div class="modal fade" id="payosModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border: 2px solid #00ff87; height: 85vh; border-radius: 16px; background-color: #ffffff; overflow: hidden; box-shadow: 0 0 30px rgba(0, 255, 135, 0.3);">
+            <div class="modal-header pb-3 pt-3" style="background-color: #010a04; border-bottom: 2px solid #00ff87;">
+                <h5 class="modal-title fw-bold text-uppercase" style="color: #00ff87; letter-spacing: 1px;"><i class="bi bi-qr-code-scan me-2"></i>Cổng thanh toán PayOS</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="cancelPayOS()"></button>
+            </div>
+            <div class="modal-body p-0 d-flex flex-column" style="position: relative; background-color: #ffffff;">
+                <div id="payos-checkout-iframe" style="width: 100%; height: 100%; flex: 1;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+    <script src="https://cdn.payos.vn/payos-checkout/v1/stable/payos-initialize.js"></script>
     <script>
         // Các biến cấu hình tĩnh từ Server đổ ra làm gốc để tính toán phần trăm
         const constTicketCount = @totalTickets;
@@ -635,7 +648,85 @@
 
             this.innerHTML      = '<span class="spinner-border spinner-border-sm"></span> Đang khởi tạo đơn hàng...';
             this.disabled       = true;
-            document.getElementById('orderForm').submit();
+            
+            const form = document.getElementById('orderForm');
+            const formData = new FormData(form);
+            
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.method === 'Wallet') {
+                        window.location.href = data.redirectUrl;
+                    } else if (data.method === 'PayOS') {
+                        const payOSConfig = {
+                            RETURN_URL: window.location.origin + "/Booking/PaymentSuccess?orderId=" + data.orderId, 
+                            ELEMENT_ID: "payos-checkout-iframe",
+                            CHECKOUT_URL: data.checkoutUrl,
+                            embedded: true, // Nhúng trực tiếp vào div thay vì tự tạo popup lỗi
+                            onSuccess: (event) => {
+                                window.location.href = `/Booking/PaymentSuccess?orderId=${data.orderId}&orderCode=${data.orderCode}&status=PAID`;
+                            },
+                            onCancel: (event) => {
+                                // Xử lý khi khách bấm Hủy trong Iframe
+                                var modalInstance = bootstrap.Modal.getInstance(document.getElementById('payosModal'));
+                                if (modalInstance) modalInstance.hide();
+                                document.getElementById('btnFinalOrder').innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận & Đặt vé';
+                                document.getElementById('btnFinalOrder').disabled = false;
+                            },
+                            onExit: (event) => {
+                                var modalInstance = bootstrap.Modal.getInstance(document.getElementById('payosModal'));
+                                if (modalInstance) modalInstance.hide();
+                                document.getElementById('btnFinalOrder').innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận & Đặt vé';
+                                document.getElementById('btnFinalOrder').disabled = false;
+                            }
+                        };
+                        const { open } = PayOSCheckout.usePayOS(payOSConfig);
+                        open();
+                        
+                        // Hiển thị modal
+                        var payosModal = new bootstrap.Modal(document.getElementById('payosModal'));
+                        payosModal.show();
+                        
+                        // Gán hàm cho nút X (đóng modal)
+                        window.cancelPayOS = function() {
+                            document.getElementById('payos-checkout-iframe').innerHTML = ''; // Clear iframe
+                            document.getElementById('btnFinalOrder').innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận & Đặt vé';
+                            document.getElementById('btnFinalOrder').disabled = false;
+                        }
+                    }
+                } else {
+                    Swal.fire({
+                        title: 'Thông báo',
+                        text: data.message + ' Bạn có muốn chuyển đến Lịch sử đặt vé để kiểm tra không?',
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonColor: '#00ff87',
+                        cancelButtonColor: '#ef4444',
+                        confirmButtonText: 'Đi tới Vé của tôi',
+                        cancelButtonText: 'Đóng',
+                        background: '#0f1f13',
+                        color: '#ffffff'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/Booking/MyTickets';
+                        }
+                    });
+                    this.innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận & Đặt vé';
+                    this.disabled = false;
+                }
+            })
+            .catch(err => {
+                alert('Có lỗi xảy ra: ' + err.message);
+                this.innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận & Đặt vé';
+                this.disabled = false;
+            });
         });
     </script>
 }

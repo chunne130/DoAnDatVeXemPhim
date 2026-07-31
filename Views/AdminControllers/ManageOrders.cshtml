@@ -97,9 +97,9 @@
                                 }
                             </td>
                             <td class="text-center">
-                                <code class="fw-bold px-2 py-1 rounded"
-                                      style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px dashed rgba(96,165,250,0.3);">
-                                    CHUB@(item.Id)@item.OrderDate.ToString("HHmm")
+                                <code class="fw-bold px-2 py-1 rounded text-uppercase"
+                                      style="background:rgba(96,165,250,0.1);color:#60a5fa;border:1px dashed rgba(96,165,250,0.3); font-size: 0.8rem;">
+                                    Thanh toan don hang @item.Id
                                 </code>
                             </td>
                             <td class="text-center">
@@ -131,7 +131,7 @@
                                         break;
                                     default:
                                         <span class="badge rounded-pill px-3 py-1 animate-pulse" style="background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);">
-                                            <i class="bi bi-hourglass-split me-1"></i> Chờ xác nhận
+                                            <i class="bi bi-hourglass-split me-1"></i> Chờ thanh toán
                                         </span>
                                         break;
                                 }
@@ -173,11 +173,11 @@
 
                                     @if (!item.IsPaid && item.Status != "CANCELLED")
                                     {
-                                        <form asp-action="ConfirmPayment" method="post" class="ajax-order-form">
+                                        <form asp-action="RejectOrder" method="post" class="ajax-order-form">
                                             <input type="hidden" name="orderId" value="@item.Id" />
                                             <button type="submit" class="btn btn-sm border-0 d-flex align-items-center justify-content-center fw-bold"
-                                                    style="background:#00ff87;color:#022c22;height:32px;border-radius:6px;padding:0 12px;" title="Duyệt đơn">
-                                                Duyệt
+                                                    style="background:rgba(251,146,60,0.15);color:#fb923c;height:32px;border-radius:6px;padding:0 12px;" title="Từ chối/Hủy đơn">
+                                                Từ chối
                                             </button>
                                         </form>
                                     }
@@ -364,7 +364,7 @@
                 data: $form.serialize(),
                 headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 success: function (res) { $box.html(res); $load.fadeOut(200, function () { $box.css('opacity','1'); }); },
-                error:   function ()    { alert('Lỗi khi duyệt đơn!'); $load.fadeOut(200); $box.css('opacity','1'); }
+                error:   function ()    { alert('Lỗi khi xử lý đơn!'); $load.fadeOut(200); $box.css('opacity','1'); }
             });
         });
 

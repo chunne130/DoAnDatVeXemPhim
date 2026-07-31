@@ -4,9 +4,11 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
 @inject ApplicationDbContext Db
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavManager
+@inject IJSRuntime JS
 
 <style>
     .my-tickets-container {
@@ -717,17 +719,7 @@
                             </div>
                         </label>
 
-                        <label class="payment-method-label @(selectedPaymentMethod == "QR" ? "selected" : "")" style="cursor: pointer; padding: 15px; border-radius: 12px; border: 1px solid @(selectedPaymentMethod == "QR" ? "#00ff87" : "rgba(255,255,255,0.1)"); background: @(selectedPaymentMethod == "QR" ? "rgba(0,255,135,0.05)" : "transparent"); transition: all 0.2s;">
-                            <div class="d-flex align-items-center">
-                                <input type="radio" name="paymentMethod" value="QR" class="form-check-input mt-0 me-3 custom-radio" 
-                                       checked="@(selectedPaymentMethod == "QR")" 
-                                       @onchange="@(() => selectedPaymentMethod = "QR")" style="background-color: transparent;" />
-                                <div>
-                                    <div class="fw-bold text-white mb-1"><i class="bi bi-qr-code-scan text-success me-2"></i>Chuyển khoản thủ công</div>
-                                    <div class="small text-muted" style="font-size: 0.75rem;">Quét mã QR VietQR và chụp bill xác nhận qua Fanpage</div>
-                                </div>
-                            </div>
-                        </label>
+
                     </div>
                 </div>
                 <div class="modal-footer border-0 pt-0 justify-content-center">
@@ -768,12 +760,14 @@
         selectedPaymentOrderId = 0;
     }
 
-    private void ConfirmPayment()
+    private async Task ConfirmPayment()
     {
         if (selectedPaymentOrderId > 0)
         {
-            // Điều hướng sang BookingController
-            NavManager.NavigateTo($"/Booking/PayExistingOrder?orderId={selectedPaymentOrderId}&paymentMethod={selectedPaymentMethod}", forceLoad: true);
+            int orderIdToPay = selectedPaymentOrderId;
+            string methodToPay = selectedPaymentMethod;
+            ClosePaymentModal();
+            await JS.InvokeVoidAsync("openPayOSPopup", orderIdToPay, methodToPay);
         }
     }
 

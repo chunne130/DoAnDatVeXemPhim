@@ -28,9 +28,9 @@ namespace DoAnDatVeXemPhim.Services
         }
 
         /// <summary>
-        /// Hàm chính để tạo Link thanh toán QR Code từ PayOS
+        /// Hàm chính để tạo Link thanh toán QR Code từ PayOS, trả về cả URL và OrderCode
         /// </summary>
-        public async Task<string> CreatePaymentLink(int orderId, decimal amount, string customCancelUrl = null)
+        public async Task<(string checkoutUrl, long orderCode)> CreatePaymentLink(int orderId, decimal amount, string customCancelUrl = null)
         {
             try
             {
@@ -87,7 +87,8 @@ namespace DoAnDatVeXemPhim.Services
                 if (code == "0" || code == "00")
                 {
                     // Lấy đường dẫn link QR (checkoutUrl) để Redirect khách sang thanh toán
-                    return result["data"]?["checkoutUrl"]?.ToString();
+                    string checkoutUrl = result["data"]?["checkoutUrl"]?.ToString();
+                    return (checkoutUrl, orderCode);
                 }
                 else
                 {
@@ -100,6 +101,36 @@ namespace DoAnDatVeXemPhim.Services
             {
                 // Bắt các lỗi kết nối mạng hoặc lỗi code bên trong
                 throw new Exception("Lỗi hệ thống khi tạo link: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Gọi API PayOS để lấy thông tin thanh toán thực tế của đơn hàng (Chống gian lận)
+        /// </summary>
+        public async Task<JToken> GetPaymentInfo(long orderCode)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("x-client-id", _clientId.Trim());
+                client.DefaultRequestHeaders.Add("x-api-key", _apiKey.Trim());
+
+                var response = await client.GetAsync($"https://api-merchant.payos.vn/v2/payment-requests/{orderCode}");
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                var result = JObject.Parse(responseContent);
+                string code = result["code"]?.ToString();
+
+                if (code == "0" || code == "00")
+                {
+                    return result["data"];
+                }
+                
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
             }
         }
 

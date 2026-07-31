@@ -28,13 +28,18 @@
 
     /* ── SIDEBAR ── */
     .sidebar-card {
-        background: rgba(10,22,13,0.75);
+        background: rgba(10,22,13,0.7);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(255,255,255,0.06);
         border-radius: 14px;
-        padding: 20px;
+        padding: 24px;
         position: sticky;
         top: 90px;
+    }
+
+    /* Ẩn footer mặc định */
+    .footer-custom {
+        display: none !important;
     }
 
     .sidebar-title {
@@ -126,8 +131,8 @@
         background: rgba(10,22,13,0.6);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 14px;
-        padding: 20px 10px;
+        border-radius: 24px;
+        padding: 24px 16px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -247,6 +252,51 @@
     .footer-movie {
         display: none;
     }
+
+    /* ── TICKET SELECTION UI ── */
+    .ticket-type-box {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(0, 255, 135, 0.15);
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+
+        .ticket-type-box:hover {
+            border-color: rgba(0, 255, 135, 0.4);
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+    .qty-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 1px solid #00ff87;
+        color: #00ff87;
+        transition: all 0.2s ease;
+    }
+
+        .qty-btn:hover:not(:disabled) {
+            background: rgba(0, 255, 135, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 135, 0.4);
+            color: #00ff87;
+        }
+
+        .qty-btn:disabled {
+            border-color: #4b5563;
+            color: #4b5563;
+            cursor: not-allowed;
+        }
+
+    .qty-text {
+        width: 30px;
+        text-align: center;
+        font-size: 1.1rem;
+    }
+
     @@media (min-width: 768px) {
         .footer-movie
 
@@ -361,54 +411,54 @@
                 var ageRestriction = Model.Movie?.AgeRestriction ?? "";
                 bool isChildRestricted = ageRestriction.Contains("16") || ageRestriction.Contains("18") || ageRestriction.Contains("C16") || ageRestriction.Contains("C18") || ageRestriction.Contains("T16") || ageRestriction.Contains("T18");
             }
-            <div class="ticket-type-area mb-4 p-4 rounded-4" style="background: rgba(25, 30, 36, 0.6); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+            <div class="ticket-type-area mb-4 p-4" style="background: rgba(25, 30, 36, 0.6); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 24px;">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="text-white fw-bold mb-0"><span class="badge bg-warning text-dark me-2">1</span> Chọn loại vé</h5>
+                    <h5 class="text-white fw-bold mb-0"><span class="badge bg-warning text-dark me-2" style="border-radius: 8px;">1</span> Chọn loại vé</h5>
                     <span class="text-white-50 small">Vui lòng chọn số lượng trước khi chọn ghế</span>
                 </div>
 
                 <div class="row g-3">
                     @* Adult *@
                     <div class="col-md-4">
-                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between align-items-center p-3 ticket-type-box">
                             <div>
                                 <div class="text-white fw-bold">Người lớn</div>
                                 <div class="small" style="color: #00ff87;">@Model.BasePrice.ToString("N0")đ</div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('adult', -1)">-</button>
-                                <span class="text-white fw-bold" id="adultQty" style="width: 20px; text-align: center;">0</span>
-                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('adult', 1)">+</button>
+                                <button type="button" class="btn rounded-circle qty-btn" onclick="updateTicket('adult', -1)"><i class="bi bi-dash"></i></button>
+                                <span class="text-white fw-bold qty-text" id="adultQty">0</span>
+                                <button type="button" class="btn rounded-circle qty-btn" onclick="updateTicket('adult', 1)"><i class="bi bi-plus"></i></button>
                             </div>
                         </div>
                     </div>
 
                     @* Student *@
                     <div class="col-md-4">
-                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);">
+                        <div class="d-flex justify-content-between align-items-center p-3 ticket-type-box">
                             <div>
                                 <div class="text-white fw-bold">Học sinh - SV</div>
                                 <div class="small" style="color: #00ff87;">@((Model.BasePrice * 0.8m).ToString("N0"))đ</div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('student', -1)">-</button>
-                                <span class="text-white fw-bold" id="studentQty" style="width: 20px; text-align: center;">0</span>
-                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('student', 1)">+</button>
+                                <button type="button" class="btn rounded-circle qty-btn" onclick="updateTicket('student', -1)"><i class="bi bi-dash"></i></button>
+                                <span class="text-white fw-bold qty-text" id="studentQty">0</span>
+                                <button type="button" class="btn rounded-circle qty-btn" onclick="updateTicket('student', 1)"><i class="bi bi-plus"></i></button>
                             </div>
                         </div>
                     </div>
 
                     @* Child *@
                     <div class="col-md-4">
-                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); @(isChildRestricted ? "opacity: 0.5;" : "")">
+                        <div class="d-flex justify-content-between align-items-center p-3 ticket-type-box" style="@(isChildRestricted ? "opacity: 0.5;" : "")">
                             <div>
                                 <div class="text-white fw-bold">Trẻ em</div>
                                 <div class="small" style="color: #00ff87;">@((Model.BasePrice * 0.7m).ToString("N0"))đ</div>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('child', -1)" @(isChildRestricted ? "disabled" : "")>-</button>
-                                <span class="text-white fw-bold" id="childQty" style="width: 20px; text-align: center;">0</span>
-                                <button type="button" class="btn btn-sm btn-outline-light rounded-circle" style="width: 28px; height: 28px; padding: 0;" onclick="updateTicket('child', 1)" @(isChildRestricted ? "disabled" : "")>+</button>
+                                <button type="button" class="btn rounded-circle qty-btn" onclick="updateTicket('child', -1)" @(isChildRestricted ? "disabled" : "")><i class="bi bi-dash"></i></button>
+                                <span class="text-white fw-bold qty-text" id="childQty">0</span>
+                                <button type="button" class="btn rounded-circle qty-btn" onclick="updateTicket('child', 1)" @(isChildRestricted ? "disabled" : "")><i class="bi bi-plus"></i></button>
                             </div>
                         </div>
                         @if (isChildRestricted)
@@ -419,7 +469,7 @@
                 </div>
             </div>
 
-            <h5 class="text-white fw-bold mb-3 mt-2"><span class="badge bg-warning text-dark me-2">2</span> Chọn ghế trên sơ đồ (<span id="seatCountTracker">0/0</span>)</h5>
+            <h5 class="text-white fw-bold mb-3 mt-2"><span class="badge bg-warning text-dark me-2" style="border-radius: 8px;">2</span> Chọn ghế trên sơ đồ (<span id="seatCountTracker">0/0</span>)</h5>
             <div class="seat-area" style="opacity: 0.5; pointer-events: none; transition: 0.3s;" id="seatAreaContainer">
                 <div class="screen-wrap">
                     <div class="screen-bar"></div>
@@ -491,6 +541,13 @@
 
         function updateTicket(type, delta) {
             if (tickets[type] + delta < 0) return;
+            
+            const maxAvailableSeats = document.querySelectorAll('.seat-item:not(.booked)').length;
+            
+            if (delta > 0 && getTotalTickets() + delta > maxAvailableSeats) {
+                alert(`Phòng chiếu chỉ còn ${maxAvailableSeats} ghế trống, bạn không thể chọn thêm vé!`);
+                return;
+            }
             
             // Không cho phép giảm số vé nếu số ghế đã chọn đang lớn hơn tổng số vé mới
             if (delta < 0 && selectedSeats.length > getTotalTickets() - 1) {

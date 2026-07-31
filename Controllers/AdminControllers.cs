@@ -216,78 +216,24 @@ namespace DoAnDatVeXemPhim.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> ConfirmPayment(int orderId)
+        public async Task<IActionResult> RejectOrder(int orderId)
         {
             var order = await _context.Orders
                 .Include(o => o.User)
-                .Include(o => o.OrderDetails).ThenInclude(od => od.Showtime).ThenInclude(s => s.Movie)
-                .Include(o => o.OrderDetails).ThenInclude(od => od.Seat)
                 .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order == null) return NotFound();
 
-            order.IsPaid = true;
-            order.Status = "PAID"; 
-            
-            // --- TÍCH ĐIỂM THƯỞNG KHI ADMIN DUYỆT ĐƠN ---
-            var profile = await _context.CustomerProfiles.FirstOrDefaultAsync(p => p.UserId == order.UserId);
-            if (profile != null)
+            if (!order.IsPaid)
             {
-                int earnedPoints = (int)(order.TotalAmount / 10000);
-                profile.RewardPoints += earnedPoints;
-                _context.CustomerProfiles.Update(profile);
-            }
+                order.Status = "CANCELLED";
+                _context.Orders.Update(order);
+                await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
+                // Bắn thông báo Real-time cho khách khi Admin hủy vé
+                await _notificationService.SendNotificationAsync(order.UserId, "❌ Đơn hàng bị hủy", $"Đơn hàng {order.Id} chưa thanh toán đã bị Admin hủy. Vui lòng đặt lại nếu có nhu cầu.", $"/User/OrderHistory");
 
-            // Bắn thông báo Real-time cho khách khi Admin duyệt vé
-            await _notificationService.SendNotificationAsync(order.UserId, "✅ Đơn hàng đã được duyệt", $"Đơn hàng {order.Id} thanh toán qua chuyển khoản đã được Admin xác nhận. Bạn đã có vé!", $"/User/OrderHistory");
-
-            string qrContent = $"TICKET-{order.Id}-{order.OrderDate:yyyyMMdd}";
-            string qrImageUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={qrContent}";
-
-            var movie = order.OrderDetails.FirstOrDefault()?.Showtime.Movie;
-            var showtime = order.OrderDetails.FirstOrDefault()?.Showtime;
-            var seats = string.Join(", ", order.OrderDetails.Select(od => od.Seat.SeatNumber));
-
-            string subject = $"[CINEMA HUB] VÉ XEM PHIM THÀNH CÔNG - #{order.Id}";
-            string message = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 15px; overflow: hidden;'>
-                    <div style='background: #dc3545; color: white; padding: 30px; text-align: center;'>
-                        <h1 style='margin: 0; font-size: 28px;'>CINEMA HUB</h1>
-                        <p style='margin: 5px 0 0; opacity: 0.9;'>Cảm ơn bạn đã tin tưởng đặt vé!</p>
-                    </div>
-                    <div style='padding: 25px; background: #fff;'>
-                        <h2 style='color: #333; border-bottom: 2px solid #f8f9fa; padding-bottom: 10px;'>THÔNG TIN VÉ XEM PHIM</h2>
-                        <p style='font-size: 16px;'>🎬 <b>Phim:</b> <span style='color: #dc3545; font-weight: bold;'>{movie?.Title}</span></p>
-                        <p style='font-size: 16px;'>📅 <b>Suất chiếu:</b> {showtime?.StartTime:HH:mm} - Ngày {showtime?.StartTime:dd/MM/yyyy}</p>
-                        <p style='font-size: 16px;'>💺 <b>Ghế:</b> <span style='background: #28a745; color: white; padding: 3px 10px; border-radius: 5px; font-weight: bold;'>{seats}</span></p>
-                        <p style='font-size: 16px;'>💰 <b>Tổng tiền:</b> <span style='color: #dc3545; font-weight: bold;'>{order.TotalAmount:N0}đ</span></p>
-                        
-                        <div style='text-align: center; margin: 30px 0; padding: 20px; background: #fdfdfd; border: 1px dashed #ccc; border-radius: 10px;'>
-                            <p style='margin-bottom: 15px; font-weight: bold; color: #555;'>MÃ QR VÀO CỔNG</p>
-                            <img src='{qrImageUrl}' alt='Mã vé QR' style='width: 200px; height: 200px; display: block; margin: auto;' />
-                            <p style='font-size: 22px; font-weight: bold; color: #dc3545; margin-top: 15px;'>MÃ ĐƠN: #{order.Id}</p>
-                        </div>
-                    </div>
-                    <div style='background: #f8f9fa; padding: 20px; text-align: center; font-size: 13px; color: #666;'>
-                        Bạn vui lòng có mặt trước <b>15 phút</b> để nhận bắp nước nhe!<br>
-                        Hệ thống Cinema Hub - Đồ án IT HUFLIT
-                    </div>
-                </div>";
-
-            string userEmail = order.User.Email;
-            int currentOrderId = order.Id;
-
-            try
-            {
-                var emailService = new DoAnDatVeXemPhim.Services.EmailSender();
-                await emailService.SendEmailAsync(userEmail, subject, message);
-                TempData["Success"] = $"Đã duyệt đơn #{orderId} thành công! Vé đã gửi qua Email.";
-            }
-            catch (Exception ex)
-            {
-                TempData["Success"] = $"Đã duyệt đơn #{orderId} nhưng LỖI GỬI MAIL: {ex.Message}";
+                TempData["Success"] = "Đã hủy đơn hàng #" + orderId;
             }
 
             if (IsAjaxRequest())
