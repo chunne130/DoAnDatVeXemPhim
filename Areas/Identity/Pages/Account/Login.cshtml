@@ -146,6 +146,11 @@
         font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-appearance: none;
         appearance: none;
+        /* Fix lỗi Safari backdrop-filter làm tàng hình dấu chấm mật khẩu */
+        position: relative;
+        z-index: 1;
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
     }
 
     .input-wrapper-figma input[type="password"]::placeholder {
