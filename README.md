@@ -22,11 +22,13 @@
 3. Nếu bạn đặt tên khác, chỉ cần sửa lại chữ "Captures/tên_ảnh_của_bạn.png" ở các thẻ <img> bên dưới.
 -->
 
-| Home Page | Movie Details | Seat Booking |
+| Home Page | Movie Details | Real-Time Seat Booking |
 |:---:|:---:|:---:|
 | <img src="Captures/home.png" width="300"/> | <img src="Captures/movie_details.png" width="300"/> | <img src="Captures/booking.png" width="300"/> |
-| **Payment (PayOS)** | **E-Ticket (QR Code)** | **Admin Dashboard** |
-| <img src="Captures/payment.png" width="300"/> | <img src="Captures/ticket.png" width="300"/> | <img src="Captures/admin.png" width="300"/> |
+| **Payment (PayOS)** | **E-Ticket (QR Code)** | **User Profile / History** |
+| <img src="Captures/payment.png" width="300"/> | <img src="Captures/ticket.png" width="300"/> | <img src="Captures/profile.png" width="300"/> |
+| **Admin Dashboard** | **Revenue Analytics** | **Google OAuth / Login** |
+| <img src="Captures/admin_dashboard.png" width="300"/> | <img src="Captures/analytics.png" width="300"/> | <img src="Captures/login.png" width="300"/> |
 
 ---
 
