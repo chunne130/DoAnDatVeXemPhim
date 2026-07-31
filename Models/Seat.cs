@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DoAnDatVeXemPhim.Models
@@ -16,6 +16,11 @@ namespace DoAnDatVeXemPhim.Models
         [StringLength(20)]
         [Display(Name = "Loại ghế")]
         public string SeatType { get; set; } = "Normal"; // "Normal", "VIP", "Sweetbox"
+        [Display(Name = "Trạng thái (Bảo trì)")]
+        public bool IsActive { get; set; } = true;
+
+        [Display(Name = "Thứ tự hiển thị")]
+        public int DisplayOrder { get; set; } = 0;
 
         [Display(Name = "Phòng chiếu")]
         public int CinemaHallId { get; set; }

@@ -23,7 +23,7 @@
 
     .page-wrap {
         padding-top: 28px;
-        padding-bottom: 20px;
+        padding-bottom: 120px; /* Thêm padding dưới để cuộn qua footer */
     }
 
     /* ── SIDEBAR ── */
@@ -171,12 +171,21 @@
         opacity: 0.8;
     }
 
-    /* Seat Grid */
-    .seat-grid {
-        display: grid;
-        grid-template-columns: repeat(10, 1fr);
-        gap: 6px;
+    /* Seat Grid -> Seat Container (Flex) */
+    .seat-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
         max-width: 580px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .seat-row {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
         width: 100%;
     }
 
@@ -201,10 +210,24 @@
             color: #fbbf24;
         }
 
+        .seat-item.sweetbox {
+            border: 1px solid #f43f5e;
+            color: #f43f5e;
+            width: 70px; /* Bằng đúng 2 ghế thường (32*2) + khoảng cách (6) */
+            border-radius: 12px;
+            aspect-ratio: 2.2 / 1;
+        }
+
         .seat-item:hover:not(.booked) {
             background: rgba(251,191,36,0.15);
             border-color: #fbbf24;
             color: #fbbf24;
+        }
+        
+        .seat-item.sweetbox:hover:not(.booked) {
+            background: rgba(244,63,94,0.15);
+            border-color: #f43f5e;
+            color: #f43f5e;
         }
 
         .seat-item.booked {
@@ -218,6 +241,19 @@
             background: transparent !important;
             border: 1px dashed #ef4444 !important;
             color: #ef4444 !important;
+            cursor: not-allowed;
+        }
+
+        .seat-item.maintenance {
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(0,0,0,0.8),
+                rgba(0,0,0,0.8) 5px,
+                rgba(50,50,50,0.8) 5px,
+                rgba(50,50,50,0.8) 10px
+            ) !important;
+            border-color: #6b7280 !important;
+            color: #6b7280 !important;
             cursor: not-allowed;
         }
 
@@ -387,9 +423,11 @@
                 <div class="legend-grid">
                     <div class="legend-item"><div class="seat-sample standard"></div> Ghế thường</div>
                     <div class="legend-item"><div class="seat-sample vip"></div> Ghế VIP (+20k)</div>
+                    <div class="legend-item"><div class="seat-sample sweetbox" style="border-color: #f43f5e; width: 32px; border-radius: 8px; aspect-ratio: 2/1;"></div> Sweetbox (+50k)</div>
                     <div class="legend-item"><div class="seat-sample selected"></div> Đang chọn</div>
                     <div class="legend-item"><div class="seat-sample booked"></div> Đã bán</div>
                     <div class="legend-item"><div class="seat-sample locked-by-other"></div> Đang giữ chỗ</div>
+                    <div class="legend-item"><div class="seat-sample maintenance" style="background: repeating-linear-gradient(45deg, #000, #000 5px, #323232 5px, #323232 10px); border-color: #6b7280;"></div> Bảo trì</div>
                 </div>
 
                 <div class="sidebar-title mt-4">Bảng giá</div>
@@ -400,6 +438,10 @@
                 <div class="price-row">
                     <span>Phụ thu VIP</span>
                     <span class="vip-price">+20.000đ</span>
+                </div>
+                <div class="price-row">
+                    <span>Phụ thu Sweetbox</span>
+                    <span style="color: #f43f5e;">+50.000đ</span>
                 </div>
             </div>
         </div>
@@ -477,18 +519,32 @@
                     <div class="screen-label">Màn hình chính</div>
                 </div>
 
-                <div class="w-100 overflow-x-auto custom-scrollbar pb-3" style="max-width: 580px;">
-                    <div class="seat-grid" id="seatGrid" style="min-width: 100%; padding-right: 12px; padding-bottom: 12px;">
+                <div class="w-100 overflow-x-auto custom-scrollbar pb-3">
+                    <div class="seat-container" id="seatGrid" style="min-width: max-content; padding: 0 12px 12px 12px;">
                         @if (Model.CinemaHall?.Seats != null)
                         {
-                            @foreach (var seat in Model.CinemaHall.Seats.OrderBy(s => s.SeatNumber))
+                            var groupedSeats = Model.CinemaHall.Seats
+                                .GroupBy(x => x.SeatNumber.Substring(0, 1))
+                                .OrderBy(g => g.Key)
+                                .ToList();
+
+                            @foreach (var group in groupedSeats)
                             {
-                                var isBooked = bookedSeats.Contains(seat.Id);
-                                <div class="seat-item @(isBooked ? "booked" : "") @seat.SeatType.ToLower()"
-                                     data-id="@seat.Id"
-                                     data-price="@(Model.BasePrice + (seat.SeatType == "VIP" ? 20000 : 0))"
-                                     data-name="@seat.SeatNumber">
-                                    @seat.SeatNumber
+                                <div class="seat-row">
+                                    @foreach (var seat in group.OrderBy(x => x.DisplayOrder))
+                                    {
+                                        var isBooked = bookedSeats.Contains(seat.Id);
+                                        var isSweetbox = seat.SeatType == "Sweetbox";
+                                        
+                                        <div class="seat-item @(!seat.IsActive ? "maintenance" : (isBooked ? "booked" : "")) @seat.SeatType.ToLower()"
+                                             data-id="@seat.Id"
+                                             data-price="@(Model.BasePrice * (isSweetbox ? 2 : 1) + (seat.SeatType == "VIP" ? 20000 : (isSweetbox ? 50000 : 0)))"
+                                             data-name="@seat.SeatNumber"
+                                             data-is-sweetbox="@(isSweetbox.ToString().ToLower())"
+                                             style="@(!isSweetbox ? "width: 32px;" : "")">
+                                            @(!seat.IsActive ? "❌" : seat.SeatNumber)
+                                        </div>
+                                    }
                                 </div>
                             }
                         }
@@ -620,11 +676,17 @@
             }
         });
 
+        function getTotalSelectedSeats() {
+            let count = 0;
+            selectedSeats.forEach(s => { count += s.isSweetbox ? 2 : 1; });
+            return count;
+        }
+
         function updateSummary() {
             document.getElementById('selectedSeatsDisplay').innerText =
                 selectedSeats.length > 0 ? selectedSeats.map(s => s.name).join(', ') : '---';
             
-            document.getElementById('seatCountTracker').innerText = `${selectedSeats.length}/${getTotalTickets()}`;
+            document.getElementById('seatCountTracker').innerText = `${getTotalSelectedSeats()}/${getTotalTickets()}`;
 
             // TÍNH TOÁN LẠI TỔNG TIỀN THEO SỐ VÉ VÀ PHỤ THU
             // 1. Phân bổ giá vé từ đắt nhất (Người lớn) đến rẻ nhất (Trẻ em) cho số lượng ghế đã chọn
@@ -633,15 +695,18 @@
             let tempStudent = tickets.student;
             let tempChild = tickets.child;
 
-            // Tính tổng phụ thu ghế VIP
+            // Tính tổng phụ thu
             let surchargeTotal = 0;
+            let totalSeatsConsumed = 0;
             selectedSeats.forEach(s => {
-                const isVip = s.price > @Model.BasePrice;
+                const isVip = s.price > @Model.BasePrice && !s.isSweetbox;
                 if(isVip) surchargeTotal += 20000;
+                if(s.isSweetbox) surchargeTotal += 50000;
+                totalSeatsConsumed += s.isSweetbox ? 2 : 1;
             });
 
             // Tính tiền vé cơ bản (map số lượng vé đã chọn với số ghế đang click)
-            for(let i = 0; i < selectedSeats.length; i++) {
+            for(let i = 0; i < totalSeatsConsumed; i++) {
                 if (tempAdult > 0) {
                     baseTotal += @Model.BasePrice;
                     tempAdult--;
@@ -658,7 +723,7 @@
             document.getElementById('totalPriceDisplay').innerText = total.toLocaleString('vi-VN') + 'đ';
         }
 
-        document.querySelectorAll('.seat-item:not(.booked)').forEach(seat => {
+        document.querySelectorAll('.seat-item:not(.booked):not(.maintenance)').forEach(seat => {
             seat.addEventListener('click', function () {
                 // Nếu ghế đang bị người khác giữ thì chặn click
                 if (this.classList.contains('locked-by-other')) {
@@ -668,6 +733,7 @@
                 const id = this.dataset.id;
                 const name = this.dataset.name;
                 const price = parseFloat(this.dataset.price);
+                const isSweetbox = this.dataset.isSweetbox === "true";
 
                 if (this.classList.contains('selected')) {
                     this.classList.remove('selected');
@@ -676,13 +742,14 @@
                     connection.invoke("UnlockSeat", showtimeId, id).catch(err => console.error(err));
                 } else {
                     // KIỂM TRA SỐ LƯỢNG VÉ ĐÃ CHỌN
-                    if (selectedSeats.length >= getTotalTickets()) {
-                        alert(`Bạn chỉ được chọn tối đa ${getTotalTickets()} ghế tương ứng với số vé đã chọn!`);
+                    const spacesNeeded = isSweetbox ? 2 : 1;
+                    if (getTotalSelectedSeats() + spacesNeeded > getTotalTickets()) {
+                        alert(`Bạn đã chọn quá số lượng vé! Ghế này chiếm ${spacesNeeded} chỗ.`);
                         return;
                     }
 
                     this.classList.add('selected');
-                    selectedSeats.push({ id, name, price });
+                    selectedSeats.push({ id, name, price, isSweetbox });
                     // Báo lên hub khóa ghế
                     connection.invoke("LockSeat", showtimeId, id).catch(err => console.error(err));
                 }
@@ -696,8 +763,8 @@
                 alert('Vui lòng chọn loại vé và số lượng!');
                 return;
             }
-            if (selectedSeats.length < getTotalTickets()) {
-                alert(`Bạn mới chọn ${selectedSeats.length}/${getTotalTickets()} ghế. Vui lòng chọn đủ ghế!`);
+            if (getTotalSelectedSeats() < getTotalTickets()) {
+                alert(`Bạn mới chọn ${getTotalSelectedSeats()}/${getTotalTickets()} chỗ. Vui lòng chọn đủ ghế!`);
                 return;
             }
             const form = document.createElement('form');

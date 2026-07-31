@@ -46,10 +46,10 @@ namespace DoAnDatVeXemPhim.Services
             });
         }
 
-        public async Task SendOrderUpdateAsync()
+        public async Task SendOrderUpdateAsync(int? orderId = null, string message = null)
         {
             // Bắn tín hiệu RefreshOrders tới nhóm StaffGroup (gồm Admin và Staff)
-            await _hubContext.Clients.Group("StaffGroup").SendAsync("RefreshOrders");
+            await _hubContext.Clients.Group("StaffGroup").SendAsync("RefreshOrders", orderId, message);
         }
     }
 }

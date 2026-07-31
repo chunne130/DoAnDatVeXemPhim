@@ -35,6 +35,7 @@ namespace DoAnDatVeXemPhim.Controllers
             var hall = await _context.CinemaHalls.Include(h => h.Cinema).FirstOrDefaultAsync(h => h.Id == hallId);
             ViewBag.HallId = hallId;
             ViewBag.HallName = hall != null ? $"{hall.Name} - {hall.Cinema?.Name}" : "N/A";
+            ViewBag.CinemaId = hall?.CinemaId ?? 0;
             ViewBag.TotalSeats = hall?.TotalSeats ?? 0;
 
             return View(await seats.ToListAsync());
@@ -61,6 +62,7 @@ namespace DoAnDatVeXemPhim.Controllers
                     {
                         CinemaHallId = hallId,
                         SeatNumber = $"{rowLabel}{j}",
+                        DisplayOrder = j,
                         // Logic phân loại: 2 hàng đầu Normal, gần cuối VIP, cuối Sweetbox
                         SeatType = (i < 2) ? "Normal" : (i < numRows - 1 ? "VIP" : "Sweetbox")
                     };
@@ -145,10 +147,10 @@ namespace DoAnDatVeXemPhim.Controllers
                 return BadRequest("Không tìm thấy ghế.");
             }
 
-            // Hoán đổi số ghế (SeatNumber) cho nhau
-            string tempNumber = seat1.SeatNumber;
-            seat1.SeatNumber = seat2.SeatNumber;
-            seat2.SeatNumber = tempNumber;
+            // Hoán đổi vị trí hiển thị (DisplayOrder) cho nhau thay vì đổi tên ghế
+            int tempOrder = seat1.DisplayOrder;
+            seat1.DisplayOrder = seat2.DisplayOrder;
+            seat2.DisplayOrder = tempOrder;
 
             // Nếu muốn đổi cả loại ghế (VIP/Normal) khi kéo thả, bạn có thể uncomment dòng dưới
             // string tempType = seat1.SeatType;
@@ -157,6 +159,33 @@ namespace DoAnDatVeXemPhim.Controllers
 
             await _context.SaveChangesAsync();
             return Ok();
+        }
+
+        // 5.1. KHÓA / MỞ KHÓA GHẾ (BẢO TRÌ)
+        [HttpPost]
+        public async Task<IActionResult> ToggleStatus(int id)
+        {
+            var seat = await _context.Seats.FindAsync(id);
+            if (seat == null) return NotFound("Không tìm thấy ghế.");
+
+            seat.IsActive = !seat.IsActive;
+            await _context.SaveChangesAsync();
+            
+            return Json(new { success = true, isActive = seat.IsActive });
+        }
+
+        // 5.2. KHÓA / MỞ KHÓA TẤT CẢ GHẾ
+        [HttpPost]
+        public async Task<IActionResult> SetAllSeatsStatus(int hallId, bool isActive)
+        {
+            var seats = await _context.Seats.Where(s => s.CinemaHallId == hallId).ToListAsync();
+            foreach (var seat in seats)
+            {
+                seat.IsActive = isActive;
+            }
+            await _context.SaveChangesAsync();
+            
+            return Json(new { success = true });
         }
 
         // 6. XÓA (DELETE) 
@@ -182,8 +211,17 @@ namespace DoAnDatVeXemPhim.Controllers
 
             if (seat != null)
             {
-                _context.Seats.Remove(seat);
-                await _context.SaveChangesAsync();
+                try
+                {
+                    _context.Seats.Remove(seat);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                        return Json(new { success = false, message = "Không thể xóa ghế này vì đã có vé được đặt cho ghế này trong hệ thống!" });
+                    return BadRequest("Không thể xóa ghế do có ràng buộc dữ liệu.");
+                }
             }
             return RedirectToAction(nameof(Index), new { hallId = hallId });
         }

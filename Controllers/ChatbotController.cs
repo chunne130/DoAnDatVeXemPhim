@@ -47,9 +47,11 @@ namespace DoAnDatVeXemPhim.Controllers
 
                 //  XÂY DỰNG NGỮ CẢNH
                 StringBuilder systemContext = new StringBuilder();
-                systemContext.AppendLine("QUY ĐỊNH RẠP: Giá vé gốc dành cho Ghế Thường. Ghế VIP phụ thu 20.000đ. Giảm 10% cho HSSV.");
-                systemContext.AppendLine($"HIỆN TẠI: {realtimeNow.ToString("HH:mm dd/MM/yyyy")}");
-                systemContext.AppendLine("LỊCH CHIẾU THỰC TẾ:");
+                systemContext.AppendLine("QUY ĐỊNH RẠP:");
+                systemContext.AppendLine("- Giá vé gốc áp dụng cho Ghế Thường. Phụ thu Ghế VIP: +20.000đ. Phụ thu Ghế Cặp đôi (Sweetbox): +50.000đ.");
+                systemContext.AppendLine("- Giảm 10% tổng tiền cho đối tượng Học Sinh - Sinh Viên.");
+                systemContext.AppendLine($"THỜI GIAN HIỆN TẠI (Thực tế): {realtimeNow.ToString("HH:mm dd/MM/yyyy")}");
+                systemContext.AppendLine("LỊCH CHIẾU & THÔNG TIN PHIM:");
 
                 int countValidMovies = 0;
 
@@ -66,34 +68,44 @@ namespace DoAnDatVeXemPhim.Controllers
                             countValidMovies++;
                             string cleanTitle = m.Title.Replace("\"", "'").Replace("\n", " ").Replace("\r", " ");
                             string cleanGenre = (m.Genres != null && m.Genres.Any() ? string.Join(", ", m.Genres.Select(g => g.Name)) : "Phim").Replace("\"", "'");
+                            string cleanDesc = !string.IsNullOrEmpty(m.Description) ? m.Description.Replace("\"", "'").Replace("\n", " ") : "Đang cập nhật nội dung.";
+                            
+                            // Giới hạn Description để tránh Context quá dài
+                            if (cleanDesc.Length > 200) cleanDesc = cleanDesc.Substring(0, 200) + "...";
 
-                            systemContext.Append($"- Phim: {cleanTitle} [{cleanGenre}]. Suất: ");
+                            systemContext.AppendLine($"- PHIM: {cleanTitle} [{cleanGenre}]");
+                            systemContext.AppendLine($"  Nội dung tóm tắt: {cleanDesc}");
+                            systemContext.Append("  Các suất chiếu: ");
                             foreach (var st in futureShowtimes)
                             {
                                 decimal normalPrice = st.BasePrice;
-                                decimal vipPrice = st.BasePrice + 20000;
-
-                                var bookedSeats = await _context.OrderDetails
-                                    .Include(od => od.Order)
-                                    .Where(od => od.ShowtimeId == st.Id && (od.Order.IsPaid == true || (od.Order.IsPaid == false && st.StartTime > realtimeNow)))
-                                    .Select(od => od.Seat.SeatNumber)
-                                    .ToListAsync();
-
-                                string bookedSeatsStr = bookedSeats.Any() ? string.Join(", ", bookedSeats) : "Chưa có";
-                                systemContext.Append($"[{st.StartTime.ToString("HH:mm dd/MM")} - {st.Format} - Thường: {normalPrice:N0}đ, VIP: {vipPrice:N0}đ - Ghế đã bán: {bookedSeatsStr}] ");
+                                systemContext.Append($"[ID: {st.Id} | Giờ chiếu: {st.StartTime.ToString("HH:mm dd/MM")} | Định dạng: {st.Format} | Giá gốc: {normalPrice:N0}đ] ");
                             }
                             systemContext.AppendLine();
                         }
                     }
                 }
 
-                if (countValidMovies == 0) systemContext.AppendLine("- Hiện tại chưa có suất chiếu nào.");
+                if (countValidMovies == 0) systemContext.AppendLine("- Hiện tại rạp chưa có suất chiếu nào sắp tới.");
 
                 //  GỌI GEMINI API TRẢ LỜI CÂU HỎI
+                string systemPrompt = $@"Bạn là trợ lý ảo nhiệt tình, sành điệu của rạp phim Cinema Hub. 
+Nhiệm vụ: Tư vấn phim và hướng dẫn khách mua vé. 
+Dữ liệu lịch chiếu: {systemContext}
+
+LUẬT TRÌNH BÀY (BẮT BUỘC):
+1. TRẢ LỜI BẰNG ĐỊNH DẠNG HTML (Tuyệt đối không dùng Markdown như **bold** hay bọc trong ```html...```).
+2. Dùng thẻ <b> để in đậm. Dùng thẻ <br> để xuống dòng.
+3. Nếu giới thiệu suất chiếu, BẮT BUỘC chèn 1 NÚT bấm HTML để khách mua vé với cấu trúc chính xác như sau:
+   <a href='/Booking/SelectSeat?showtimeId=[ID_SUẤT_CHIẾU]' class='btn btn-sm btn-outline-success mt-1 mb-2' style='border-radius:20px; font-weight:600;'><i class='bi bi-ticket-perforated'></i> Đặt vé [GIỜ_CHIẾU]</a>
+4. Trả lời cực kỳ ngắn gọn (2-3 câu), thân thiện, có emoji. Không bịa đặt lịch chiếu. Nếu khách hỏi phim không có, hãy xin lỗi và giới thiệu phim khác.
+
+Câu hỏi của khách: {message}";
+
                 var url = $"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={_apiKey}";
                 var requestBody = new
                 {
-                    contents = new[] { new { role = "user", parts = new[] { new { text = $"Bạn là trợ lý bán vé Cinema Hub. Hãy tư vấn ngắn gọn (2-3 câu). Trả lời dựa trên lịch chiếu dưới đây.\n\n[DỮ LIỆU]:\n{systemContext}\n\nCâu hỏi: {message}" } } } }
+                    contents = new[] { new { role = "user", parts = new[] { new { text = systemPrompt } } } }
                 };
 
                 var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
@@ -104,6 +116,12 @@ namespace DoAnDatVeXemPhim.Controllers
                     var responseString = await response.Content.ReadAsStringAsync();
                     using var doc = JsonDocument.Parse(responseString);
                     botReply = doc.RootElement.GetProperty("candidates")[0].GetProperty("content").GetProperty("parts")[0].GetProperty("text").GetString();
+                    
+                    // Xóa bỏ wrapper markdown nếu Gemini vẫn cố tình sinh ra
+                    if (!string.IsNullOrEmpty(botReply))
+                    {
+                        botReply = botReply.Replace("```html", "").Replace("```", "").Trim();
+                    }
                 }
 
                 // 4 CÁCH LY LUỒNG DATABASE (NẾU DB LỖI THÌ BỎ QUA, BOT VẪN TRẢ LỜI BÌNH THƯỜNG)

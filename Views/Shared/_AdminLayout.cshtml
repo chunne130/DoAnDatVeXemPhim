@@ -406,6 +406,7 @@
         });
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script>
     const adminConnection = new signalR.HubConnectionBuilder()
@@ -413,7 +414,53 @@
         .withAutomaticReconnect()
         .build();
 
-    adminConnection.on("RefreshOrders", function () {
+    function playNotificationSound() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime); // Âm A5 cao, leng keng
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            
+            // Âm lặp 2 lần như tiếng chuông 
+            setTimeout(() => {
+                const osc2 = ctx.createOscillator();
+                osc2.connect(gain);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1046, ctx.currentTime); // C6
+                osc2.start();
+                osc2.stop(ctx.currentTime + 0.15);
+            }, 100);
+
+            osc.start();
+            osc.stop(ctx.currentTime + 0.1);
+        } catch(e) { }
+    }
+
+    adminConnection.on("RefreshOrders", function (orderId, message) {
+        // Hiện Toast notification nếu có nội dung tin nhắn
+        if (message) {
+            playNotificationSound();
+            Swal.fire({
+                icon: 'success',
+                title: '🔔 Đơn hàng mới!',
+                text: message,
+                background: '#1f2937', // Màu dark theme
+                color: '#00ff87', // Màu text neon
+                timer: 5000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end',
+                customClass: {
+                    popup: 'border border-success'
+                }
+            });
+        }
+
         // Chỉ tải lại dữ liệu nếu đang ở trang ManageOrders
         if (window.location.pathname.toLowerCase().includes("manageorders")) {
             // Có thể dùng logic AJAX đã có ở trên để reload content 

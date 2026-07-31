@@ -8,20 +8,38 @@
 
 <div id="seatMapContainer" class="container mt-4 mb-5 slide-in-bottom">
     @* HEADER CYBERPUNK *@
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
-        <div class="mb-3 mb-md-0 pe-3">
-            <h4 class="fw-bold mb-0 text-uppercase text-white" style="text-shadow: 0 0 10px rgba(0,255,135,0.3); white-space: nowrap;">
-                PHÒNG: <span style="color: #00ff87;">@ViewBag.HallName</span>
-            </h4>
-            <p class="text-muted small mb-0 mt-1">Sức chứa cấu hình: <span class="badge bg-cyber-warning px-2 py-1">@ViewBag.TotalSeats ghế</span></p>
-        </div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-cyber-warning fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="collapse" data-bs-target="#autoGenForm" style="white-space: nowrap;">
-                <i class="bi bi-magic me-1"></i> TẠO GHẾ TỰ ĐỘNG
-            </button>
-            <button data-url="/Seats/Create?hallId=@hallId" class="btn btn-outline-light fw-bold rounded-pill px-4 btn-trigger-modal shadow-sm" style="border-color: rgba(255,255,255,0.2); white-space: nowrap;">
-                <i class="bi bi-plus-lg me-1"></i> THÊM LẺ
-            </button>
+    <div class="mb-4 pb-3 border-bottom" style="border-color: rgba(255,255,255,0.05) !important;">
+        <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-end gap-4">
+            @* Khối Tiêu đề *@
+            <div>
+                <h4 class="fw-bold mb-0 text-uppercase text-white" style="text-shadow: 0 0 10px rgba(0,255,135,0.3);">
+                    PHÒNG: <span style="color: #00ff87;">@ViewBag.HallName</span>
+                </h4>
+                <p class="text-muted small mb-0 mt-2">Sức chứa cấu hình: <span class="badge bg-cyber-warning px-2 py-1 fs-6">@ViewBag.TotalSeats ghế</span></p>
+            </div>
+
+            @* Khối Toolbar Các Nút Công Cụ *@
+            <div class="d-flex flex-wrap gap-3">
+                @* Group Bảo Trì *@
+                <div class="btn-group shadow-sm" role="group">
+                    <button type="button" class="btn btn-outline-success fw-bold btn-mass-toggle" data-active="true" data-hall="@hallId" title="Mở khóa tất cả ghế">
+                        <i class="bi bi-unlock-fill me-1"></i> MỞ TẤT CẢ
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary fw-bold btn-mass-toggle" data-active="false" data-hall="@hallId" title="Khóa bảo trì tất cả ghế">
+                        <i class="bi bi-lock-fill me-1"></i> KHÓA TẤT CẢ
+                    </button>
+                </div>
+
+                @* Group Thêm Ghế *@
+                <div class="btn-group shadow-sm" role="group">
+                    <button type="button" class="btn btn-cyber-warning fw-bold" data-bs-toggle="collapse" data-bs-target="#autoGenForm" style="white-space: nowrap;">
+                        <i class="bi bi-magic me-1"></i> TẠO TỰ ĐỘNG
+                    </button>
+                    <button data-url="/Seats/Create?hallId=@hallId" class="btn btn-outline-light fw-bold btn-trigger-modal shadow-sm" style="border-color: rgba(255,255,255,0.2); white-space: nowrap;">
+                        <i class="bi bi-plus-lg me-1"></i> THÊM LẺ
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -68,45 +86,31 @@
         @* Khu vực rải ghế *@
         <div class="mx-auto" style="max-width: 1000px;">
             @{
-                // Nhóm ghế theo hàng (ví dụ: A1, A2 -> hàng A) và sắp xếp
-                var sortedSeats = Model.Select(s => {
-                    string row = new string(s.SeatNumber.TakeWhile(char.IsLetter).ToArray());
-                    string colStr = new string(s.SeatNumber.SkipWhile(char.IsLetter).ToArray());
-                    int col = int.TryParse(colStr, out int c) ? c : 0;
-                    return new { Seat = s, Row = row, Col = col };
-                })
-                .GroupBy(x => x.Row)
-                .OrderBy(g => g.Key)
-                .ToList();
+                var sortedSeats = Model.GroupBy(s => s.SeatNumber.Substring(0, 1))
+                                       .OrderBy(g => g.Key)
+                                       .ToList();
             }
 
-            @foreach (var rowGroup in sortedSeats)
+            @foreach (var group in sortedSeats)
             {
-                <div class="d-flex justify-content-center gap-2 mb-2 seat-row-container">
-                    @* Hiển thị tên hàng ở đầu (Tùy chọn) *@
-                    <div class="d-flex align-items-center justify-content-center text-muted fw-bold" style="width: 20px; font-size: 12px; cursor: default;">
-                        @rowGroup.Key
-                    </div>
-
-                    @foreach (var itemWrapper in rowGroup.OrderBy(x => x.Col))
+                <div class="d-flex justify-content-center mb-2 gap-2 position-relative seat-row-wrapper">
+                    <div class="seat-row-label align-self-center text-muted fw-bold me-2" style="width: 20px;">@group.Key</div>
+                    @foreach (var item in group.OrderBy(x => x.DisplayOrder))
                     {
-                        var item = itemWrapper.Seat;
                         <div class="seat-container" data-id="@item.Id">
-                            <div class="seat-box @(item.SeatType == "VIP" ? "seat-vip" : (item.SeatType == "Sweetbox" ? "seat-couple" : "seat-normal"))"
-                                 title="@item.SeatNumber - @item.SeatType">
+                            <div class="seat-box @(item.SeatType == "VIP" ? "seat-vip" : (item.SeatType == "Sweetbox" ? "seat-couple" : "seat-normal")) @(!item.IsActive ? "seat-inactive" : "")"
+                                 title="@item.SeatNumber - @item.SeatType @(!item.IsActive ? "(Bảo trì)" : "")">
                                 @item.SeatNumber
 
                                 @* Hover Action *@
                                 <div class="seat-actions">
+                                    <button class="btn btn-icon-warning btn-toggle-status" data-id="@item.Id" title="Khóa/Mở khóa bảo trì"><i class="bi @(item.IsActive ? "bi-lock-fill" : "bi-unlock-fill")"></i></button>
                                     <button data-url="/Seats/Edit/@item.Id" class="btn btn-icon-neon btn-trigger-modal"><i class="bi bi-pencil-fill"></i></button>
                                     <button data-url="/Seats/Delete/@item.Id" class="btn btn-icon-danger btn-trigger-modal"><i class="bi bi-trash-fill"></i></button>
                                 </div>
                             </div>
                         </div>
                     }
-
-                    @* Khoảng trống cân bằng ở cuối hàng *@
-                    <div style="width: 20px;"></div>
                 </div>
             }
 
@@ -119,12 +123,6 @@
                 </div>
             }
         </div>
-    </div>
-
-    <div class="mt-4 text-start">
-        <a href="/CinemaHalls/Index" class="btn btn-outline-neon fw-bold rounded-pill px-4 shadow-sm" style="transition: all 0.3s;">
-            <i class="bi bi-arrow-left-circle me-1"></i> Quay lại Quản lý Phòng Chiếu
-        </a>
     </div>
 </div>
 
@@ -266,9 +264,23 @@
         width: 96px;
     }
 
+    .seat-inactive {
+        background: repeating-linear-gradient(
+            45deg,
+            rgba(0,0,0,0.8),
+            rgba(0,0,0,0.8) 10px,
+            rgba(50,50,50,0.8) 10px,
+            rgba(50,50,50,0.8) 20px
+        );
+        border-color: #6b7280;
+        color: #6b7280;
+        box-shadow: none;
+        opacity: 0.6;
+    }
+
     .seat-actions {
         position: absolute;
-        top: -30px;
+        top: -38px;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(15, 23, 42, 0.95);
@@ -285,6 +297,17 @@
         z-index: 20;
         box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         pointer-events: none; /* Tránh cản trở khi chưa hiện hẳn */
+    }
+
+    /* Tạo cầu nối tàng hình để chuột không bị lọt khe khi di chuyển lên */
+    .seat-actions::before {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        height: 15px;
+        background: transparent;
     }
 
     .seat-actions::after {
@@ -324,6 +347,20 @@
     .btn-icon-danger:hover {
         background: #ef4444;
         color: #fff;
+    }
+
+    .btn-icon-warning {
+        color: #fbbf24;
+        background: rgba(251,191,36,0.1);
+        border: 1px solid rgba(251,191,36,0.3);
+        border-radius: 4px;
+        font-size: 11px;
+        padding: 4px 6px;
+        transition: all 0.2s;
+    }
+    .btn-icon-warning:hover {
+        background: #fbbf24;
+        color: #000;
     }
 
     .seat-box:hover .seat-actions {
@@ -391,15 +428,24 @@
                         $('#seatMapContainer').html($newContainer.html());
                         closeSeatModal();
                         Swal.fire({ title: 'Xong!', text: 'Đã cập nhật ghế.', icon: 'success', background: '#111827', color: '#fff', timer: 1500, showConfirmButton: false });
+                    } else if (res.success === false) {
+                        Swal.fire({ title: 'Lỗi', text: res.message, icon: 'error', background: '#111827', color: '#fff' });
+                        $form.css('opacity', '1');
                     } else {
                         $('#modalContentBody').html(res);
                         $form.css('opacity', '1');
                     }
+                },
+                error: function(xhr) {
+                    var msg = "Có lỗi xảy ra!";
+                    if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                    Swal.fire({ title: 'Lỗi hệ thống', text: msg, icon: 'error', background: '#111827', color: '#fff' });
+                    $form.css('opacity', '1');
                 }
             });
         });
 
-        // 🚀 3. SUBMIT FORM TẠO GHẾ TỰ ĐỘNG (AutoGenerate)
+        // 3. SUBMIT FORM TẠO GHẾ TỰ ĐỘNG (AutoGenerate)
         $(document).off('submit', '#formAutoGenerate').on('submit', '#formAutoGenerate', function(e) {
             e.preventDefault();
             var $form = $(this);
@@ -426,6 +472,50 @@
             });
         });
 
+        // 3.5. KHÓA / MỞ KHÓA GHẾ (BẢO TRÌ)
+        $(document).off('click', '.btn-toggle-status').on('click', '.btn-toggle-status', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+            var seatId = btn.data('id');
+            var seatBox = btn.closest('.seat-box');
+
+            $.post('/Seats/ToggleStatus', { id: seatId }, function(res) {
+                if(res.success) {
+                    if(!res.isActive) {
+                        seatBox.addClass('seat-inactive');
+                        btn.html('<i class="bi bi-unlock-fill"></i>');
+                        var title = seatBox.attr('title');
+                        if (!title.includes('(Bảo trì)')) seatBox.attr('title', title + ' (Bảo trì)');
+                    } else {
+                        seatBox.removeClass('seat-inactive');
+                        btn.html('<i class="bi bi-lock-fill"></i>');
+                        seatBox.attr('title', seatBox.attr('title').replace(' (Bảo trì)', ''));
+                    }
+                }
+            });
+        });
+
+        // 3.6. KHÓA/MỞ KHÓA TẤT CẢ GHẾ
+        $(document).off('click', '.btn-mass-toggle').on('click', '.btn-mass-toggle', function(e) {
+            e.preventDefault();
+            var isActive = $(this).data('active');
+            var hallId = $(this).data('hall');
+            var actionName = isActive ? "mở khóa" : "khóa";
+
+            if (confirm(`Bạn có chắc chắn muốn ${actionName} TOÀN BỘ ghế trong phòng này không?`)) {
+                $('#seatMapContainer').css('opacity', '0.5');
+                $.post('/Seats/SetAllSeatsStatus', { hallId: hallId, isActive: isActive }, function(res) {
+                    if (res.success) {
+                        // Reload data by clicking active sidebar menu or reloading page
+                        location.reload();
+                    }
+                }).fail(function() {
+                    alert("Có lỗi xảy ra, vui lòng thử lại!");
+                    $('#seatMapContainer').css('opacity', '1');
+                });
+            }
+        });
+
         // Dọn rác Modal
         $(document).off('hidden.bs.modal', '#seatActionModal').on('hidden.bs.modal', '#seatActionModal', function () {
             $('#modalContentBody').html(''); $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '');
@@ -440,6 +530,12 @@
         // Dùng Event Delegation để đảm bảo hoạt động kể cả khi DOM thay đổi
         $(document)
             .off('dragstart', '.seat-container').on('dragstart', '.seat-container', function (e) {
+                // Hủy kéo thả nếu đang click vào nút sửa/xóa
+                if ($(e.target).closest('.seat-actions').length > 0) {
+                    e.preventDefault();
+                    return false;
+                }
+                
                 draggedEl = this;
                 e.originalEvent.dataTransfer.effectAllowed = 'move';
                 e.originalEvent.dataTransfer.setData('text/plain', $(this).data('id'));
@@ -470,40 +566,8 @@
                     if (draggedId && targetId && draggedId !== targetId) {
                         // Gọi API hoán đổi DB trước
                         $.post('/Seats/SwapSeats', { seatId1: draggedId, seatId2: targetId }, function () {
-                            // 1. Hoán đổi vị trí của 2 khối DOM element
-                            var parent1 = draggedEl.parentNode;
-                            var sibling1 = draggedEl.nextSibling === e.currentTarget ? draggedEl : draggedEl.nextSibling;
-                            e.currentTarget.parentNode.insertBefore(draggedEl, e.currentTarget);
-                            parent1.insertBefore(e.currentTarget, sibling1);
-
-                            // 2. Vì DOM đã đổi chỗ, nên J10 chạy sang J11 và ngược lại. 
-                            // Nhưng ta muốn giữ nguyên thứ tự tên (J10 luôn ở trước J11), nên ta hoán đổi lại tên (text) của 2 ghế
-                            var $draggedBox = $(draggedEl).find('.seat-box');
-                            var $targetBox = $(e.currentTarget).find('.seat-box');
-                            
-                            var dragNode = $draggedBox.contents().filter(function() { return this.nodeType === 3 && $.trim(this.nodeValue) !== ''; })[0];
-                            var targetNode = $targetBox.contents().filter(function() { return this.nodeType === 3 && $.trim(this.nodeValue) !== ''; })[0];
-                            
-                            if (dragNode && targetNode) {
-                                var dragText = $.trim(dragNode.nodeValue);
-                                var targetText = $.trim(targetNode.nodeValue);
-                                
-                                dragNode.nodeValue = targetText;
-                                targetNode.nodeValue = dragText;
-                                
-                                $draggedBox.attr('title', $draggedBox.attr('title').replace(dragText, targetText));
-                                $targetBox.attr('title', $targetBox.attr('title').replace(targetText, dragText));
-                            }
-
-                            Swal.fire({
-                                toast: true,
-                                position: 'bottom-end',
-                                icon: 'success',
-                                title: 'Đã đổi chỗ ghế thành công!',
-                                showConfirmButton: false,
-                                timer: 1500,
-                                background: '#111827', color: '#00ff87'
-                            });
+                            // Sau khi Swap DisplayOrder thành công, reload lại trang để server sắp xếp lại
+                            location.reload();
                         }).fail(function () {
                             alert("Có lỗi xảy ra khi hoán đổi vị trí!");
                             location.reload(); 
