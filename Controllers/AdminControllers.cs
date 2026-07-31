@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using DoAnDatVeXemPhim.Services;
 using System;
+using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,13 +19,15 @@ namespace DoAnDatVeXemPhim.Controllers
         private readonly IEmailSender _emailSender;
         private readonly AprioriService _aprioriService;
         private readonly DoAnDatVeXemPhim.Services.NotificationService _notificationService;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public AdminControllers(ApplicationDbContext context, IEmailSender emailSender, AprioriService aprioriService, DoAnDatVeXemPhim.Services.NotificationService notificationService)
+        public AdminControllers(ApplicationDbContext context, IEmailSender emailSender, AprioriService aprioriService, DoAnDatVeXemPhim.Services.NotificationService notificationService, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _emailSender = emailSender;
             _aprioriService = aprioriService;
             _notificationService = notificationService;
+            _userManager = userManager;
         }
 
         private bool IsAjaxRequest()
@@ -33,8 +36,10 @@ namespace DoAnDatVeXemPhim.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var user = await _userManager.GetUserAsync(User);
+            ViewBag.Is2FAEnabled = user != null && await _userManager.GetTwoFactorEnabledAsync(user);
             return View("~/Views/AdminControllers/Index.cshtml");
         }
 
@@ -42,6 +47,65 @@ namespace DoAnDatVeXemPhim.Controllers
         public IActionResult Settings()
         {
             return View("~/Views/AdminControllers/Settings.cshtml");
+        }
+
+        // --- 2FA SETUP API ---
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> Get2FASetup()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Json(new { success = false });
+            
+            var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+            if (string.IsNullOrEmpty(unformattedKey))
+            {
+                await _userManager.ResetAuthenticatorKeyAsync(user);
+                unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+            }
+            
+            string email = await _userManager.GetEmailAsync(user);
+            string uri = $"otpauth://totp/CinemaHub:{email}?secret={unformattedKey}&issuer=CinemaHub";
+            return Json(new { success = true, uri = uri, key = unformattedKey });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public async Task<IActionResult> VerifyAndEnable2FA(string code)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Json(new { success = false, message = "Lỗi người dùng." });
+
+            var is2faTokenValid = await _userManager.VerifyTwoFactorTokenAsync(
+                user, _userManager.Options.Tokens.AuthenticatorTokenProvider, code.Replace(" ", string.Empty).Replace("-", string.Empty));
+
+            if (!is2faTokenValid)
+            {
+                return Json(new { success = false, message = "Mã xác thực không hợp lệ. Vui lòng thử lại!" });
+            }
+
+            await _userManager.SetTwoFactorEnabledAsync(user, true);
+            
+            // Generate recovery codes
+            var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
+            
+            return Json(new { 
+                success = true, 
+                message = "Đã bật bảo mật 2 lớp thành công!",
+                recoveryCodes = recoveryCodes
+            });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public async Task<IActionResult> Disable2FA()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Json(new { success = false, message = "Lỗi người dùng." });
+
+            await _userManager.SetTwoFactorEnabledAsync(user, false);
+            await _userManager.ResetAuthenticatorKeyAsync(user);
+            return Json(new { success = true, message = "Đã tắt bảo mật 2 lớp thành công!" });
         }
 
         // ═══════════════════════════════════════════

@@ -7,7 +7,13 @@ namespace DoAnDatVeXemPhim.Hubs
     [Authorize]
     public class NotificationHub : Hub
     {
-        // Hub trống, sử dụng Identity mặc định để map UserId với ConnectionId
-        // Các client kết nối sẽ tự động được gán vào group theo UserId của họ.
+        public override async Task OnConnectedAsync()
+        {
+            if (Context.User.IsInRole("Admin") || Context.User.IsInRole("Staff"))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, "StaffGroup");
+            }
+            await base.OnConnectedAsync();
+        }
     }
 }

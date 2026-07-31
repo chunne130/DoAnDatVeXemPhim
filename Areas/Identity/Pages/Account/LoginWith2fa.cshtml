@@ -1,39 +1,152 @@
-﻿@page
+@page
 @model LoginWith2faModel
 @{
-    ViewData["Title"] = "Two-factor authentication";
+    ViewData["Title"] = "Xác thực 2 Lớp (2FA)";
+    Layout = null;
 }
-
-<h1>@ViewData["Title"]</h1>
-<hr />
-<p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-<div class="row">
-    <div class="col-md-4">
-        <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
-            <input asp-for="RememberMe" type="hidden" />
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.TwoFactorCode" class="form-control" autocomplete="off" />
-                <label asp-for="Input.TwoFactorCode" class="form-label"></label>
-                <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
-            </div>
-            <div class="checkbox mb-3">
-                <label asp-for="Input.RememberMachine" class="form-label">
-                    <input asp-for="Input.RememberMachine" />
-                    @Html.DisplayNameFor(m => m.Input.RememberMachine)
-                </label>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+<style>
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #010a04;
+        background-image: 
+            radial-gradient(ellipse at 10% 90%, rgba(0, 255, 135, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at 90% 10%, rgba(0, 255, 135, 0.15) 0%, transparent 50%),
+            linear-gradient(135deg, #010a04 0%, #021a0d 100%);
+        background-attachment: fixed;
+        min-height: 100vh;
+        margin: 0;
+        padding: 0;
+        position: relative;
+        overflow-y: scroll;
+    }
+    .split-container { width: 100%; min-height: 100vh; display: flex; z-index: 1; }
+    .left-banner {
+        width: 50%;
+        background: linear-gradient(145deg, #022c22 0%, #061512 60%, #010a04 100%);
+        display: flex; flex-direction: column; justify-content: space-between;
+        padding: 60px 80px; color: #ffffff; position: relative;
+        animation: fadeIn 0.8s ease-out forwards;
+    }
+    .brand-logo-area img { height: 35px; }
+    .banner-text-heading { font-size: 3rem; font-weight: 300; line-height: 1.2; max-width: 480px; margin-bottom: 40px; }
+    .banner-text-heading strong { font-weight: 600; display: block; color: #00ff87; }
+    .right-form-area {
+        width: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        padding: 60px; background: rgba(15, 25, 20, 0.45); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .register-form-wrapper {
+        width: 100%; max-width: 440px; animation: fadeLeft 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        opacity: 0; transform: translateX(20px);
+    }
+    @@keyframes fadeLeft { to { opacity: 1; transform: translateX(0); } }
+    @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .form-title { font-size: 2rem; font-weight: 700; color: #ffffff; margin-bottom: 8px; }
+    .form-subtitle { color: #9ca3af; font-size: 0.95rem; margin-bottom: 30px; }
+    .custom-label-small { font-size: 0.85rem; font-weight: 600; color: #d1d5db; margin-bottom: 8px; display: block; letter-spacing: 0.3px; }
+    .input-wrapper-figma { position: relative; margin-bottom: 24px; }
+    .input-wrapper-figma input {
+        width: 100%; padding: 14px 18px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; font-weight: 600; color: #ffffff;
+        background-color: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+        transition: all 0.3s ease; font-family: 'Inter', sans-serif; height: 60px; line-height: 1.5;
+    }
+    .input-wrapper-figma input::placeholder { color: #6b7280; font-size: 1rem; letter-spacing: normal; font-weight: 400;}
+    .input-wrapper-figma input:focus {
+        outline: none; border-color: #00ff87; background-color: rgba(0, 255, 135, 0.03);
+        box-shadow: 0 0 0 4px rgba(0, 255, 135, 0.15), inset 0 0 0 1px #00ff87;
+    }
+    .btn-login-figma {
+        width: 100%; background: linear-gradient(135deg, #00ff87 0%, #00c060 100%); color: #010a04;
+        font-weight: 700; font-size: 1.05rem; padding: 14px; border: none; border-radius: 12px; margin-bottom: 24px; cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); text-transform: uppercase; letter-spacing: 1px;
+    }
+    .btn-login-figma:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 255, 135, 0.3); }
+    .btn-login-figma:active { transform: translateY(0); }
+    @@media (max-width: 991px) {
+        .split-container { flex-direction: column; }
+        .left-banner { width: 100%; padding: 40px 30px; min-height: 35vh; justify-content: center; text-align: center; align-items: center;}
+        .banner-text-heading { font-size: 2.2rem; margin: 20px 0; }
+        .right-form-area { width: 100%; padding: 40px 24px; min-height: 65vh; }
+    }
+</style>
+</head>
+<body>
+    <div class="split-container">
+        <!-- NỬA TRÁI (BANNER) -->
+        <div class="left-banner">
+            <div class="brand-logo-area">
+                <a href="/Home/Index" class="text-decoration-none">
+                    <img src="~/images/logo.png" alt="Cinema Hub Logo" onerror="this.onerror=null; this.src=''; this.alt='CINEMA HUB';" style="max-height: 40px;">
+                    @if (ViewData["MissingLogo"] != null) {
+                        <span class="fs-4 fw-bold text-white ms-2" style="letter-spacing:1px;">CINEMA <span style="color:#00ff87;">HUB</span></span>
+                    }
+                </a>
             </div>
             <div>
-                <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                <h1 class="banner-text-heading">
+                    Hàng rào bảo mật
+                    <strong>Tối cao</strong>
+                </h1>
+                <p class="text-white-50" style="font-size: 1.1rem; max-width: 400px; line-height: 1.6;">
+                    Tài khoản của bạn được bảo vệ bởi lớp bảo mật Google Authenticator. Vui lòng lấy mã xác thực trên ứng dụng để tiếp tục.
+                </p>
             </div>
-        </form>
-    </div>
-</div>
-<p>
-    Don't have access to your authenticator device? You can
-    <a id="recovery-code-login" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl">log in with a recovery code</a>.
-</p>
+            <div class="small text-white-50">
+                &copy; @DateTime.Now.Year Cinema Hub. Secure Access.
+            </div>
+        </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+        <!-- NỬA PHẢI (FORM 2FA) -->
+        <div class="right-form-area">
+            <div class="register-form-wrapper">
+                <h2 class="form-title">Nhập mã xác thực</h2>
+                <p class="form-subtitle">Mở ứng dụng Google Authenticator trên điện thoại của bạn.</p>
+                
+                <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                    <input asp-for="RememberMe" type="hidden" />
+                    
+                    @if (!ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; border-radius: 8px;">
+                            <div asp-validation-summary="All" class="mb-0 small"></div>
+                        </div>
+                    }
+                    
+                    <div class="mb-4">
+                        <label asp-for="Input.TwoFactorCode" class="custom-label-small">Mã 6 chữ số (2FA Code)</label>
+                        <div class="input-wrapper-figma">
+                            <input asp-for="Input.TwoFactorCode" autocomplete="off" placeholder="000 000" maxlength="7"/>
+                        </div>
+                    </div>
+                    
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" asp-for="Input.RememberMachine" style="background-color: rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.2);">
+                        <label class="form-check-label text-white-50 small" asp-for="Input.RememberMachine">
+                            Nhớ trình duyệt này (Không hỏi lại lần sau)
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-login-figma">Xác nhận đăng nhập</button>
+                    
+                    <div class="text-center mt-3">
+                        <a id="recovery-code-login" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none small text-white-50" style="transition: all 0.2s;">
+                            Mất thiết bị? Đăng nhập bằng mã khôi phục
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -3,14 +3,31 @@
     Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="admin-top-header">
+<div class="admin-top-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h1 class="h3 fw-bold m-0" style="letter-spacing: -0.5px;">Dashboard Overview</h1>
         <p class="text-muted small m-0 mt-1">Hệ thống chuỗi rạp phim Cinema Hub vận hành ổn định.</p>
     </div>
-    <div class="admin-user-badge">
-        <div style="width: 8px; height: 8px; background: #00ff87; border-radius: 50%;"></div>
-        <span class="small fw-semibold text-muted">administrator</span>
+    
+    <!-- 2FA Security Widget -->
+    <div class="d-flex align-items-center gap-3 p-2 rounded-4 shadow-sm" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-shield-lock text-info fs-4 ms-2"></i>
+            <div class="lh-1">
+                <span class="d-block small text-muted fw-semibold">Bảo mật 2 Lớp (2FA)</span>
+                @if (ViewBag.Is2FAEnabled == true)
+                {
+                    <span class="badge bg-success mt-1"><i class="bi bi-check-circle"></i> Đang bật</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary mt-1"><i class="bi bi-x-circle"></i> Đang tắt</span>
+                }
+            </div>
+        </div>
+        <div class="form-check form-switch fs-4 m-0 pe-2">
+            <input class="form-check-input shadow-none" type="checkbox" role="switch" id="toggle2FA" style="cursor: pointer;" @(ViewBag.Is2FAEnabled == true ? "checked" : "") onchange="handle2FAToggle(this)">
+        </div>
     </div>
 </div>
 
@@ -103,6 +120,118 @@
         </table>
     </div>
 
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function handle2FAToggle(checkbox) {
+            var isEnabling = checkbox.checked;
+            checkbox.checked = !isEnabling; // Revert visually until confirmed
+            
+            if (isEnabling) {
+                // Fetch 2FA Setup details
+                fetch('/AdminControllers/Get2FASetup', { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Generate QR Code URL via external API
+                        var qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.uri)}`;
+                        
+                        Swal.fire({
+                            title: 'Cài đặt Google Authenticator',
+                            html: `
+                                <div class="text-start mb-3 text-muted small">
+                                    1. Tải app <b>Google Authenticator</b> trên điện thoại.<br/>
+                                    2. Quét mã QR bên dưới.<br/>
+                                    3. Nhập mã 6 số hiện trên app vào ô trống để kích hoạt.
+                                </div>
+                                <div class="text-center mb-3 p-3 bg-white rounded-3 d-inline-block">
+                                    <img src="${qrCodeUrl}" alt="QR Code" style="width:200px;height:200px;"/>
+                                </div>
+                                <input type="text" id="swal-input2fa" class="form-control text-center fs-4 fw-bold shadow-none" placeholder="000 000" maxlength="6" style="letter-spacing: 5px;">
+                            `,
+                            background: '#1a1f1c',
+                            color: '#ffffff',
+                            showCancelButton: true,
+                            confirmButtonText: 'Kích hoạt',
+                            cancelButtonText: 'Hủy',
+                            confirmButtonColor: '#00ff87',
+                            cancelButtonColor: '#3d4b43',
+                            preConfirm: () => {
+                                const code = document.getElementById('swal-input2fa').value;
+                                if (!code || code.length < 6) {
+                                    Swal.showValidationMessage('Vui lòng nhập đủ mã 6 số');
+                                }
+                                return code;
+                            }
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Gửi mã lên server để xác nhận
+                                fetch('/AdminControllers/VerifyAndEnable2FA?code=' + result.value, { 
+                                    method: 'POST',
+                                    headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+                                })
+                                .then(r => r.json())
+                                .then(res => {
+                                    if(res.success) {
+                                        let codesHtml = res.recoveryCodes.map(c => `<div class="col-6 mb-2"><code class="fs-5 p-2 bg-dark rounded d-block text-white" style="letter-spacing: 2px;">${c}</code></div>`).join('');
+                                        Swal.fire({
+                                            title: 'Bật 2FA Thành Công!',
+                                            html: `
+                                                <p class="text-warning fw-bold mb-2"><i class="bi bi-exclamation-triangle"></i> LƯU LẠI MÃ KHÔI PHỤC!</p>
+                                                <p class="small text-muted mb-4">Nếu bạn mất điện thoại, đây là cách DUY NHẤT để đăng nhập. Hãy copy và lưu vào nơi an toàn!</p>
+                                                <div class="row text-center user-select-all">
+                                                    ${codesHtml}
+                                                </div>
+                                            `,
+                                            icon: 'success',
+                                            background: '#1a1f1c',
+                                            color: '#ffffff',
+                                            confirmButtonColor: '#00ff87',
+                                            confirmButtonText: 'Tôi đã lưu mã an toàn!',
+                                            allowOutsideClick: false
+                                        }).then(() => location.reload());
+                                    } else {
+                                        Swal.fire('Lỗi', res.message, 'error');
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        Swal.fire('Lỗi', 'Không thể khởi tạo mã 2FA. Vui lòng thử lại.', 'error');
+                    }
+                });
+            } else {
+                // Tắt 2FA
+                Swal.fire({
+                    title: 'Tắt bảo mật 2 lớp?',
+                    text: 'Tài khoản của bạn sẽ kém an toàn hơn nếu tắt tính năng này!',
+                    icon: 'warning',
+                    background: '#1a1f1c',
+                    color: '#ffffff',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đồng ý tắt',
+                    cancelButtonText: 'Hủy',
+                    confirmButtonColor: '#ef4444'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/AdminControllers/Disable2FA', { 
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' } 
+                        })
+                        .then(r => r.json())
+                        .then(res => {
+                            if(res.success) {
+                                Swal.fire('Thành công', res.message, 'success').then(() => location.reload());
+                            } else {
+                                Swal.fire('Lỗi', res.message, 'error');
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    </script>
+}
     <div class="text-center mt-4">
         <a href="/Movies/Index" class="text-decoration-none font-weight-bold small ajax-link" style="color: #00ff87; font-weight: 600;">Xem toàn bộ danh sách kho phim thực tế →</a>
     </div>

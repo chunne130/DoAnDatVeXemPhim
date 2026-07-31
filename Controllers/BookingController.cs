@@ -447,6 +447,7 @@ namespace DoAnDatVeXemPhim.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+                    await _notificationService.SendOrderUpdateAsync();
                     newOrderId = order.Id;
                 }
                 catch (Exception ex)
@@ -498,6 +499,7 @@ namespace DoAnDatVeXemPhim.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                await _notificationService.SendOrderUpdateAsync();
                 ClearBookingSession();
 
                 // Gửi mail xác nhận 
@@ -626,7 +628,7 @@ namespace DoAnDatVeXemPhim.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-
+                await _notificationService.SendOrderUpdateAsync();
                 // Gửi mail xác nhận & thông báo
                 await SendConfirmationEmail(order);
                 await _notificationService.SendNotificationAsync(order.UserId, "🎉 Thanh toán thành công!", $"Đơn hàng {order.Id} trị giá {order.TotalAmount.ToString("N0")}đ đã được thanh toán bằng Ví nội bộ.", $"/User/OrderHistory");
@@ -670,6 +672,7 @@ namespace DoAnDatVeXemPhim.Controllers
             {
                 order.Status = "WAITING_CONFIRM";
                 await _context.SaveChangesAsync();
+                await _notificationService.SendOrderUpdateAsync();
             }
             ClearBookingSession();
             return RedirectToAction("PaymentSuccess", new { orderId = orderId, status = "WAITING" });
@@ -727,6 +730,7 @@ namespace DoAnDatVeXemPhim.Controllers
                         }
 
                         await _context.SaveChangesAsync();
+                        await _notificationService.SendOrderUpdateAsync();
                         await SendConfirmationEmail(order);
 
                         // Bắn thông báo Real-time
@@ -778,6 +782,7 @@ namespace DoAnDatVeXemPhim.Controllers
                 order.Status = "CANCELLED";
                 _context.Orders.Update(order);
                 await _context.SaveChangesAsync();
+                await _notificationService.SendOrderUpdateAsync();
                 return Json(new { success = true, message = "Đã hủy đơn hàng chưa thanh toán và giải phóng ghế thành công!" });
             }
 
@@ -887,6 +892,7 @@ namespace DoAnDatVeXemPhim.Controllers
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
+                    await _notificationService.SendOrderUpdateAsync();
 
                     // Gửi Email thông báo hoàn tiền thành công
                     await SendRefundEmail(order, refundAmount, refundPercentage, refundReason, wallet.Balance);

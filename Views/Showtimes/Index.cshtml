@@ -1,4 +1,4 @@
-﻿@model IEnumerable<DoAnDatVeXemPhim.Models.Showtime>
+@model IEnumerable<DoAnDatVeXemPhim.Models.Showtime>
 
 @{
     Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
@@ -94,7 +94,7 @@
                                 <span class="fw-bold" style="color: #00ff87; text-shadow: 0 0 8px rgba(0,255,135,0.3);">@item.BasePrice.ToString("N0")<span style="font-size: 0.7rem; color: #9ca3af; margin-left: 2px;">đ</span></span>
                             </td>
                             <td>
-                                @if (item.IsActive)
+                                @if (item.IsActive && item.StartTime >= DateTime.Now)
                                 {
                                     <span class="badge" style="background: rgba(0, 255, 135, 0.1); color: #00ff87; border: 1px solid rgba(0, 255, 135, 0.3); padding: 5px 12px; border-radius: 50px; font-size: 0.7rem;">Đang mở bán</span>
                                 }
