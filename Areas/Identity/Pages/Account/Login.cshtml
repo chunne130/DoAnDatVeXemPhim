@@ -141,6 +141,17 @@
         line-height: 1.5;
     }
 
+    /* Bắt buộc dùng font hệ thống cho ô nhập mật khẩu trên iOS Safari để không bị kẹt / không gõ được */
+    .input-wrapper-figma input[type="password"] {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        letter-spacing: 2px;
+    }
+
+    .input-wrapper-figma input[type="password"]::placeholder {
+        letter-spacing: normal;
+        font-family: 'Inter', sans-serif;
+    }
+
     .input-wrapper-figma input::placeholder {
         color: #6b7280;
     }
