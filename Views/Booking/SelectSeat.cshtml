@@ -9,6 +9,11 @@
         box-sizing: border-box;
     }
 
+    html, body {
+        overflow-x: hidden;
+        max-width: 100%;
+    }
+
     body {
         font-family: 'Inter', sans-serif;
         background-image: radial-gradient(ellipse at 0% 100%, rgba(0,160,70,0.55) 0%, rgba(0,80,30,0.3) 30%, transparent 55%), radial-gradient(ellipse at 100% 0%, rgba(0,160,70,0.45) 0%, rgba(0,80,30,0.25) 28%, transparent 50%);
@@ -24,6 +29,15 @@
     .page-wrap {
         padding-top: 28px;
         padding-bottom: 120px; /* Thêm padding dưới để cuộn qua footer */
+    }
+
+    /* ── FIX TRÀN NGANG TRÊN MOBILE ── */
+    .row {
+        min-width: 0;
+    }
+
+    .col-lg-3, .col-lg-9 {
+        min-width: 0;
     }
 
     /* ── SIDEBAR ── */
@@ -66,11 +80,13 @@
         .sidebar-card {
             margin-top: 20px;
         }
+
         .legend-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
+
         .legend-item {
             margin-bottom: 0;
             font-size: 0.75rem;
@@ -133,9 +149,10 @@
         border: 1px solid rgba(255,255,255,0.06);
         border-radius: 24px;
         padding: 24px 16px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        display: block;
+        text-align: center;
+        max-width: 100%;
+        min-width: 0;
     }
 
     /* Screen */
@@ -171,22 +188,34 @@
         opacity: 0.8;
     }
 
+    /* Wrapper cuộn ngang cho sơ đồ ghế */
+    .seat-scroll-wrap {
+        width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding-bottom: 12px;
+    }
+
     /* Seat Grid -> Seat Container (Flex) */
     .seat-container {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 8px;
-        max-width: 580px;
-        width: 100%;
+        width: max-content;
+        min-width: 100%;
         margin: 0 auto;
+        padding: 0 12px;
     }
 
     .seat-row {
         display: flex;
         justify-content: center;
         gap: 6px;
-        width: 100%;
+        width: max-content;
+        margin: 0 auto;
     }
 
     .seat-item {
@@ -203,6 +232,7 @@
         border: 1px solid #4b5563;
         color: #d1d5db;
         user-select: none;
+        flex-shrink: 0;
     }
 
         .seat-item.vip {
@@ -223,7 +253,7 @@
             border-color: #fbbf24;
             color: #fbbf24;
         }
-        
+
         .seat-item.sweetbox:hover:not(.booked) {
             background: rgba(244,63,94,0.15);
             border-color: #f43f5e;
@@ -245,13 +275,7 @@
         }
 
         .seat-item.maintenance {
-            background: repeating-linear-gradient(
-                45deg,
-                rgba(0,0,0,0.8),
-                rgba(0,0,0,0.8) 5px,
-                rgba(50,50,50,0.8) 5px,
-                rgba(50,50,50,0.8) 10px
-            ) !important;
+            background: repeating-linear-gradient( 45deg, rgba(0,0,0,0.8), rgba(0,0,0,0.8) 5px, rgba(50,50,50,0.8) 5px, rgba(50,50,50,0.8) 10px ) !important;
             border-color: #6b7280 !important;
             color: #6b7280 !important;
             cursor: not-allowed;
@@ -334,12 +358,9 @@
     }
 
     @@media (min-width: 768px) {
-        .footer-movie
-
-    {
-        display: block;
-    }
-
+        .footer-movie {
+            display: block;
+        }
     }
 
     .footer-movie-title {
@@ -399,18 +420,20 @@
             transform: translateY(-1px);
         }
 
-        @@media (max-width: 576px) {
-            .footer-inner {
-                gap: 8px;
-            }
-            .btn-continue {
-                padding: 10px 16px;
-                font-size: 0.85rem;
-            }
-            .footer-total {
-                font-size: 1.2rem;
-            }
+    @@media (max-width: 576px) {
+        .footer-inner {
+            gap: 8px;
         }
+
+        .btn-continue {
+            padding: 10px 16px;
+            font-size: 0.85rem;
+        }
+
+        .footer-total {
+            font-size: 1.2rem;
+        }
+    }
 </style>
 
 <div class="container-xl page-wrap">
@@ -423,7 +446,7 @@
                 <div class="legend-grid">
                     <div class="legend-item"><div class="seat-sample standard"></div> Ghế thường</div>
                     <div class="legend-item"><div class="seat-sample vip"></div> Ghế VIP (+20k)</div>
-                    <div class="legend-item"><div class="seat-sample sweetbox" style="border-color: #f43f5e; width: 32px; border-radius: 8px; aspect-ratio: 2/1;"></div> Sweetbox (+50k)</div>
+                    <div class="legend-item"><div class="seat-sample sweetbox" style="border: 1px solid #f43f5e; width: 38px; border-radius: 8px;"></div> Sweetbox (+50k)</div>
                     <div class="legend-item"><div class="seat-sample selected"></div> Đang chọn</div>
                     <div class="legend-item"><div class="seat-sample booked"></div> Đã bán</div>
                     <div class="legend-item"><div class="seat-sample locked-by-other"></div> Đang giữ chỗ</div>
@@ -454,7 +477,7 @@
                 bool isChildRestricted = ageRestriction.Contains("16") || ageRestriction.Contains("18") || ageRestriction.Contains("C16") || ageRestriction.Contains("C18") || ageRestriction.Contains("T16") || ageRestriction.Contains("T18");
             }
             <div class="ticket-type-area mb-4 p-4" style="background: rgba(25, 30, 36, 0.6); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 24px;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
                     <h5 class="text-white fw-bold mb-0"><span class="badge bg-warning text-dark me-2" style="border-radius: 8px;">1</span> Chọn loại vé</h5>
                     <span class="text-white-50 small">Vui lòng chọn số lượng trước khi chọn ghế</span>
                 </div>
@@ -512,21 +535,21 @@
             </div>
 
             <h5 class="text-white fw-bold mb-3 mt-2"><span class="badge bg-warning text-dark me-2" style="border-radius: 8px;">2</span> Chọn ghế trên sơ đồ (<span id="seatCountTracker">0/0</span>)</h5>
-            <div class="seat-area" style="opacity: 0.5; pointer-events: none; transition: 0.3s;" id="seatAreaContainer">
-                <div class="screen-wrap">
+            <div class="seat-area" style="opacity: 0.5; transition: 0.3s;" id="seatAreaContainer">
+                <div class="screen-wrap" style="margin: 0 auto;">
                     <div class="screen-bar"></div>
                     <div class="screen-glow"></div>
                     <div class="screen-label">Màn hình chính</div>
                 </div>
 
-                <div class="w-100 overflow-x-auto custom-scrollbar pb-3">
-                    <div class="seat-container" id="seatGrid" style="min-width: max-content; padding: 0 12px 12px 12px;">
+                <div class="seat-scroll-wrap">
+                    <div class="seat-container" id="seatGrid">
                         @if (Model.CinemaHall?.Seats != null)
                         {
                             var groupedSeats = Model.CinemaHall.Seats
-                                .GroupBy(x => x.SeatNumber.Substring(0, 1))
-                                .OrderBy(g => g.Key)
-                                .ToList();
+                            .GroupBy(x => x.SeatNumber.Substring(0, 1))
+                            .OrderBy(g => g.Key)
+                            .ToList();
 
                             @foreach (var group in groupedSeats)
                             {
@@ -535,13 +558,13 @@
                                     {
                                         var isBooked = bookedSeats.Contains(seat.Id);
                                         var isSweetbox = seat.SeatType == "Sweetbox";
-                                        
+
                                         <div class="seat-item @(!seat.IsActive ? "maintenance" : (isBooked ? "booked" : "")) @seat.SeatType.ToLower()"
                                              data-id="@seat.Id"
                                              data-price="@(Model.BasePrice * (isSweetbox ? 2 : 1) + (seat.SeatType == "VIP" ? 20000 : (isSweetbox ? 50000 : 0)))"
                                              data-name="@seat.SeatNumber"
                                              data-is-sweetbox="@(isSweetbox.ToString().ToLower())"
-                                             style="@(!isSweetbox ? "width: 32px;" : "")">
+                                             style="@(!isSweetbox ? "width: 32px; flex-shrink: 0;" : "flex-shrink: 0;")">
                                             @(!seat.IsActive ? "❌" : seat.SeatNumber)
                                         </div>
                                     }
@@ -597,14 +620,14 @@
 
         function updateTicket(type, delta) {
             if (tickets[type] + delta < 0) return;
-            
+
             const maxAvailableSeats = document.querySelectorAll('.seat-item:not(.booked)').length;
-            
+
             if (delta > 0 && getTotalTickets() + delta > maxAvailableSeats) {
                 alert(`Phòng chiếu chỉ còn ${maxAvailableSeats} ghế trống, bạn không thể chọn thêm vé!`);
                 return;
             }
-            
+
             // Không cho phép giảm số vé nếu số ghế đã chọn đang lớn hơn tổng số vé mới
             if (delta < 0 && selectedSeats.length > getTotalTickets() - 1) {
                 alert("Vui lòng bỏ chọn ghế trên sơ đồ trước khi giảm số lượng vé!");
@@ -613,15 +636,13 @@
 
             tickets[type] += delta;
             document.getElementById(type + 'Qty').innerText = tickets[type];
-            
+
             // Mở khóa sơ đồ ghế nếu có chọn vé
             const seatArea = document.getElementById('seatAreaContainer');
-            if (getTotalTickets() > 0) {
-                seatArea.style.opacity = '1';
-                seatArea.style.pointerEvents = 'auto';
+            if (total > 0) {
+                document.getElementById('seatAreaContainer').style.opacity = '1';
             } else {
-                seatArea.style.opacity = '0.5';
-                seatArea.style.pointerEvents = 'none';
+                document.getElementById('seatAreaContainer').style.opacity = '0.5';
             }
 
             updateSummary();
@@ -685,7 +706,7 @@
         function updateSummary() {
             document.getElementById('selectedSeatsDisplay').innerText =
                 selectedSeats.length > 0 ? selectedSeats.map(s => s.name).join(', ') : '---';
-            
+
             document.getElementById('seatCountTracker').innerText = `${getTotalSelectedSeats()}/${getTotalTickets()}`;
 
             // TÍNH TOÁN LẠI TỔNG TIỀN THEO SỐ VÉ VÀ PHỤ THU
@@ -789,7 +810,7 @@
 
             form.appendChild(i1); form.appendChild(i2);
             form.appendChild(i3); form.appendChild(i4); form.appendChild(i5);
-            
+
             document.body.appendChild(form);
             form.submit();
         });

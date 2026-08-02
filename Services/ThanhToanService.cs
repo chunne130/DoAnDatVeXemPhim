@@ -17,13 +17,22 @@ namespace DoAnDatVeXemPhim.Services
         private readonly string _checksumKey;
         private readonly string _baseUrl;
 
+        // VNPAY Cấu hình
+        private readonly string _vnpTmnCode;
+        private readonly string _vnpHashSecret;
+        private readonly string _vnpUrl;
+
         public ThanhToanService(IConfiguration configuration)
         {
             // Lấy các thông số cấu hình từ file appsettings.json
             _clientId = configuration["PayOS:ClientId"];
             _apiKey = configuration["PayOS:ApiKey"];
             _checksumKey = configuration["PayOS:ChecksumKey"];
-            // Nếu không có BaseUrl trong cấu hình thì dùng localhost mặc định
+            
+            _vnpTmnCode = configuration["VNPay:TmnCode"];
+            _vnpHashSecret = configuration["VNPay:HashSecret"];
+            _vnpUrl = configuration["VNPay:BaseUrl"];
+
             _baseUrl = configuration["App:BaseUrl"] ?? "https://localhost:13015";
         }
 
@@ -148,6 +157,36 @@ namespace DoAnDatVeXemPhim.Services
                 // Chuyển mảng byte thành chuỗi Hex (viết thường, không có dấu gạch ngang)
                 return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
             }
+        }
+
+        /// <summary>
+        /// Tạo URL chuyển hướng thanh toán VNPAY
+        /// </summary>
+        public string CreateVnPayPaymentUrl(int orderId, decimal amount, HttpContext context, string customReturnUrl = null)
+        {
+            var vnpay = new VnPayLibrary();
+            long vnpAmount = (long)(amount * 100); // VNPAY yêu cầu nhân 100 (bỏ thập phân)
+            
+            vnpay.AddRequestData("vnp_Version", "2.1.0");
+            vnpay.AddRequestData("vnp_Command", "pay");
+            vnpay.AddRequestData("vnp_TmnCode", _vnpTmnCode);
+            vnpay.AddRequestData("vnp_Amount", vnpAmount.ToString());
+            
+            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+            vnpay.AddRequestData("vnp_CurrCode", "VND");
+            vnpay.AddRequestData("vnp_IpAddr", VnPayLibrary.GetIpAddress(context));
+            vnpay.AddRequestData("vnp_Locale", "vn");
+            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang " + orderId);
+            vnpay.AddRequestData("vnp_OrderType", "other");
+            
+            string returnUrl = customReturnUrl ?? $"{_baseUrl}/Booking/VnPayReturn";
+            vnpay.AddRequestData("vnp_ReturnUrl", returnUrl);
+            
+            // Generate unique txn ref based on orderId and time to avoid duplicates
+            vnpay.AddRequestData("vnp_TxnRef", $"{orderId}_{DateTime.Now.Ticks}");
+
+            string paymentUrl = vnpay.CreateRequestUrl(_vnpUrl, _vnpHashSecret);
+            return paymentUrl;
         }
     }
 }

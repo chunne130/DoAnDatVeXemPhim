@@ -23,18 +23,21 @@ namespace DoAnDatVeXemPhim.Controllers
         private readonly ThanhToanService _thanhToanService;
         private readonly IEmailSender _emailSender;
         private readonly NotificationService _notificationService;
+        private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
         public BookingController(ApplicationDbContext context,
                                  UserManager<IdentityUser> userManager,
                                  ThanhToanService thanhToanService,
                                  IEmailSender emailSender,
-                                 NotificationService notificationService)
+                                 NotificationService notificationService,
+                                 Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
             _thanhToanService = thanhToanService;
             _emailSender = emailSender;
             _notificationService = notificationService;
+            _configuration = configuration;
         }
 
         // CÁC HÀM SELECT VÉ 
@@ -538,6 +541,29 @@ namespace DoAnDatVeXemPhim.Controllers
                 }
             }
             
+            if (paymentMethod == "VNPay")
+            {
+                try
+                {
+                    string paymentUrl = _thanhToanService.CreateVnPayPaymentUrl(newOrderId, finalTotal, HttpContext);
+                    ClearBookingSession();
+                    
+                    bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                    if (isAjax)
+                    {
+                        return Json(new { success = true, method = "VNPay", checkoutUrl = paymentUrl, orderId = newOrderId });
+                    }
+                    
+                    return Redirect(paymentUrl);
+                }
+                catch (Exception ex)
+                {
+                    bool isAjax = Request.Headers["X-Requested-With"] == "XMLHttpRequest";
+                    if (isAjax) return Json(new { success = false, message = "Lỗi gọi VNPay: " + ex.Message });
+                    return Content("Lỗi gọi VNPay: " + ex.Message);
+                }
+            }
+            
             return BadRequest("Phương thức thanh toán không hợp lệ.");
         }
 
@@ -660,8 +686,93 @@ namespace DoAnDatVeXemPhim.Controllers
                     return Content("Lỗi gọi PayOS: " + ex.Message);
                 }
             }
+            else if (paymentMethod == "VNPay")
+            {
+                try
+                {
+                    string customReturnUrl = $"{Request.Scheme}://{Request.Host}/Booking/VnPayReturn";
+                    string paymentUrl = _thanhToanService.CreateVnPayPaymentUrl(order.Id, order.TotalAmount, HttpContext, customReturnUrl);
+                    
+                    if (isAjax)
+                    {
+                        return Json(new { success = true, method = "VNPay", checkoutUrl = paymentUrl, orderId = order.Id });
+                    }
+
+                    return Redirect(paymentUrl);
+                }
+                catch (Exception ex)
+                {
+                    if (isAjax) return Json(new { success = false, message = "Lỗi gọi VNPay: " + ex.Message });
+                    return Content("Lỗi gọi VNPay: " + ex.Message);
+                }
+            }
 
             return BadRequest("Phương thức thanh toán không hợp lệ.");
+        }
+
+        // --- XỬ LÝ KẾT QUẢ TỪ VNPAY ---
+        [HttpGet]
+        public async Task<IActionResult> VnPayReturn()
+        {
+            var vnpayData = Request.Query;
+            var vnpay = new DoAnDatVeXemPhim.Services.VnPayLibrary();
+
+            foreach (var (key, value) in vnpayData)
+            {
+                if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
+                {
+                    vnpay.AddResponseData(key, value.ToString());
+                }
+            }
+
+            long orderId = Convert.ToInt64(vnpay.GetResponseData("vnp_TxnRef").Split('_')[0]); // Lấy orderId từ vnp_TxnRef
+            long vnp_Amount = Convert.ToInt64(vnpay.GetResponseData("vnp_Amount")) / 100;
+            long vnp_TransactionNo = Convert.ToInt64(vnpay.GetResponseData("vnp_TransactionNo"));
+            string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
+            string vnp_SecureHash = Request.Query["vnp_SecureHash"].ToString();
+            
+            string hashSecret = _configuration["VNPay:HashSecret"];
+            bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, hashSecret);
+
+            if (checkSignature)
+            {
+                if (vnp_ResponseCode == "00")
+                {
+                    // Thanh toán thành công
+                    var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+                    if (order != null && order.Status == "PENDING")
+                    {
+                        order.Status = "PAID";
+                        order.IsPaid = true;
+                        
+                        // Tích điểm thưởng
+                        var profile = await _context.CustomerProfiles.FirstOrDefaultAsync(p => p.UserId == order.UserId);
+                        if (profile != null)
+                        {
+                            int earnedPoints = (int)(order.TotalAmount / 10000);
+                            profile.RewardPoints += earnedPoints;
+                            _context.CustomerProfiles.Update(profile);
+                        }
+
+                        await _context.SaveChangesAsync();
+                        await SendConfirmationEmail(order);
+                        await _notificationService.SendOrderUpdateAsync(order.Id, $"Đơn hàng #{order.Id} vừa thanh toán {order.TotalAmount.ToString("N0")}đ qua VNPay");
+                        await _notificationService.SendNotificationAsync(order.UserId, "🎉 Thanh toán thành công!", $"Đơn hàng {order.Id} trị giá {order.TotalAmount.ToString("N0")}đ đã thanh toán qua VNPay.", $"/User/OrderHistory");
+                    }
+                    return RedirectToAction("PaymentSuccess", new { orderId = orderId, status = "PAID" });
+                }
+                else
+                {
+                    // Lỗi thanh toán
+                    TempData["Error"] = $"Thanh toán VNPay thất bại. Mã lỗi: {vnp_ResponseCode}";
+                    return RedirectToAction("MyTickets");
+                }
+            }
+            else
+            {
+                TempData["Error"] = "Chữ ký VNPay không hợp lệ!";
+                return RedirectToAction("MyTickets");
+            }
         }
 
         [HttpPost]

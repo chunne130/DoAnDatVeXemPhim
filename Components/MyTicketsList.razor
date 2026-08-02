@@ -708,8 +708,20 @@
                                        checked="@(selectedPaymentMethod == "PayOS")" 
                                        @onchange="@(() => selectedPaymentMethod = "PayOS")" style="background-color: transparent;" />
                                 <div>
-                                    <div class="fw-bold text-white mb-1"><i class="bi bi-credit-card-2-front text-info me-2"></i>Thẻ ATM / Ngân hàng (PayOS)</div>
+                                    <div class="fw-bold text-white mb-1"><i class="bi bi-qr-code-scan text-info me-2"></i>Thanh toán VietQR (PayOS)</div>
                                     <div class="small text-muted" style="font-size: 0.75rem;">Quét mã QR tự động xác nhận qua ứng dụng ngân hàng</div>
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-method-label @(selectedPaymentMethod == "VNPay" ? "selected" : "")" style="cursor: pointer; padding: 15px; border-radius: 12px; border: 1px solid @(selectedPaymentMethod == "VNPay" ? "#00ff87" : "rgba(255,255,255,0.1)"); background: @(selectedPaymentMethod == "VNPay" ? "rgba(0,255,135,0.05)" : "transparent"); transition: all 0.2s;">
+                            <div class="d-flex align-items-center">
+                                <input type="radio" name="paymentMethod" value="VNPay" class="form-check-input mt-0 me-3 custom-radio" 
+                                       checked="@(selectedPaymentMethod == "VNPay")" 
+                                       @onchange="@(() => selectedPaymentMethod = "VNPay")" style="background-color: transparent;" />
+                                <div>
+                                    <div class="fw-bold text-white mb-1"><i class="bi bi-credit-card-2-front text-primary me-2"></i>Thẻ ATM / Visa / VNPAY</div>
+                                    <div class="small text-muted" style="font-size: 0.75rem;">Thanh toán bằng thẻ ATM nội địa, Visa, Mastercard qua cổng VNPAY</div>
                                 </div>
                             </div>
                         </label>

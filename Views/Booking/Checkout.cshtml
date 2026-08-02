@@ -14,7 +14,7 @@
     int vipDiscountRate = ViewBag.VipDiscountRate != null ? (int)ViewBag.VipDiscountRate : 0;
     decimal walletBalance = ViewBag.WalletBalance != null ? (decimal)ViewBag.WalletBalance : 0;
 
-    // 🚀 Lấy số lượng vé và tổng tiền combo để phục vụ tính toán giảm giá 20% động phía Client
+    //  Lấy số lượng vé và tổng tiền combo để phục vụ tính toán giảm giá 20% động phía Client
     int totalTickets = seats.Count;
     decimal totalComboPrice = combos.Sum(c => c.price * c.qty);
 }
@@ -324,20 +324,24 @@
         background: #0d1f10;
         border: 1px solid #1a3320;
         border-radius: 10px;
-        padding: 14px 12px;
+        padding: 14px 8px;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 105px;
     }
 
         .payment-option img {
-            width: 36px;
-            height: 36px;
+            width: auto;
+            max-width: 70px;
+            height: 30px;
             object-fit: contain;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             display: block;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .payment-option span {
@@ -514,16 +518,21 @@
 
             @* ── PAYMENT METHOD ── *@
             <div class="section-label" style="margin-bottom:12px;"><i class="bi bi-credit-card me-1"></i> Phương thức thanh toán</div>
-            <div class="payment-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="payment-grid" style="grid-template-columns: 1fr 1fr 1fr;">
                 <div class="payment-option" data-value="PayOS" onclick="selectPayment(this)">
                     <img src="https://payos.vn/wp-content/uploads/2025/06/Casso-payOSLogo-1.svg" alt="PayOS" />
                     <span>Thanh toán QR (payOS)</span>
                 </div>
 
+                <div class="payment-option" data-value="VNPay" onclick="selectPayment(this)">
+                    <img src="https://vinadesign.vn/uploads/images/2023/05/vnpay-logo-vinadesign-25-12-57-55.jpg" alt="VNPay" />
+                    <span>VNPay</span>
+                </div>
+
                 <div class="payment-option" data-value="Wallet" onclick="selectPayment(this)">
-                    <i class="bi bi-wallet2-fill" style="font-size:2rem;color:#00ff87;display:block;margin:0 auto 8px;"></i>
+                    <i class="bi bi-wallet2-fill" style="font-size:30px; line-height:30px; color:#00ff87; display:block; margin-bottom:10px;"></i>
                     <span>Ví Cinema Hub</span>
-                    <span style="color:#00ff87;font-weight:700;font-size:0.7rem;margin-top:3px;">
+                    <span style="color:#00ff87;font-weight:700;font-size:0.7rem;margin-top:4px;">
                         Số dư: @walletBalance.ToString("N0")đ
                     </span>
                 </div>
@@ -700,6 +709,8 @@
                             document.getElementById('btnFinalOrder').innerHTML = '<i class="bi bi-check-circle-fill"></i> Xác nhận & Đặt vé';
                             document.getElementById('btnFinalOrder').disabled = false;
                         }
+                    } else if (data.method === 'VNPay') {
+                        window.location.href = data.checkoutUrl;
                     }
                 } else {
                     Swal.fire({

@@ -72,6 +72,8 @@
                         window.cancelPayOS = function() {
                             document.getElementById('payos-checkout-iframe').innerHTML = '';
                         }
+                    } else if (data.method === 'VNPay') {
+                        window.location.href = data.checkoutUrl;
                     } else if (data.method === 'Wallet') {
                         window.location.href = data.redirectUrl;
                     }
