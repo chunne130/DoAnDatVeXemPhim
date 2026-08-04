@@ -34,6 +34,9 @@ builder.Services.AddScoped<DoAnDatVeXemPhim.Services.NotificationService>();
 // Background Job - Email Marketing
 builder.Services.AddHostedService<DoAnDatVeXemPhim.Services.EmailMarketingJob>();
 
+// Background Job - Tự động sinh suất chiếu
+builder.Services.AddHostedService<DoAnDatVeXemPhim.Services.AutoShowtimeGeneratorJob>();
+
 // 3. CẤU HÌNH IDENTITY
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => {
     options.SignIn.RequireConfirmedAccount = false;
