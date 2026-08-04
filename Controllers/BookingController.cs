@@ -216,6 +216,8 @@ namespace DoAnDatVeXemPhim.Controllers
         }
 
         // TỰ ĐỘNG KHẤU TRỪ THEO HẠNG THÀNH VIÊN REAL-TIME 
+        [Authorize]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Checkout()
         {
             var showtimeId = HttpContext.Session.GetInt32("ShowtimeId");

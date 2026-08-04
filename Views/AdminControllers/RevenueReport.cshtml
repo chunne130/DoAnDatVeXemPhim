@@ -1,5 +1,5 @@
 ﻿@{
-    // 🚀 1. CẮT LAYOUT ĐỂ TRỊ BỆNH "LỒNG TRANG ĐỆ QUY" TRONG SPA
+    //  1. CẮT LAYOUT ĐỂ TRỊ BỆNH "LỒNG TRANG ĐỆ QUY" TRONG SPA
     Layout = Context.Request.Headers["X-Requested-With"] == "XMLHttpRequest" ? null : "~/Views/Shared/_AdminLayout.cshtml";
 
     var labels = Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.Labels);
@@ -314,7 +314,7 @@
             </h1>
         </div>
 
-        @* 🚀 ĐÃ GẮN CLASS 'report-ajax-link' ĐỂ BẤM LÀ CHẠY NGẦM, KHÔNG CHỚP TRANG *@
+        @*  GẮN CLASS 'report-ajax-link' ĐỂ BẤM LÀ CHẠY NGẦM, KHÔNG CHỚP TRANG *@
         <nav class="tab-nav">
             <a href="/AdminControllers/RevenueReport?type=total&filter=@filter" class="tab-link report-ajax-link @(type == "total" ? "active" : "")">Tổng quan</a>
             <a href="/AdminControllers/RevenueReport?type=movie&filter=@filter" class="tab-link report-ajax-link @(type == "movie" ? "active" : "")">Vé Phim</a>
@@ -384,7 +384,7 @@
 
 <script>
     (function () {
-        // 🚀 CƠ CHẾ CHUYỂN TAB MƯỢT MÀ BẰNG AJAX
+        // CƠ CHẾ CHUYỂN TAB MƯỢT BẰNG AJAX
         $('.report-ajax-link').off('click').on('click', function (e) {
             e.preventDefault();
             var url = $(this).attr('href');
@@ -411,7 +411,7 @@
             });
         });
 
-        // 🚀 KHỞI TẠO BIỂU ĐỒ BỌC THÉP
+        //  KHỞI TẠO BIỂU ĐỒ 
         function initCinemaChart() {
             const palette = {
                 total:    { line: '#00ff87', fill0: 'rgba(0,255,135,0.12)',  fill1: 'rgba(0,255,135,0)' },

@@ -378,7 +378,6 @@
 
 <script>
     (function () {
-        // 🚀 ĐÓNG MODAL BỌC THÉP
         function closeSeatModal() {
             var $el = $('#seatActionModal');
             if (typeof bootstrap !== 'undefined') {
@@ -392,7 +391,7 @@
             $('body').removeClass('modal-open').css('overflow', '');
         }
 
-        // 🚀 1. GỌI MODAL (Thêm lẻ, Sửa, Xóa)
+        //  1. GỌI MODAL (Thêm lẻ, Sửa, Xóa)
         $(document).off('click', '.btn-trigger-modal').on('click', '.btn-trigger-modal', function (e) {
             e.preventDefault();
             var targetUrl = $(this).data('url');
@@ -410,7 +409,7 @@
             });
         });
 
-        // 🚀 2. SUBMIT FORM TRONG MODAL (Thêm/Sửa/Xóa ghế ngầm)
+        //  2. SUBMIT FORM TRONG MODAL (Thêm/Sửa/Xóa ghế ngầm)
         $(document).off('submit', '#modalContentBody form').on('submit', '#modalContentBody form', function(e) {
             e.preventDefault();
             var $form = $(this);
@@ -521,7 +520,7 @@
             $('#modalContentBody').html(''); $('.modal-backdrop').remove(); $('body').removeClass('modal-open').css('overflow', '');
         });
 
-        // 🚀 4. KÉO THẢ SẮP XẾP GHẾ (DRAG & DROP SWAP - VANILLA JS)
+        //  4. KÉO THẢ SẮP XẾP GHẾ (DRAG & DROP SWAP - VANILLA JS)
         var draggedEl = null;
 
         // Thêm draggable attribute vào tất cả seat-container

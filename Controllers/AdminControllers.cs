@@ -108,10 +108,8 @@ namespace DoAnDatVeXemPhim.Controllers
             return Json(new { success = true, message = "Đã tắt bảo mật 2 lớp thành công!" });
         }
 
-        // ═══════════════════════════════════════════
+        
         // TÍNH NĂNG NHÂN VIÊN: SOÁT VÉ (SCAN TICKET)
-        // ═══════════════════════════════════════════
-
         [Authorize(Roles = "Admin,Staff")]
         public IActionResult ScanTicket()
         {
@@ -406,7 +404,7 @@ namespace DoAnDatVeXemPhim.Controllers
                 labels = top.Select(x => x.Key.ToString("dd/MM HH:mm")).ToList();
                 data = top.Select(x => (double)x.Count).ToList();
             }
-            // --- ĐÃ THÊM: Tính năng Behavior Tracking (Báo cáo Lượt xem phim) ---
+            // Tính năng Behavior Tracking (Báo cáo Lượt xem phim) ---
             else if (type == "topviews")
             {
                 var topViews = await _context.Movies

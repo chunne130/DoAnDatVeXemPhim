@@ -199,7 +199,7 @@
 </style>
 
 <script>
-    // 🚀 Đưa hàm ra ngoài để form AJAX trong Modal gọi được
+    //  Đưa hàm ra ngoài để form AJAX trong Modal gọi được
     window.closeComboModal = function() {
         var $el = $('#comboModal');
         var instance = bootstrap.Modal.getInstance($el[0]);
@@ -211,7 +211,7 @@
     };
 
     (function () {
-        // 🚀 1. GỌI MODAL (Create, Edit, Delete)
+        //  1. GỌI MODAL (Create, Edit, Delete)
         $(document).off('click', '.btn-trigger-modal').on('click', '.btn-trigger-modal', function (e) {
             e.preventDefault();
             var targetUrl = $(this).data('url');
@@ -229,7 +229,7 @@
             });
         });
 
-        // 🚀 2. SUBMIT FORM TRONG MODAL
+        //  2. SUBMIT FORM TRONG MODAL
         $(document).off('submit', '#modalContentBody form').on('submit', '#modalContentBody form', function(e) {
             e.preventDefault();
             var $form = $(this);

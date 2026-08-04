@@ -29,7 +29,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
         }
 
-        // 🚀 API Xử lý Thả tim / Bỏ tim bằng AJAX
+        // API Xử lý Thả tim / Bỏ tim bằng AJAX
         [HttpPost]
         public async Task<IActionResult> ToggleFavorite(int movieId)
         {
@@ -62,19 +62,19 @@ namespace DoAnDatVeXemPhim.Controllers
             }
         }
 
-        // 🚀 Trang hiển thị toàn bộ Phim yêu thích của User
+        //  Trang hiển thị toàn bộ Phim yêu thích của User
         public async Task<IActionResult> MyFavorites()
         {
             var userId = _userManager.GetUserId(User);
 
-            // 🚀 ĐÃ SỬA: Thêm điều kiện f.Movie != null để tránh dính bản ghi rác dưới Database
+            // Thêm điều kiện f.Movie != null để tránh dính bản ghi rác dưới Database
             var favoriteMovies = await _context.MovieFavorites
                 .Include(f => f.Movie)
                 .Where(f => f.UserId == userId && f.Movie != null)
                 .Select(f => f.Movie)
                 .ToListAsync();
 
-            // 🚀 ĐÃ SỬA: Đồng bộ cơ chế SPA tải trang không chớp màn hình của dự án ní
+            // Đồng bộ cơ chế SPA tải trang không chớp màn hình của dự án ní
             if (IsAjaxRequest()) return PartialView(favoriteMovies);
 
             return View(favoriteMovies);

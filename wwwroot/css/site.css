@@ -8,13 +8,13 @@ html {
     }
 }
 
-/* 🟢 FIX NÚT FOCUS CHUẨN TÔNG MÀU XANH NEON */
+/* FIX NÚT FOCUS CHUẨN TÔNG MÀU XANH NEON */
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
     box-shadow: 0 0 0 0.1rem #060913, 0 0 0 0.25rem #00ff87;
     border-color: #00ff87 !important;
 }
 
-/* 🛡️ BẢO VỆ: Các nút lớn (Dashboard, Quay lại...) không bị CSS toàn cục thu nhỏ */
+/*  BẢO VỆ: Các nút lớn (Dashboard, Quay lại...) không bị CSS toàn cục thu nhỏ */
 .btn-outline-secondary {
     width: auto !important;
     height: auto !important;
@@ -27,7 +27,7 @@ html {
     min-height: 100%;
 }
 
-/* 🚀 FIX CHÍ MẠNG: Ép 2 quầng sáng loang chéo đối xứng chéo nhau chuẩn đét Figma bg.png */
+/*  Ép 2 quầng sáng loang chéo đối xứng chéo nhau chuẩn đét Figma bg.png */
 body {
     margin-bottom: 60px;
     background-image: radial-gradient(circle at 90% 15%, rgba(16, 185, 129, 0.28) 0%, rgba(4, 47, 31, 0.6) 35%, transparent 65%), radial-gradient(circle at 10% 85%, rgba(5, 150, 105, 0.22) 0%, rgba(6, 78, 59, 0.5) 30%, transparent 60%) !important;
@@ -206,7 +206,7 @@ body {
     text-shadow: 0 0 12px rgba(0, 255, 135, 0.85); /* Quầng sáng dạ quang tỏa ra xung quanh chữ */
 }
 
-/* 🚀 SMOOTH SCROLLING & SCROLLBAR CUSTOMIZATION */
+/*  SMOOTH SCROLLING & SCROLLBAR CUSTOMIZATION */
 html {
     scroll-behavior: smooth;
 }
@@ -240,7 +240,7 @@ html {
     100% { background-position: 200% 0; }
 }
 
-/* 🚀 THỊNH HÀNH (TRENDING) HOVER EFFECTS */
+/*  THỊNH HÀNH (TRENDING) HOVER EFFECTS */
 .trending-top1-card {
     transition: all 0.3s ease;
 }
@@ -261,7 +261,7 @@ html {
     transform: translateX(4px);
 }
 
-/* 🚀 HIỆU ỨNG FADE IN TOÀN WEBSITE */
+/*  HIỆU ỨNG FADE IN TOÀN WEBSITE */
 body {
     animation: pageFadeIn 0.4s ease-out forwards;
 }
@@ -283,7 +283,7 @@ body {
     transform: scale(1.03);
 }
 
-/* 🚀 ĐỒNG BỘ HÓA NÚT THAO TÁC ADMIN (EDIT, DETAILS, DELETE) TOÀN HỆ THỐNG */
+/*  ĐỒNG BỘ HÓA NÚT THAO TÁC ADMIN (EDIT, DETAILS, DELETE) TOÀN HỆ THỐNG */
 .btn-sm, .custom-btn-group button, .btn-action-edit, .btn-action-details, .btn-action-delete, .btn-outline-info, .btn-outline-danger, .btn-action {
     border-radius: 8px !important;
     font-size: 0.8rem !important;

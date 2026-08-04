@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using DoAnDatVeXemPhim.Data;
 using DoAnDatVeXemPhim.Models;
 using Microsoft.AspNetCore.Mvc;
-// Trigger Rebuild to compile CSHTML changes
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +19,6 @@ namespace DoAnDatVeXemPhim.Controllers
             _context = context;
         }
 
-        // 🟢 HÀM KIỂM TRA AJAX BỌC THÉP
         private bool IsAjaxRequest()
         {
             return Request.Headers["X-Requested-With"] == "XMLHttpRequest";

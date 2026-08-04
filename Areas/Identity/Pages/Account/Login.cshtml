@@ -137,16 +137,15 @@
         border-radius: 12px;
         transition: all 0.3s ease;
         font-family: 'Inter', sans-serif;
-        height: 52px; /* Fix iOS Safari password field collapse bug */
+        height: 52px; 
         line-height: 1.5;
     }
 
-    /* Bắt buộc dùng font hệ thống và không dùng letter-spacing cho ô nhập mật khẩu trên iOS Safari để tránh lỗi xẹp khung và đơ bàn phím */
+    
     .input-wrapper-figma input[type="password"] {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-appearance: none;
         appearance: none;
-        /* Fix lỗi Safari backdrop-filter làm tàng hình dấu chấm mật khẩu */
         position: relative;
         z-index: 1;
         -webkit-transform: translate3d(0, 0, 0);
@@ -359,7 +358,7 @@
         <form id="account" method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
 
-            @* ✉️ Trường Email *@
+            @*  Trường Email *@
             <div>
                 <label asp-for="Input.Email" class="custom-label-small">Email</label>
                 <div class="input-wrapper-figma">
@@ -368,7 +367,7 @@
                 <span asp-validation-for="Input.Email" class="text-danger small d-block mt-1"></span>
             </div>
 
-            @* 🔒 Trường Mật khẩu *@
+            @* Trường Mật khẩu *@
             <div>
                 <label asp-for="Input.Password" class="custom-label-small">Mật khẩu</label>
                 <div class="input-wrapper-figma">

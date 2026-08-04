@@ -29,7 +29,7 @@
         margin: 0;
         padding: 0;
         position: relative;
-        overflow-y: scroll; /* Force scrollbar to prevent layout shift */
+        overflow-y: scroll; 
     }
 
     .split-container {
@@ -39,7 +39,7 @@
         z-index: 1;
     }
 
-    /* 🟢 BÊN TRÁI: BANNER GRADIENT XANH LỤC BẢO HUYỀN BÍ */
+   
     .left-banner {
         width: 50%;
         background: linear-gradient(145deg, #022c22 0%, #061512 60%, #010a04 100%);
@@ -67,16 +67,15 @@
     .banner-text-heading strong {
         font-weight: 600;
         display: block;
-        color: #00ff87; /* Điểm nhấn Neon xanh */
-    }
+        color: #00ff87; 
 
-    /* ⚪ BÊN PHẢI: KHÔNG GIAN NHẬP LIỆU GỌN GÀNG (DARK THEME) */
+   
     .right-form-area {
         width: 50%;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        align-items: center; /* Center form horizontally */
+        align-items: center; 
         padding: 60px;
         background: rgba(15, 25, 20, 0.45); /* Glassmorphism background */
         backdrop-filter: blur(24px);
@@ -130,16 +129,15 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
         transition: all 0.2s ease;
-        height: 48px; /* Fix iOS Safari password field collapse bug */
+        height: 48px; 
         line-height: 1.5;
     }
 
-    /* Bắt buộc dùng font hệ thống và không dùng letter-spacing cho ô nhập mật khẩu trên iOS Safari để tránh lỗi xẹp khung và đơ bàn phím */
+  
     .input-wrapper-figma input[type="password"] {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         -webkit-appearance: none;
-        appearance: none;
-        /* Fix lỗi Safari backdrop-filter làm tàng hình dấu chấm mật khẩu */
+        appearance: none;       
         position: relative;
         z-index: 1;
         -webkit-transform: translate3d(0, 0, 0);
@@ -162,7 +160,6 @@
         box-shadow: 0 0 0 4px rgba(0, 255, 135, 0.15);
     }
 
-    /* Icon mắt ẩn hiện password */
     .password-toggle-eye {
         position: absolute;
         right: 16px;
@@ -178,7 +175,6 @@
         color: #00ff87;
     }
 
-    /* 🟢 NÚT BẤM NEON GREEN SIÊU WOW */
     .btn-create-account-figma {
         width: 100%;
         background: linear-gradient(135deg, #00ff87 0%, #00c060 100%);
@@ -218,7 +214,6 @@
         text-shadow: 0 0 10px rgba(0,255,135,0.4);
     }
 
-    /* Responsive cho màn hình laptop nhỏ và điện thoại */
     @@media (max-width: 992px) {
         body { padding: 20px; }
         .left-banner { display: none; }
@@ -271,7 +266,7 @@
             <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
 
-                @* ✉️ Trường Email *@
+                @*  Trường Email *@
                 <div class="mb-3">
                     <label asp-for="Input.Email" class="custom-label-small">Email</label>
                     <div class="input-wrapper-figma">
@@ -280,7 +275,7 @@
                     <span asp-validation-for="Input.Email" class="text-danger small d-block mt-1"></span>
                 </div>
 
-                @* 🔒 Trường Mật khẩu *@
+                @*  Trường Mật khẩu *@
                 <div class="mb-3">
                     <label asp-for="Input.Password" class="custom-label-small">Mật khẩu</label>
                     <div class="input-wrapper-figma">
@@ -290,7 +285,7 @@
                     <span asp-validation-for="Input.Password" class="text-danger small d-block mt-1"></span>
                 </div>
 
-                @* 🛡️ Trường Xác nhận Mật khẩu *@
+                @* Trường Xác nhận Mật khẩu *@
                 <div class="mb-4">
                     <label asp-for="Input.ConfirmPassword" class="custom-label-small">Xác nhận mật khẩu</label>
                     <div class="input-wrapper-figma">
@@ -300,7 +295,7 @@
                     <span asp-validation-for="Input.ConfirmPassword" class="text-danger small d-block mt-1"></span>
                 </div>
 
-                @* Nút Submit phát sáng Neon *@
+                @* Nút Submit *@
                 <button id="registerSubmit" type="submit" class="btn-create-account-figma shadow">
                     Đăng Ký Ngay
                 </button>

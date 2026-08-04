@@ -23,7 +23,7 @@
                 <i class="bi bi-house-door me-1"></i> Dashboard
             </a>
 
-            @* 🚀 NÚT GỌI MODAL THÊM MỚI *@
+            @*  NÚT GỌI MODAL THÊM MỚI *@
             <a href="/Promotions/Create" class="btn-action-pill btn-open-modal shadow-sm" style="background: #00ff87; color: #022c22; padding: 8px 20px; border-radius: 50px; font-weight: bold; text-decoration: none;">
                 <i class="bi bi-plus-lg me-1"></i> Tạo voucher mới
             </a>
@@ -198,7 +198,7 @@
 
 <script>
     (function() {
-        // 🚀 Hàm hỗ trợ Đóng Modal bất tử
+        //  Hàm hỗ trợ Đóng Modal 
         function closeNeonModal() {
             var $el = $('#promotionModal');
             if (typeof bootstrap !== 'undefined') {
@@ -212,7 +212,7 @@
             $('body').removeClass('modal-open').css('overflow', '');
         }
 
-        // 🚀 1. AJAX TÌM KIẾM KHÔNG CHỚP TRANG
+        //  1. AJAX TÌM KIẾM KHÔNG CHỚP TRANG
         $('#searchPromoForm').off('submit').on('submit', function(e) {
             e.preventDefault();
             var targetUrl = $(this).attr('action') + '?' + $(this).serialize();
@@ -230,7 +230,7 @@
             });
         });
 
-        // 🚀 2. BẤM NÚT MỞ MODAL ĐA NĂNG
+        //  2. BẤM NÚT MỞ MODAL ĐA NĂNG
         $(document).off('click', '.btn-open-modal').on('click', '.btn-open-modal', function(e) {
             e.preventDefault();
             var url = $(this).attr('href');
@@ -257,7 +257,7 @@
             });
         });
 
-        // 🚀 3. SUBMIT FORM BÊN TRONG MODAL BẰNG AJAX (ĐÃ FIX LỖI HIỂN THỊ THÔNG BÁO)
+        //  3. SUBMIT FORM BÊN TRONG MODAL BẰNG AJAX (ĐÃ FIX LỖI HIỂN THỊ THÔNG BÁO)
         $(document).off('submit', '#modalBody form').on('submit', '#modalBody form', function(e) {
             e.preventDefault();
             var $form = $(this);
@@ -272,7 +272,7 @@
                     if (res && res.success === true) {
                         closeNeonModal(); // Đóng modal
 
-                        // ⚡ BƯỚC FIX: Vẽ thanh thông báo màu xanh ngay tại trang này theo chuẩn giao diện của bạn
+                        //  BƯỚC FIX: Vẽ thanh thông báo màu xanh ngay tại trang này theo chuẩn giao diện của bạn
                         var alertHtml = `
                             <div class="alert alert-success alert-dismissible fade show rounded-3 mb-4 transition-all" role="alert" style="background: rgba(0, 255, 135, 0.1); border: 1px solid #00ff87; color: #00ff87;">
                                 <i class="bi bi-check-circle-fill me-2"></i> ${res.message}
@@ -317,7 +317,7 @@
             });
         });
 
-        // 🚀 4. DỌN DẸP SẠCH SẼ KHI TẮT MODAL
+        //  4. DỌN DẸP SẠCH SẼ KHI TẮT MODAL
         $(document).off('hidden.bs.modal', '#promotionModal').on('hidden.bs.modal', '#promotionModal', function () {
             $('#modalBody').html('');
             $('.modal-backdrop').remove();

@@ -19,13 +19,13 @@ namespace DoAnDatVeXemPhim.Controllers
             _context = context;
         }
 
-        // 🟢 CẢM BIẾN KIỂM TRA AJAX BỌC THÉP CHO SPA
+       
         private bool IsAjaxRequest()
         {
             return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
         }
 
-        // GET: CinemaHalls (Trang chính giữ nguyên View gốc để render bảng dữ liệu)
+        // GET: CinemaHalls 
         public async Task<IActionResult> Index(string searchString)
         {
             var query = _context.CinemaHalls.Include(c => c.Cinema).AsQueryable();
@@ -46,7 +46,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return View(result);
         }
 
-        // GET: CinemaHalls/Details/5 -> CHUYỂN THÀNH PARTIAL VIEW
+        // GET: CinemaHalls/Details/5 
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -57,13 +57,12 @@ namespace DoAnDatVeXemPhim.Controllers
 
             if (cinemaHall == null) return NotFound();
 
-            return PartialView(cinemaHall); // Trả về nội dung thô để nhét vào Modal
+            return PartialView(cinemaHall); 
         }
 
-        // GET: CinemaHalls/Create -> CHUYỂN THÀNH PARTIAL VIEW
+        // GET: CinemaHalls/Create 
         public IActionResult Create()
         {
-            // Đồng bộ tên ViewBag là CinemaId trùng khớp với thuộc tính asp-for="CinemaId" ngoài View
             ViewBag.CinemaId = new SelectList(_context.Cinemas, "Id", "Name");
             return PartialView();
         }
@@ -82,7 +81,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return PartialView(cinemaHall);
         }
 
-        // GET: CinemaHalls/Edit/5 -> CHUYỂN THÀNH PARTIAL VIEW
+        // GET: CinemaHalls/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -118,7 +117,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return PartialView(cinemaHall);
         }
 
-        // GET: CinemaHalls/Delete/5 -> CHUYỂN THÀNH PARTIAL VIEW
+        // GET: CinemaHalls/Delete/5 
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();

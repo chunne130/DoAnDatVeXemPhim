@@ -5,7 +5,7 @@
     ViewData["Title"] = "Trang chủ - Cinema Hub";
 }
 
-@* 🚀 GIỮ NGUYÊN: Hàm Helper tự động giải thích và bọc badge tuổi *@
+@*  Hàm Helper tự động giải thích và bọc badge tuổi *@
 @functions {
     public Microsoft.AspNetCore.Html.IHtmlContent RenderAgeBadge(string age)
     {
@@ -927,7 +927,7 @@
             $('#btn-toggle-chat').on('click', function () { $('#cinema-chatbox').toggleClass('d-none'); });
             $('#btn-close-chat').on('click',  function () { $('#cinema-chatbox').addClass('d-none'); });
 
-            // 🚀 BỔ SUNG KHỐI MỚI: XỬ LÝ THẢ TIM / BỎ TIM PHIM YÊU THÍCH BẰNG AJAX 🚀
+            //  BỔ SUNG KHỐI MỚI: XỬ LÝ THẢ TIM / BỎ TIM PHIM YÊU THÍCH BẰNG AJAX 
             $(document).on('click', '.btn-favorite-heart', function (e) {
                 e.preventDefault();
                 e.stopPropagation(); // Ngăn hành vi nhảy trang khi click trúng tim
@@ -1108,7 +1108,7 @@
                                     <div class="carousel-item @(i == 0 ? "active" : "")">
                                         <a href="@(string.IsNullOrEmpty(banner.TargetUrl) ? "#" : banner.TargetUrl)">
                                             <!-- max-height: 85vh đảm bảo dù màn hình nhỏ thì ảnh vẫn không bị rớt ra ngoài -->
-                                            <img src="@banner.ImageUrl" class="d-block w-100" alt="@banner.Title" style="max-height: 85vh; object-fit: contain;">
+                                            <img src="@banner.ImageUrl" class="d-block w-100" alt="@banner.Title" style="max-height: 85vh; object-fit: contain;" onerror="$('#promoBannerModal').modal('hide');">
                                         </a>
                                     </div>
                                 }

@@ -18,7 +18,6 @@ namespace DoAnDatVeXemPhim.Controllers
             _context = context;
         }
 
-        // 🟢 CẢM BIẾN KIỂM TRA AJAX BỌC THÉP CHO SPA
         private bool IsAjaxRequest()
         {
             return Request.Headers["X-Requested-With"] == "XMLHttpRequest";

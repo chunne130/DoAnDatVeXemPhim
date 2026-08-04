@@ -535,7 +535,7 @@
             </div>
 
             <h5 class="text-white fw-bold mb-3 mt-2"><span class="badge bg-warning text-dark me-2" style="border-radius: 8px;">2</span> Chọn ghế trên sơ đồ (<span id="seatCountTracker">0/0</span>)</h5>
-            <div class="seat-area" style="opacity: 0.5; transition: 0.3s;" id="seatAreaContainer">
+            <div class="seat-area" style="opacity: 0.5; pointer-events: none; transition: 0.3s;" id="seatAreaContainer">
                 <div class="screen-wrap" style="margin: 0 auto;">
                     <div class="screen-bar"></div>
                     <div class="screen-glow"></div>
@@ -639,10 +639,12 @@
 
             // Mở khóa sơ đồ ghế nếu có chọn vé
             const seatArea = document.getElementById('seatAreaContainer');
-            if (total > 0) {
-                document.getElementById('seatAreaContainer').style.opacity = '1';
+            if (getTotalTickets() > 0) {
+                seatArea.style.opacity = '1';
+                seatArea.style.pointerEvents = 'auto';
             } else {
-                document.getElementById('seatAreaContainer').style.opacity = '0.5';
+                seatArea.style.opacity = '0.5';
+                seatArea.style.pointerEvents = 'none';
             }
 
             updateSummary();

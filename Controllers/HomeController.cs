@@ -63,9 +63,7 @@ public class HomeController : Controller
             .AsNoTracking()
             .ToListAsync();
 
-        // ═════════════════════════════════════════════════════════════════
         // THUẬT TOÁN: GỢI Ý PHIM THEO GU (DATABASE DRIVEN)
-        // ═════════════════════════════════════════════════════════════════
         List<Movie> recommendedMovies = new List<Movie>();
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // Bốc ID người dùng hiện tại
 
@@ -156,7 +154,7 @@ public class HomeController : Controller
 
         var movies = query.OrderByDescending(m => m.ReleaseDate).ToList();
 
-        // 🚀 BỌC THÉP: Lấy danh sách ID phim yêu thích của User hiện tại để hiển thị trạng thái nút Tim
+        // Lấy danh sách ID phim yêu thích của User hiện tại để hiển thị trạng thái nút Tim
         if (User.Identity.IsAuthenticated)
         {
             var currentUserId = _userManager.GetUserId(User);
@@ -170,7 +168,7 @@ public class HomeController : Controller
             ViewBag.FavoriteMovieIds = new List<int>();
         }
 
-        // --- ĐÃ THÊM: Lấy Top 5 Từ khóa tìm kiếm nhiều nhất (Behavior Tracking) ---
+        //  Lấy Top 5 Từ khóa tìm kiếm nhiều nhất (Behavior Tracking) ---
         var trendingSearches = await _context.SearchHistories
             .GroupBy(s => s.Keyword)
             .OrderByDescending(g => g.Count())
@@ -179,7 +177,7 @@ public class HomeController : Controller
             .ToListAsync();
         ViewBag.TrendingSearches = trendingSearches;
 
-        // --- ĐÃ THÊM: Lấy Top 4 Phim Thịnh Hành (Trending) dựa trên ViewCount ---
+        // Lấy Top 4 Phim Thịnh Hành (Trending) dựa trên ViewCount ---
         var trendingMovies = await _context.Movies
             .Include(m => m.MovieReviews)
             .Where(m => m.ReleaseDate <= now)
@@ -189,7 +187,7 @@ public class HomeController : Controller
             .ToListAsync();
         ViewBag.TrendingMovies = trendingMovies;
 
-        // --- ĐÃ THÊM: Tính toán Số vé bán thực tế (Tickets Sold) ---
+        //  Tính toán Số vé bán thực tế (Tickets Sold) ---
         var ticketsSoldDict = await _context.OrderDetails
             .Include(od => od.Order)
             .Include(od => od.Showtime)
@@ -226,7 +224,7 @@ public class HomeController : Controller
 
         if (movie == null) return NotFound();
 
-        // --- ĐÃ THÊM: Tính năng Behavior Tracking ---
+        //  Tính năng Behavior Tracking ---
         movie.ViewCount++;
         await _context.SaveChangesAsync();
 

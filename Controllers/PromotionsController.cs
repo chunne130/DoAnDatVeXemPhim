@@ -26,7 +26,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return Request.Headers["X-Requested-With"] == "XMLHttpRequest";
         }
 
-        // ── ⚙️ API KIỂM TRA MÃ VOUCHER + CHẶN CHÉO PHÂN HẠNG THÀNH VIÊN REAL-TIME ──
+        // ──  API KIỂM TRA MÃ VOUCHER + CHẶN CHÉO PHÂN HẠNG THÀNH VIÊN REAL-TIME ──
         [HttpGet]
         [AllowAnonymous]
         [Route("Promotions/CheckVoucher")]
@@ -125,9 +125,7 @@ namespace DoAnDatVeXemPhim.Controllers
             });
         }
 
-        // ==========================================
         // 1. DANH SÁCH MÃ KHUYẾN MÃI (INDEX)
-        // ==========================================
         public async Task<IActionResult> Index(string searchString)
         {
             var query = _context.Promotions.Include(p => p.MembershipLevel).AsQueryable();
@@ -145,9 +143,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return View(list);
         }
 
-        // ==========================================
         // 2. TẠO MỚI MÃ VOUCHER (GET)
-        // ==========================================
         public IActionResult Create()
         {
             ViewData["MembershipLevelId"] = new SelectList(_context.MembershipLevels, "Id", "LevelName");
@@ -192,9 +188,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return View(promotion);
         }
 
-        // ==========================================
         // 3. CHỈNH SỬA VOUCHER (GET)
-        // ==========================================
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -243,9 +237,7 @@ namespace DoAnDatVeXemPhim.Controllers
             return View(promotion);
         }
 
-        // ==========================================
         // 4. XÓA VOUCHER (GET)
-        // ==========================================
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
